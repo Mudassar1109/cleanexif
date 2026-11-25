@@ -5,4 +5,6 @@
   <url><loc>https://cleanexif.vercel.app/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://cleanexif.vercel.app/disclaimer</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://cleanexif.vercel.app/cookie-policy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://cleanexif.vercel.app/blog</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://cleanexif.vercel.app/blog/what-is-exif-data</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
 </urlset>
