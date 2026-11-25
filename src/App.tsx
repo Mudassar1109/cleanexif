@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useMemo, useRef, useState, useEffect, type ChangeEvent } from "react";
 import exifr from "exifr";
 import JSZip from "jszip";
 import {
@@ -180,6 +180,11 @@ function App() {
   const metadataRows = useMemo(() => metadataCategories.flatMap(group => group.rows), [metadataCategories]);
   const failedItems = useMemo(() => items.filter(item => !!item.cleanError && !item.cleaned), [items]);
   const noticeIsError = /unsupported format|larger than 25 MB|Maximum 20 images|total batch limit|could not read image|Could not clean|Batch download failed|No images could be cleaned/i.test(notice);
+  useEffect(() => {
+    if (!notice || busy) return;
+    const timeout = window.setTimeout(() => setNotice(""), 6000);
+    return () => window.clearTimeout(timeout);
+  }, [notice, busy]);
   const addFiles = useCallback(async (list: FileList | File[]) => {
     const incoming = Array.from(list);
     const valid: File[] = [];
@@ -338,6 +343,7 @@ function App() {
       <button className="mobile-toggle" aria-label="Toggle navigation" onClick={() => setMobileMenu(!mobileMenu)}><Menu size={22} /></button>
       <nav className={mobileMenu ? "nav-links nav-open" : "nav-links"}><a href="#how-it-works" onClick={() => setMobileMenu(false)}>How it works</a><a href="#privacy" onClick={() => setMobileMenu(false)}>Privacy</a><a href="#faq" onClick={() => setMobileMenu(false)}>FAQ</a><a className="button button-primary nav-cta" href="#tool" onClick={() => setMobileMenu(false)}>Start cleaning <ArrowRight size={16} /></a></nav>
     </div></header>
+    {notice && <div className={"toast-notice" + (noticeIsError ? " toast-error" : " toast-success")} role={noticeIsError ? "alert" : "status"} aria-live="assertive"><span className="toast-icon">{noticeIsError ? <AlertCircle size={19} /> : <CheckCircle2 size={19} />}</span><span className="toast-message">{notice}</span><button className="toast-close" type="button" aria-label="Dismiss notification" onClick={() => setNotice("")}><X size={17} /></button></div>}
 
     <main>
       <section className="hero-section"><div className="hero-glow hero-glow-one" /><div className="hero-glow hero-glow-two" />
@@ -376,7 +382,6 @@ function App() {
       {items.length > 0 && <section className="tool-workspace" aria-live="polite"><div className="container">
         <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {MAX_FILES} images selected · Files stay in this browser tab</p></div>
           <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()} disabled={busy}><FilePlus2 size={16} /> Add images</button>{failedItems.length > 0 && <button className="button button-outline" onClick={() => void cleanAll(failedItems)} disabled={busy}><RefreshCw size={15} /> Retry failed ({failedItems.length})</button>}<button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll} disabled={busy}><Trash2 size={17} /></button></div></div>
-        {notice && <div className={"notice" + (noticeIsError ? " notice-error" : "")} role={noticeIsError ? "alert" : "status"} aria-live="polite">{noticeIsError ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}{notice}</div>}
         {busy && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing batch"}</b><span>Working</span></div><div className="processing-track"><span style={{ width: batchProgress.total ? ((batchProgress.done / batchProgress.total) * 100) + "%" : "0%" }} /></div><p>{batchProgress.done} of {batchProgress.total} images processed. Images are cleaned and verified locally; the ZIP archive downloads when ready.</p></div>}
         <div className="workspace-grid"><div className="image-list"><div className="panel-label">SELECTED IMAGES <span>{items.length}</span></div>
           {items.map(item => <button key={item.id} className={"image-list-item" + (active?.id === item.id ? " selected" : "")} onClick={() => setActiveId(item.id)}>
