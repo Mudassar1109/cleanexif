@@ -324,7 +324,7 @@ function App() {
             <span className={"status-dot " + item.status} title={item.status} /> <span className="remove-image" role="button" aria-label={"Remove " + item.file.name} onClick={event => { event.stopPropagation(); removeItem(item.id); }}><X size={15} /></span>
           </button>)}
         </div>
-        {active && <div className="inspector-panel"><div className="inspector-preview"><img src={active.preview} alt={active.file.name} /><div className="preview-caption"><b>{active.file.name}</b><span>{active.width} × {active.height} · {formatBytes(active.file.size)}</span></div></div>
+        {active && <div className="inspector-panel"><div className="inspector-preview"><img src={active.status === "clean" && active.cleanedUrl ? active.cleanedUrl : active.preview} alt={active.status === "clean" ? "Cleaned preview of " + active.file.name : active.file.name} /><div className="preview-caption"><b>{active.status === "clean" ? "Cleaned preview" : active.file.name}</b><span>{active.width} × {active.height} · {formatBytes(active.cleaned?.size ?? active.file.size)}</span></div></div>
           <div className="metadata-panel"><div className="panel-label">{active.status === "clean" ? "ORIGINAL METADATA (BEFORE CLEANING)" : "METADATA FOUND"} <span>{metadataRows.length} fields shown</span></div>
             {metadataRows.length ? <div className="metadata-table">{metadataRows.map(row => <div className="metadata-row" key={row.key}><span>{row.label}</span><b>{row.value}</b></div>)}</div> : <div className="empty-metadata"><Fingerprint size={25} /><b>No readable EXIF fields found</b><span>This image may already have little or no EXIF metadata.</span></div>}
             {active.cleanError && <p className="error-text">{active.cleanError}</p>}
