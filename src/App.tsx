@@ -42,7 +42,9 @@ const getMetaRows = (meta: Meta | null) => {
 };
 async function readMetadata(blob: Blob): Promise<Meta | null> {
   try {
-    const result = await exifr.parse(blob as File, { exif: true, gps: true, iptc: true, xmp: true, icc: true });
+    // ICC color profiles describe color rendering, not personal EXIF/location data.
+    // Exclude them from the privacy verification result to avoid false warnings.
+    const result = await exifr.parse(blob as File, { exif: true, gps: true, iptc: true, xmp: true, icc: false });
     return result && typeof result === "object" ? result as Meta : null;
   } catch { return null; }
 }
