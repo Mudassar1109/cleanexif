@@ -16,6 +16,7 @@ type ImageRecord = {
 };
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024;
+const MAX_TOTAL_SIZE = 100 * 1024 * 1024;
 const MAX_FILES = 20;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 const formatBytes = (bytes: number) => bytes < 1024 * 1024
@@ -183,11 +184,14 @@ function App() {
     const incoming = Array.from(list);
     const valid: File[] = [];
     const errors: string[] = [];
+    let totalSize = items.reduce((sum, item) => sum + item.file.size, 0);
     for (const file of incoming) {
       if (!ACCEPTED.includes(file.type)) { errors.push(file.name + ": unsupported format"); continue; }
       if (file.size > MAX_FILE_SIZE) { errors.push(file.name + ": larger than 25 MB"); continue; }
       if (items.length + valid.length >= MAX_FILES) { errors.push("Maximum 20 images per batch"); break; }
+      if (totalSize + file.size > MAX_TOTAL_SIZE) { errors.push(file.name + ": total batch limit is 100 MB"); continue; }
       valid.push(file);
+      totalSize += file.size;
     }
     const records: ImageRecord[] = await Promise.all(valid.map(async file => {
       const id = (typeof crypto !== "undefined" && "randomUUID" in crypto) ? crypto.randomUUID() : String(Date.now()) + Math.random();
@@ -325,7 +329,7 @@ function App() {
     ["What is EXIF data?", "EXIF is information stored inside many image files. It can include camera details, capture date, lens settings and, when enabled, GPS coordinates."],
     ["Does CleanExif upload my photos?", "No. Image processing happens locally in your browser. Your selected image files are not sent to CleanExif image-processing servers."],
     ["Can I remove GPS location from an image?", "Re-encoding a supported image removes embedded metadata commonly used for GPS and camera details. Always inspect the exported file if location privacy is critical."],
-    ["Which image formats are supported?", "CleanExif currently supports JPEG, PNG and WebP images. HEIC, animated GIF and SVG are not supported in this version."],
+    ["Which image formats are supported?", "CleanExif supports JPEG, PNG and WebP images up to 25 MB each, with a maximum of 20 images and 100 MB total per batch. HEIC, animated GIF and SVG are not supported."],
     ["Does removing EXIF data affect image quality?", "PNG is re-encoded losslessly. JPEG and WebP are exported at a high quality setting, but re-encoding can cause a small quality or file-size difference."],
     ["Can I clean multiple images at once?", "Yes. Add up to 20 supported images and use Clean all to download the cleaned files together in a ZIP archive."]
   ];
@@ -380,7 +384,7 @@ function App() {
             <span className={"status-dot " + item.status} title={item.status} /> <span className={"remove-image" + (busy ? " remove-disabled" : "")} role="button" aria-disabled={busy} aria-label={"Remove " + item.file.name} onClick={event => { event.stopPropagation(); if (!busy) removeItem(item.id); }}><X size={15} /></span>
           </button>)}
         </div>
-        {active && <div className="inspector-panel"><div className="inspector-preview"><img src={active.status === "clean" && active.cleanedUrl ? active.cleanedUrl : active.preview} alt={active.status === "clean" ? "Cleaned preview of " + active.file.name : active.file.name} /><div className="preview-caption"><b>{active.status === "clean" ? "Cleaned preview" : active.file.name}</b><span>{active.width} × {active.height} · {formatBytes(active.cleaned?.size ?? active.file.size)}</span></div></div>
+        {active && <div className="inspector-panel"><div className="inspector-preview"><img src={active.status === "clean" && active.cleanedUrl ? active.cleanedUrl : active.preview} alt={active.status === "clean" ? "Cleaned preview of " + active.file.name : active.file.name} /><div className="preview-caption"><b>{active.status === "clean" ? "Cleaned preview" : active.file.name}</b><span>{active.width} × {active.height} · {(active.cleaned?.type || active.file.type).split("/")[1]?.toUpperCase()} · {formatBytes(active.cleaned?.size ?? active.file.size)}</span></div></div>
           <div className="metadata-panel"><div className="panel-label">{active.status === "clean" ? "ORIGINAL METADATA (BEFORE CLEANING)" : "METADATA FOUND"} <span>{metadataRows.length} fields shown</span></div>
             {metadataRows.length ? <div className="metadata-categories">{metadataCategories.map(group => <section className="metadata-category" key={group.id}><h4>{group.label}<span>{group.rows.length}</span></h4><div className="metadata-table">{group.rows.map(row => <div className="metadata-row" key={row.key}><span>{row.label}</span><b>{row.value}</b></div>)}</div></section>)}</div> : <div className="empty-metadata"><Fingerprint size={25} /><b>No readable EXIF fields found</b><span>This image may already have little or no EXIF metadata.</span></div>}
             {active.cleanError && <p className="error-text">{active.cleanError}</p>}
