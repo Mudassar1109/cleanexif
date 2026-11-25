@@ -63,7 +63,6 @@ const getMetaCategories = (meta: Meta | null) => {
   }
   return groups.filter(group => group.rows.length);
 };
-const getMetaRows = (meta: Meta | null) => getMetaCategories(meta).flatMap(group => group.rows);
 async function readMetadata(blob: Blob): Promise<Meta | null> {
   try {
     // ICC color profiles describe color rendering, not personal EXIF/location data.
