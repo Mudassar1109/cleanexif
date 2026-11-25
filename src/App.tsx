@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState, type ChangeEvent } from "react"
 import exifr from "exifr";
 import JSZip from "jszip";
 import {
-  ArrowRight, Camera, Check, CheckCircle2, ChevronDown,
+  AlertCircle, ArrowRight, Camera, Check, CheckCircle2, ChevronDown,
   Download, Eye, FilePlus2, Fingerprint, Globe2, Image as ImageIcon,
   LockKeyhole, MapPin, Menu, Monitor, RefreshCw, Shield, ShieldCheck,
   Trash2, UploadCloud, X, Zap
@@ -179,6 +179,7 @@ function App() {
   const metadataCategories = useMemo(() => getMetaCategories(active?.metadata ?? null), [active]);
   const metadataRows = useMemo(() => metadataCategories.flatMap(group => group.rows), [metadataCategories]);
   const failedItems = useMemo(() => items.filter(item => !!item.cleanError && !item.cleaned), [items]);
+  const noticeIsError = /unsupported format|larger than 25 MB|Maximum 20 images|total batch limit|could not read image|Could not clean|Batch download failed|No images could be cleaned/i.test(notice);
   const addFiles = useCallback(async (list: FileList | File[]) => {
     const incoming = Array.from(list);
     const valid: File[] = [];
@@ -357,7 +358,7 @@ function App() {
                 <h2>Drop your images here</h2><p>or click to choose files</p>
                 <button className="button button-primary choose-button" onClick={() => inputRef.current?.click()}><FilePlus2 size={18} /> Choose images</button>
                 <span className="format-note">JPG, JPEG, PNG or WebP · Up to 25 MB each</span>
-                <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden disabled={busy || items.length >= MAX_FILES} onChange={handleInput} />
+                <input ref={inputRef} type="file" multiple hidden disabled={busy} onChange={handleInput} />
               </div>
               <div className="upload-card-bottom"><span><LockKeyhole size={14} /> Processed locally</span><span><CheckCircle2 size={14} /> No account needed</span></div>
             </div>
@@ -374,8 +375,8 @@ function App() {
 
       {items.length > 0 && <section className="tool-workspace" aria-live="polite"><div className="container">
         <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {MAX_FILES} images selected · Files stay in this browser tab</p></div>
-          <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()} disabled={busy || items.length >= MAX_FILES}><FilePlus2 size={16} /> Add images</button>{failedItems.length > 0 && <button className="button button-outline" onClick={() => void cleanAll(failedItems)} disabled={busy}><RefreshCw size={15} /> Retry failed ({failedItems.length})</button>}<button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll} disabled={busy}><Trash2 size={17} /></button></div></div>
-        {notice && <div className="notice"><CheckCircle2 size={16} />{notice}</div>}
+          <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()} disabled={busy}><FilePlus2 size={16} /> Add images</button>{failedItems.length > 0 && <button className="button button-outline" onClick={() => void cleanAll(failedItems)} disabled={busy}><RefreshCw size={15} /> Retry failed ({failedItems.length})</button>}<button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll} disabled={busy}><Trash2 size={17} /></button></div></div>
+        {notice && <div className={"notice" + (noticeIsError ? " notice-error" : "")} role={noticeIsError ? "alert" : "status"} aria-live="polite">{noticeIsError ? <AlertCircle size={16} /> : <CheckCircle2 size={16} />}{notice}</div>}
         {busy && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing batch"}</b><span>Working</span></div><div className="processing-track"><span style={{ width: batchProgress.total ? ((batchProgress.done / batchProgress.total) * 100) + "%" : "0%" }} /></div><p>{batchProgress.done} of {batchProgress.total} images processed. Images are cleaned and verified locally; the ZIP archive downloads when ready.</p></div>}
         <div className="workspace-grid"><div className="image-list"><div className="panel-label">SELECTED IMAGES <span>{items.length}</span></div>
           {items.map(item => <button key={item.id} className={"image-list-item" + (active?.id === item.id ? " selected" : "")} onClick={() => setActiveId(item.id)}>
