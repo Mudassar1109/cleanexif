@@ -203,6 +203,7 @@ function App() {
     setItems([]); setActiveId(null); setNotice("");
   };
   const cleanOne = async (item: ImageRecord) => {
+    setBusy(true);
     setCleaningStage("Starting local processing");
     setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "cleaning", cleanError: undefined } : entry));
     try {
@@ -218,6 +219,9 @@ function App() {
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not clean this image.";
       setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "ready", cleanError: message } : entry));
+      setNotice("Could not clean " + item.file.name + ": " + message);
+    } finally {
+      setBusy(false);
       setCleaningStage("");
     }
   };
@@ -314,7 +318,7 @@ function App() {
                 <h2>Drop your images here</h2><p>or click to choose files</p>
                 <button className="button button-primary choose-button" onClick={() => inputRef.current?.click()}><FilePlus2 size={18} /> Choose images</button>
                 <span className="format-note">JPG, JPEG, PNG or WebP · Up to 25 MB each</span>
-                <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={handleInput} />
+                <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden disabled={busy || items.length >= MAX_FILES} onChange={handleInput} />
               </div>
               <div className="upload-card-bottom"><span><LockKeyhole size={14} /> Processed locally</span><span><CheckCircle2 size={14} /> No account needed</span></div>
             </div>
@@ -331,13 +335,13 @@ function App() {
 
       {items.length > 0 && <section className="tool-workspace" aria-live="polite"><div className="container">
         <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {MAX_FILES} images selected · Files stay in this browser tab</p></div>
-          <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()}><FilePlus2 size={16} /> Add images</button><button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll}><Trash2 size={17} /></button></div></div>
+          <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()} disabled={busy || items.length >= MAX_FILES}><FilePlus2 size={16} /> Add images</button><button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll} disabled={busy}><Trash2 size={17} /></button></div></div>
         {notice && <div className="notice"><CheckCircle2 size={16} />{notice}</div>}
         {busy && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing batch"}</b><span>Working</span></div><div className="processing-track"><span /></div><p>Images are being cleaned and verified locally. The ZIP archive will download when ready.</p></div>}
         <div className="workspace-grid"><div className="image-list"><div className="panel-label">SELECTED IMAGES <span>{items.length}</span></div>
           {items.map(item => <button key={item.id} className={"image-list-item" + (active?.id === item.id ? " selected" : "")} onClick={() => setActiveId(item.id)}>
             <img src={item.preview} alt="" /><span className="image-list-copy"><b>{item.file.name}</b><small>{formatBytes(item.file.size)} · {item.width} × {item.height}</small></span>
-            <span className={"status-dot " + item.status} title={item.status} /> <span className="remove-image" role="button" aria-label={"Remove " + item.file.name} onClick={event => { event.stopPropagation(); removeItem(item.id); }}><X size={15} /></span>
+            <span className={"status-dot " + item.status} title={item.status} /> <span className={"remove-image" + (busy ? " remove-disabled" : "")} role="button" aria-disabled={busy} aria-label={"Remove " + item.file.name} onClick={event => { event.stopPropagation(); if (!busy) removeItem(item.id); }}><X size={15} /></span>
           </button>)}
         </div>
         {active && <div className="inspector-panel"><div className="inspector-preview"><img src={active.status === "clean" && active.cleanedUrl ? active.cleanedUrl : active.preview} alt={active.status === "clean" ? "Cleaned preview of " + active.file.name : active.file.name} /><div className="preview-caption"><b>{active.status === "clean" ? "Cleaned preview" : active.file.name}</b><span>{active.width} × {active.height} · {formatBytes(active.cleaned?.size ?? active.file.size)}</span></div></div>
@@ -347,6 +351,7 @@ function App() {
             {active.status === "clean" ? <div className="clean-success"><CheckCircle2 size={17} /><span>Clean copy is ready</span><button className="button button-primary" onClick={() => downloadItem(active)}><Download size={15} /> Download</button></div> :
               <button className="button button-primary clean-button" onClick={() => void cleanOne(active)} disabled={active.status === "cleaning" || busy}>{active.status === "cleaning" ? <><RefreshCw className="spin" size={16} /> Processing image…</> : <><ShieldCheck size={17} /> Remove metadata</>}</button>}
             {active.status === "cleaning" && <div className="processing-panel" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing locally"}</b><span>In progress</span></div><div className="processing-track"><span /></div><p>Decoding pixels, creating a fresh image and checking its metadata — all in your browser.</p></div>}
+            {active.status === "clean" && <div className="comparison-panel"><div><span>Original privacy fields</span><b>{metadataRows.length}</b></div><div><span>Clean copy fields</span><b>{active.cleanCheckError ? "Not verified" : active.cleanCheck ? Object.keys(active.cleanCheck).length : 0}</b></div><div><span>File size</span><b>{formatBytes(active.file.size)} → {formatBytes(active.cleaned?.size ?? 0)}</b></div></div>}
             {active.status === "clean" && <p className={"verification-note" + (active.cleanCheckError || (active.cleanCheck && Object.keys(active.cleanCheck).length) ? " verification-warning" : "")}><ShieldCheck size={14} /> {active.cleanCheckError ? "The clean copy is ready, but automatic metadata verification was unavailable. Check the downloaded file with another metadata reader before sharing sensitive images." : active.cleanCheck && Object.keys(active.cleanCheck).length ? "Verification detected remaining readable fields: " + Object.keys(active.cleanCheck).slice(0, 6).join(", ") + ". Review the exported file before sharing." : "No readable metadata fields were detected in the exported copy. This check is not a forensic guarantee."}</p>}<p className="small-disclaimer">A fresh image copy is created. JPEG and WebP are re-encoded at high quality; a small quality or file-size difference may occur.</p>
           </div></div>}
         </div>
