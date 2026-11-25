@@ -1,17 +1,17 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState, type ChangeEvent } from "react";
 import exifr from "exifr";
 import JSZip from "jszip";
 import {
-  ArrowDown, ArrowRight, Camera, Check, CheckCircle2, ChevronDown, CircleHelp,
-  Download, Eye, FileImage, FilePlus2, Fingerprint, Globe2, Image as ImageIcon,
-  LockKeyhole, MapPin, Menu, Monitor, RefreshCw, Shield, ShieldCheck, Sparkles,
+  ArrowRight, Camera, Check, CheckCircle2, ChevronDown,
+  Download, Eye, FilePlus2, Fingerprint, Globe2, Image as ImageIcon,
+  LockKeyhole, MapPin, Menu, Monitor, RefreshCw, Shield, ShieldCheck,
   Trash2, UploadCloud, X, Zap
 } from "lucide-react";
 
 type Meta = Record<string, unknown>;
 type ImageRecord = {
   id: string; file: File; preview: string; width: number; height: number;
-  metadata: Meta | null; cleaned?: Blob; cleanedUrl?: string; cleanError?: string;
+  metadata: Meta | null; cleaned?: Blob; cleanedUrl?: string; cleanError?: string; cleanCheck?: Meta | null;
   status: "ready" | "cleaning" | "clean";
 };
 
@@ -20,7 +20,6 @@ const MAX_FILES = 20;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 const formatBytes = (bytes: number) => bytes < 1024 * 1024
   ? (bytes / 1024).toFixed(0) + " KB" : (bytes / (1024 * 1024)).toFixed(2) + " MB";
-const hasMetadata = (meta: Meta | null) => !!meta && Object.keys(meta).length > 0;
 const displayValue = (value: unknown): string => {
   if (value instanceof Date) return value.toLocaleString();
   if (Array.isArray(value)) return value.map(v => typeof v === "number" ? Number(v.toFixed(5)) : String(v)).join(", ");
@@ -128,7 +127,6 @@ function App() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const active = items.find(item => item.id === activeId) ?? items[0] ?? null;
   const readyCount = items.filter(item => item.status === "ready").length;
-  const cleanedCount = items.filter(item => item.status === "clean").length;
   const metadataRows = useMemo(() => getMetaRows(active?.metadata ?? null), [active]);
   const addFiles = useCallback(async (list: FileList | File[]) => {
     const incoming = Array.from(list);
@@ -158,7 +156,7 @@ function App() {
     if (!activeId && usable[0]) setActiveId(usable[0].id);
     setNotice(errors.length ? errors.join(" · ") : usable.length ? usable.length + " image" + (usable.length === 1 ? "" : "s") + " ready to inspect." : "");
   }, [items.length, activeId]);
-  const handleInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInput = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) void addFiles(event.target.files);
     event.target.value = "";
   };
@@ -185,7 +183,7 @@ function App() {
       const blob = await cleanImage(item.file);
       const after = await readMetadata(blob);
       const url = URL.createObjectURL(blob);
-      setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", metadata: item.metadata, cleanError: undefined, cleanCheck: after } as ImageRecord & { cleanCheck: Meta | null } : entry));
+      setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", metadata: item.metadata, cleanError: undefined, cleanCheck: after } : entry));
       setNotice(item.file.name + " is ready to download.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not clean this image.";
@@ -213,7 +211,7 @@ function App() {
         const after = await readMetadata(blob);
         const url = URL.createObjectURL(blob);
         zip.file("clean-" + item.file.name, blob);
-        setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", cleanCheck: after } as ImageRecord & { cleanCheck: Meta | null } : entry));
+        setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", cleanCheck: after } : entry));
         success++;
       } catch (error) {
         const message = error instanceof Error ? error.message : "Could not clean image";
@@ -293,7 +291,7 @@ function App() {
             {active.cleanError && <p className="error-text">{active.cleanError}</p>}
             {active.status === "clean" ? <div className="clean-success"><CheckCircle2 size={17} /><span>Clean copy is ready</span><button className="button button-primary" onClick={() => downloadItem(active)}><Download size={15} /> Download</button></div> :
               <button className="button button-primary clean-button" onClick={() => void cleanOne(active)} disabled={active.status === "cleaning" || busy}>{active.status === "cleaning" ? <><RefreshCw className="spin" size={16} /> Cleaning locally…</> : <><ShieldCheck size={17} /> Remove metadata</>}</button>}
-            <p className="small-disclaimer">A fresh image copy is created. JPEG and WebP are re-encoded at high quality; a small quality or file-size difference may occur.</p>
+            <p className="verification-note"><ShieldCheck size={14} /> {active.cleanCheck && Object.keys(active.cleanCheck).length ? "Verification found readable metadata fields. Review the output before sharing." : "Post-export check found no readable EXIF fields."}</p><p className="small-disclaimer">A fresh image copy is created. JPEG and WebP are re-encoded at high quality; a small quality or file-size difference may occur.</p>
           </div></div>}
         </div>
       </div></section>}
