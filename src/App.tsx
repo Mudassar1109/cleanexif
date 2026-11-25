@@ -126,6 +126,40 @@ function LegalPage({ type }: { type: string }) {
     disclaimer: "Disclaimer", "cookie-policy": "Cookie Policy"
   };
   const title = titles[type] ?? "Legal";
+  const descriptions: Record<string, string> = {
+    "privacy-policy": "Read how CleanExif handles image files, browser processing, website requests and privacy-related information.",
+    terms: "Review the terms for using CleanExif, including supported image processing, user responsibilities and service limitations.",
+    disclaimer: "Understand CleanExif's image metadata removal limitations and important information before relying on cleaned files.",
+    "cookie-policy": "Learn how CleanExif uses essential browser functionality and handles cookies, analytics and third-party resources."
+  };
+  useEffect(() => {
+    const description = descriptions[type] ?? "CleanExif website policies and information.";
+    const canonicalUrl = window.location.origin + window.location.pathname;
+    document.title = title + " | CleanExif";
+    const setMeta = (selector: string, attribute: string, value: string) => {
+      let element = document.head.querySelector(selector) as HTMLMetaElement | null;
+      if (!element) {
+        element = document.createElement("meta");
+        const [key, contentValue] = selector.match(/\[(name|property)="([^"]+)"\]/)?.slice(1) ?? [];
+        if (key && contentValue) element.setAttribute(key, contentValue);
+        document.head.appendChild(element);
+      }
+      element.setAttribute(attribute, value);
+    };
+    setMeta('meta[name="description"]', "content", description);
+    setMeta('meta[property="og:title"]', "content", title + " | CleanExif");
+    setMeta('meta[property="og:description"]', "content", description);
+    setMeta('meta[property="og:url"]', "content", canonicalUrl);
+    setMeta('meta[name="twitter:title"]', "content", title + " | CleanExif");
+    setMeta('meta[name="twitter:description"]', "content", description);
+    let canonical = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.rel = "canonical";
+      document.head.appendChild(canonical);
+    }
+    canonical.href = canonicalUrl;
+  }, [type, title]);
   const content: Record<string, string[]> = {
     "privacy-policy": [
       "CleanExif is designed to process image files locally in your web browser. The image-processing feature does not upload your selected photos to CleanExif application servers.",
@@ -155,7 +189,6 @@ function LegalPage({ type }: { type: string }) {
     <main className="container legal-content"><span className="eyebrow"><ShieldCheck size={15} /> CLEANEXIF POLICIES</span><h1>{title}</h1>
       <p className="legal-date">Last updated: November 25, 2026</p>
       {(content[type] ?? []).map((p, i) => <p key={i}>{p}</p>)}
-      <p className="legal-note">This draft should be reviewed and updated to reflect the final hosting setup and actual product behavior before launch.</p>
     </main><Footer /></div>;
 }
 function Footer() {
