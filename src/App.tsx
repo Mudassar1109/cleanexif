@@ -11,7 +11,7 @@ import {
 type Meta = Record<string, unknown>;
 type ImageRecord = {
   id: string; file: File; preview: string; width: number; height: number;
-  metadata: Meta | null; cleaned?: Blob; cleanedUrl?: string; cleanError?: string; cleanCheck?: Meta | null;
+  metadata: Meta | null; cleaned?: Blob; cleanedUrl?: string; cleanError?: string; cleanCheck?: Meta | null; cleanCheckError?: boolean;
   status: "ready" | "cleaning" | "clean";
 };
 
@@ -45,6 +45,12 @@ async function readMetadata(blob: Blob): Promise<Meta | null> {
     const result = await exifr.parse(blob as File, { exif: true, gps: true, iptc: true, xmp: true, icc: true });
     return result && typeof result === "object" ? result as Meta : null;
   } catch { return null; }
+}
+async function verifyMetadata(blob: Blob): Promise<{ metadata: Meta | null; error: boolean }> {
+  try {
+    const result = await exifr.parse(blob as File, { exif: true, gps: true, iptc: true, xmp: true, icc: true });
+    return { metadata: result && typeof result === "object" ? result as Meta : null, error: false };
+  } catch { return { metadata: null, error: true }; }
 }
 async function cleanImage(file: File, onStage?: (stage: string) => void): Promise<Blob> {
   onStage?.("Decoding image");
@@ -130,7 +136,6 @@ function App() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const active = items.find(item => item.id === activeId) ?? items[0] ?? null;
-  const readyCount = items.filter(item => item.status === "ready").length;
   const metadataRows = useMemo(() => getMetaRows(active?.metadata ?? null), [active]);
   const addFiles = useCallback(async (list: FileList | File[]) => {
     const incoming = Array.from(list);
@@ -189,9 +194,9 @@ function App() {
       await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
       const blob = await cleanImage(item.file, setCleaningStage);
       setCleaningStage("Verifying exported image");
-      const after = await readMetadata(blob);
+      const verification = await verifyMetadata(blob);
       const url = URL.createObjectURL(blob);
-      setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", metadata: item.metadata, cleanError: undefined, cleanCheck: after } : entry));
+      setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", metadata: item.metadata, cleanError: undefined, cleanCheck: verification.metadata, cleanCheckError: verification.error } : entry));
       setCleaningStage("Complete");
       setNotice(item.file.name + " is ready to download.");
     } catch (error) {
@@ -202,15 +207,16 @@ function App() {
   };
   const downloadItem = (item: ImageRecord) => {
     if (!item.cleaned) return;
-    const url = URL.createObjectURL(item.cleaned);
+    const url = item.cleanedUrl ?? URL.createObjectURL(item.cleaned);
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.download = "clean-" + item.file.name.replace(/\.[^.]+$/, "") + (item.file.name.match(/\.[^.]+$/)?.[0] ?? "");
     document.body.appendChild(anchor); anchor.click(); anchor.remove();
-    URL.revokeObjectURL(url);
+    if (!item.cleanedUrl) URL.revokeObjectURL(url);
   };
   const cleanAll = async () => {
     setBusy(true); setCleaningStage("Preparing batch"); setNotice("Cleaning images locally in your browser…");
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     const zip = new JSZip();
     let success = 0;
     for (const item of items) {
@@ -219,10 +225,10 @@ function App() {
         setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "cleaning" } : entry));
         const blob = await cleanImage(item.file, setCleaningStage);
         setCleaningStage("Verifying " + item.file.name);
-        const after = await readMetadata(blob);
+        const verification = await verifyMetadata(blob);
         const url = URL.createObjectURL(blob);
         zip.file("clean-" + item.file.name, blob);
-        setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", cleanCheck: after } : entry));
+        setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", cleanCheck: verification.metadata, cleanCheckError: verification.error } : entry));
         success++;
       } catch (error) {
         const message = error instanceof Error ? error.message : "Could not clean image";
@@ -234,7 +240,7 @@ function App() {
       const archive = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(archive);
       const anchor = document.createElement("a"); anchor.href = url; anchor.download = "cleanexif-images.zip";
-      document.body.appendChild(anchor); anchor.click(); anchor.remove(); URL.revokeObjectURL(url);
+      document.body.appendChild(anchor); anchor.click(); anchor.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1500);
       setNotice(success + " cleaned image" + (success === 1 ? "" : "s") + " downloaded as a ZIP file.");
     } else setNotice("No images could be cleaned. Please try another supported image.");
     setBusy(false); setCleaningStage("");
@@ -289,7 +295,7 @@ function App() {
 
       {items.length > 0 && <section className="tool-workspace" aria-live="polite"><div className="container">
         <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {MAX_FILES} images selected · Files stay in this browser tab</p></div>
-          <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()}><FilePlus2 size={16} /> Add images</button><button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || readyCount === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll}><Trash2 size={17} /></button></div></div>
+          <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()}><FilePlus2 size={16} /> Add images</button><button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll}><Trash2 size={17} /></button></div></div>
         {notice && <div className="notice"><CheckCircle2 size={16} />{notice}</div>}
         <div className="workspace-grid"><div className="image-list"><div className="panel-label">SELECTED IMAGES <span>{items.length}</span></div>
           {items.map(item => <button key={item.id} className={"image-list-item" + (active?.id === item.id ? " selected" : "")} onClick={() => setActiveId(item.id)}>
@@ -298,13 +304,13 @@ function App() {
           </button>)}
         </div>
         {active && <div className="inspector-panel"><div className="inspector-preview"><img src={active.preview} alt={active.file.name} /><div className="preview-caption"><b>{active.file.name}</b><span>{active.width} × {active.height} · {formatBytes(active.file.size)}</span></div></div>
-          <div className="metadata-panel"><div className="panel-label">METADATA FOUND <span>{metadataRows.length} fields shown</span></div>
+          <div className="metadata-panel"><div className="panel-label">{active.status === "clean" ? "ORIGINAL METADATA (BEFORE CLEANING)" : "METADATA FOUND"} <span>{metadataRows.length} fields shown</span></div>
             {metadataRows.length ? <div className="metadata-table">{metadataRows.map(row => <div className="metadata-row" key={row.key}><span>{row.label}</span><b>{row.value}</b></div>)}</div> : <div className="empty-metadata"><Fingerprint size={25} /><b>No readable EXIF fields found</b><span>This image may already have little or no EXIF metadata.</span></div>}
             {active.cleanError && <p className="error-text">{active.cleanError}</p>}
             {active.status === "clean" ? <div className="clean-success"><CheckCircle2 size={17} /><span>Clean copy is ready</span><button className="button button-primary" onClick={() => downloadItem(active)}><Download size={15} /> Download</button></div> :
               <button className="button button-primary clean-button" onClick={() => void cleanOne(active)} disabled={active.status === "cleaning" || busy}>{active.status === "cleaning" ? <><RefreshCw className="spin" size={16} /> Processing image…</> : <><ShieldCheck size={17} /> Remove metadata</>}</button>}
             {active.status === "cleaning" && <div className="processing-panel" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing locally"}</b><span>In progress</span></div><div className="processing-track"><span /></div><p>Decoding pixels, creating a fresh image and checking its metadata — all in your browser.</p></div>}
-            {active.status === "clean" && <p className="verification-note"><ShieldCheck size={14} /> {active.cleanCheck && Object.keys(active.cleanCheck).length ? "Some readable metadata fields remain. Review this file before sharing." : "No readable EXIF fields were detected after export. This check is not a forensic guarantee."}</p>}<p className="small-disclaimer">A fresh image copy is created. JPEG and WebP are re-encoded at high quality; a small quality or file-size difference may occur.</p>
+            {active.status === "clean" && <p className={"verification-note" + (active.cleanCheckError || (active.cleanCheck && Object.keys(active.cleanCheck).length) ? " verification-warning" : "")}><ShieldCheck size={14} /> {active.cleanCheckError ? "The clean copy is ready, but automatic metadata verification was unavailable. Check the downloaded file with another metadata reader before sharing sensitive images." : active.cleanCheck && Object.keys(active.cleanCheck).length ? "Verification detected remaining readable fields: " + Object.keys(active.cleanCheck).slice(0, 6).join(", ") + ". Review the exported file before sharing." : "No readable metadata fields were detected in the exported copy. This check is not a forensic guarantee."}</p>}<p className="small-disclaimer">A fresh image copy is created. JPEG and WebP are re-encoded at high quality; a small quality or file-size difference may occur.</p>
           </div></div>}
         </div>
       </div></section>}
