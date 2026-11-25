@@ -291,7 +291,7 @@ function App() {
             {active.cleanError && <p className="error-text">{active.cleanError}</p>}
             {active.status === "clean" ? <div className="clean-success"><CheckCircle2 size={17} /><span>Clean copy is ready</span><button className="button button-primary" onClick={() => downloadItem(active)}><Download size={15} /> Download</button></div> :
               <button className="button button-primary clean-button" onClick={() => void cleanOne(active)} disabled={active.status === "cleaning" || busy}>{active.status === "cleaning" ? <><RefreshCw className="spin" size={16} /> Cleaning locally…</> : <><ShieldCheck size={17} /> Remove metadata</>}</button>}
-            <p className="verification-note"><ShieldCheck size={14} /> {active.cleanCheck && Object.keys(active.cleanCheck).length ? "Verification found readable metadata fields. Review the output before sharing." : "Post-export check found no readable EXIF fields."}</p><p className="small-disclaimer">A fresh image copy is created. JPEG and WebP are re-encoded at high quality; a small quality or file-size difference may occur.</p>
+            {active.status === "clean" && <p className="verification-note"><ShieldCheck size={14} /> {active.cleanCheck && Object.keys(active.cleanCheck).length ? "Some readable metadata fields remain. Review this file before sharing." : "No readable EXIF fields were detected after export. This check is not a forensic guarantee."}</p>}<p className="small-disclaimer">A fresh image copy is created. JPEG and WebP are re-encoded at high quality; a small quality or file-size difference may occur.</p>
           </div></div>}
         </div>
       </div></section>}
