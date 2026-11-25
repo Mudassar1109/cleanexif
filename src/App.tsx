@@ -27,6 +27,16 @@ const displayValue = (value: unknown): string => {
   if (typeof value === "object" && value !== null) return "Available";
   return String(value ?? "—");
 };
+function uniqueZipFilename(original: string, used: Set<string>): string {
+  const dot = original.lastIndexOf(".");
+  const base = dot > 0 ? original.slice(0, dot) : original;
+  const extension = dot > 0 ? original.slice(dot) : "";
+  let candidate = "clean-" + original;
+  let counter = 2;
+  while (used.has(candidate.toLowerCase())) candidate = "clean-" + base + "-" + counter++ + extension;
+  used.add(candidate.toLowerCase());
+  return candidate;
+}
 const getMetaRows = (meta: Meta | null) => {
   if (!meta) return [];
   const fields: [string, string][] = [
@@ -148,6 +158,7 @@ function App() {
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [cleaningStage, setCleaningStage] = useState("");
+  const [batchProgress, setBatchProgress] = useState({ done: 0, total: 0 });
   const [notice, setNotice] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -236,15 +247,20 @@ function App() {
   };
   const cleanAll = async () => {
     setBusy(true); setCleaningStage("Preparing batch"); setNotice("Cleaning images locally in your browser…");
+    setBatchProgress({ done: 0, total: items.length });
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     const zip = new JSZip();
+    const usedZipNames = new Set<string>();
     let success = 0;
     let failed = 0;
+    let processed = 0;
     try {
       for (const item of items) {
         if (item.cleaned) {
-          zip.file("clean-" + item.file.name, item.cleaned);
+          zip.file(uniqueZipFilename(item.file.name, usedZipNames), item.cleaned);
           success++;
+          processed++;
+          setBatchProgress({ done: processed, total: items.length });
           continue;
         }
         try {
@@ -253,13 +269,16 @@ function App() {
           setCleaningStage("Verifying " + item.file.name);
           const verification = await verifyMetadata(blob);
           const url = URL.createObjectURL(blob);
-          zip.file("clean-" + item.file.name, blob);
+          zip.file(uniqueZipFilename(item.file.name, usedZipNames), blob);
           setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", cleanCheck: verification.metadata, cleanCheckError: verification.error } : entry));
           success++;
         } catch (error) {
           failed++;
           const message = error instanceof Error ? error.message : "Could not clean image";
           setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "ready", cleanError: message } : entry));
+        } finally {
+          processed++;
+          setBatchProgress({ done: processed, total: items.length });
         }
       }
       if (success) {
@@ -283,6 +302,7 @@ function App() {
     } finally {
       setBusy(false);
       setCleaningStage("");
+      setBatchProgress({ done: 0, total: 0 });
     }
   };
   const faqs = [
@@ -337,7 +357,7 @@ function App() {
         <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {MAX_FILES} images selected · Files stay in this browser tab</p></div>
           <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()} disabled={busy || items.length >= MAX_FILES}><FilePlus2 size={16} /> Add images</button><button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll} disabled={busy}><Trash2 size={17} /></button></div></div>
         {notice && <div className="notice"><CheckCircle2 size={16} />{notice}</div>}
-        {busy && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing batch"}</b><span>Working</span></div><div className="processing-track"><span /></div><p>Images are being cleaned and verified locally. The ZIP archive will download when ready.</p></div>}
+        {busy && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing batch"}</b><span>Working</span></div><div className="processing-track"><span style={{ width: batchProgress.total ? ((batchProgress.done / batchProgress.total) * 100) + "%" : "0%" }} /></div><p>{batchProgress.done} of {batchProgress.total} images processed. Images are cleaned and verified locally; the ZIP archive downloads when ready.</p></div>}
         <div className="workspace-grid"><div className="image-list"><div className="panel-label">SELECTED IMAGES <span>{items.length}</span></div>
           {items.map(item => <button key={item.id} className={"image-list-item" + (active?.id === item.id ? " selected" : "")} onClick={() => setActiveId(item.id)}>
             <img src={item.preview} alt="" /><span className="image-list-copy"><b>{item.file.name}</b><small>{formatBytes(item.file.size)} · {item.width} × {item.height}</small></span>
