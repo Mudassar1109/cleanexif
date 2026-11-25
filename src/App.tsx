@@ -37,19 +37,32 @@ function uniqueZipFilename(original: string, used: Set<string>): string {
   used.add(candidate.toLowerCase());
   return candidate;
 }
-const getMetaRows = (meta: Meta | null) => {
-  if (!meta) return [];
-  const fields: [string, string][] = [
-    ["Make", "Camera maker"], ["Model", "Camera model"], ["LensModel", "Lens"],
-    ["DateTimeOriginal", "Date captured"], ["CreateDate", "Created"],
-    ["GPSLatitude", "GPS latitude"], ["GPSLongitude", "GPS longitude"],
-    ["GPSAltitude", "GPS altitude"], ["Orientation", "Orientation"],
-    ["ISO", "ISO"], ["FNumber", "Aperture"], ["ExposureTime", "Exposure time"],
-    ["FocalLength", "Focal length"], ["Software", "Software"]
+const labelMetadataKey = (key: string) => key
+  .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+  .replace(/GPS/g, "GPS").replace(/IPTC/g, "IPTC").replace(/XMP/g, "XMP")
+  .replace(/_/g, " ").trim();
+const getMetaCategories = (meta: Meta | null) => {
+  const groups = [
+    { id: "gps", label: "GPS & location", rows: [] as { key: string; label: string; value: string }[] },
+    { id: "camera", label: "Camera & device", rows: [] as { key: string; label: string; value: string }[] },
+    { id: "datetime", label: "Date & time", rows: [] as { key: string; label: string; value: string }[] },
+    { id: "capture", label: "Exposure & capture", rows: [] as { key: string; label: string; value: string }[] },
+    { id: "other", label: "Other metadata", rows: [] as { key: string; label: string; value: string }[] }
   ];
-  return fields.filter(([key]) => meta[key] !== undefined && meta[key] !== null)
-    .map(([key, label]) => ({ key, label, value: displayValue(meta[key]) }));
+  if (!meta) return groups;
+  const excluded = /^(?:Thumbnail|MakerNote|UserCommentEncoding|Binary|JFIFThumbnail|ImageData|StripOffsets|StripByteCounts)/i;
+  for (const [key, value] of Object.entries(meta)) {
+    if (excluded.test(key) || value === undefined || value === null || typeof value === "function" || value instanceof ArrayBuffer || ArrayBuffer.isView(value)) continue;
+    const row = { key, label: labelMetadataKey(key), value: displayValue(value) };
+    const index = /^GPS|Latitude|Longitude|Altitude|Position/i.test(key) ? 0
+      : /Make|Model|Lens|Camera|BodySerial|SerialNumber|OwnerName|Software|HostComputer/i.test(key) ? 1
+      : /Date|Time|OffsetTime|SubSec/i.test(key) ? 2
+      : /ISO|Exposure|FNumber|Aperture|Shutter|Focal|Flash|Metering|WhiteBalance|Scene|Orientation|Resolution|ColorSpace/i.test(key) ? 3 : 4;
+    groups[index].rows.push(row);
+  }
+  return groups.filter(group => group.rows.length);
 };
+const getMetaRows = (meta: Meta | null) => getMetaCategories(meta).flatMap(group => group.rows);
 async function readMetadata(blob: Blob): Promise<Meta | null> {
   try {
     // ICC color profiles describe color rendering, not personal EXIF/location data.
@@ -163,7 +176,9 @@ function App() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const active = items.find(item => item.id === activeId) ?? items[0] ?? null;
-  const metadataRows = useMemo(() => getMetaRows(active?.metadata ?? null), [active]);
+  const metadataCategories = useMemo(() => getMetaCategories(active?.metadata ?? null), [active]);
+  const metadataRows = useMemo(() => metadataCategories.flatMap(group => group.rows), [metadataCategories]);
+  const failedItems = useMemo(() => items.filter(item => !!item.cleanError && !item.cleaned), [items]);
   const addFiles = useCallback(async (list: FileList | File[]) => {
     const incoming = Array.from(list);
     const valid: File[] = [];
@@ -245,9 +260,10 @@ function App() {
     document.body.appendChild(anchor); anchor.click(); anchor.remove();
     if (!item.cleanedUrl) URL.revokeObjectURL(url);
   };
-  const cleanAll = async () => {
+  const cleanAll = async (targetItems: ImageRecord[] = items) => {
+    if (!targetItems.length || busy) return;
     setBusy(true); setCleaningStage("Preparing batch"); setNotice("Cleaning images locally in your browser…");
-    setBatchProgress({ done: 0, total: items.length });
+    setBatchProgress({ done: 0, total: targetItems.length });
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     const zip = new JSZip();
     const usedZipNames = new Set<string>();
@@ -255,12 +271,12 @@ function App() {
     let failed = 0;
     let processed = 0;
     try {
-      for (const item of items) {
+      for (const item of targetItems) {
         if (item.cleaned) {
           zip.file(uniqueZipFilename(item.file.name, usedZipNames), item.cleaned);
           success++;
           processed++;
-          setBatchProgress({ done: processed, total: items.length });
+          setBatchProgress({ done: processed, total: targetItems.length });
           continue;
         }
         try {
@@ -292,7 +308,7 @@ function App() {
         anchor.click();
         anchor.remove();
         window.setTimeout(() => URL.revokeObjectURL(url), 1500);
-        setNotice(success + " cleaned image" + (success === 1 ? "" : "s") + " added to the ZIP download" + (failed ? "; " + failed + " failed." : "."));
+        setNotice(success + " cleaned image" + (success === 1 ? "" : "s") + " added to the ZIP download" + (failed ? "; " + failed + " failed. Use Retry failed to try them again." : "."));
       } else {
         setNotice("No images could be cleaned. Please try another supported image.");
       }
@@ -355,7 +371,7 @@ function App() {
 
       {items.length > 0 && <section className="tool-workspace" aria-live="polite"><div className="container">
         <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {MAX_FILES} images selected · Files stay in this browser tab</p></div>
-          <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()} disabled={busy || items.length >= MAX_FILES}><FilePlus2 size={16} /> Add images</button><button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll} disabled={busy}><Trash2 size={17} /></button></div></div>
+          <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()} disabled={busy || items.length >= MAX_FILES}><FilePlus2 size={16} /> Add images</button>{failedItems.length > 0 && <button className="button button-outline" onClick={() => void cleanAll(failedItems)} disabled={busy}><RefreshCw size={15} /> Retry failed ({failedItems.length})</button>}<button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll} disabled={busy}><Trash2 size={17} /></button></div></div>
         {notice && <div className="notice"><CheckCircle2 size={16} />{notice}</div>}
         {busy && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing batch"}</b><span>Working</span></div><div className="processing-track"><span style={{ width: batchProgress.total ? ((batchProgress.done / batchProgress.total) * 100) + "%" : "0%" }} /></div><p>{batchProgress.done} of {batchProgress.total} images processed. Images are cleaned and verified locally; the ZIP archive downloads when ready.</p></div>}
         <div className="workspace-grid"><div className="image-list"><div className="panel-label">SELECTED IMAGES <span>{items.length}</span></div>
@@ -366,7 +382,7 @@ function App() {
         </div>
         {active && <div className="inspector-panel"><div className="inspector-preview"><img src={active.status === "clean" && active.cleanedUrl ? active.cleanedUrl : active.preview} alt={active.status === "clean" ? "Cleaned preview of " + active.file.name : active.file.name} /><div className="preview-caption"><b>{active.status === "clean" ? "Cleaned preview" : active.file.name}</b><span>{active.width} × {active.height} · {formatBytes(active.cleaned?.size ?? active.file.size)}</span></div></div>
           <div className="metadata-panel"><div className="panel-label">{active.status === "clean" ? "ORIGINAL METADATA (BEFORE CLEANING)" : "METADATA FOUND"} <span>{metadataRows.length} fields shown</span></div>
-            {metadataRows.length ? <div className="metadata-table">{metadataRows.map(row => <div className="metadata-row" key={row.key}><span>{row.label}</span><b>{row.value}</b></div>)}</div> : <div className="empty-metadata"><Fingerprint size={25} /><b>No readable EXIF fields found</b><span>This image may already have little or no EXIF metadata.</span></div>}
+            {metadataRows.length ? <div className="metadata-categories">{metadataCategories.map(group => <section className="metadata-category" key={group.id}><h4>{group.label}<span>{group.rows.length}</span></h4><div className="metadata-table">{group.rows.map(row => <div className="metadata-row" key={row.key}><span>{row.label}</span><b>{row.value}</b></div>)}</div></section>)}</div> : <div className="empty-metadata"><Fingerprint size={25} /><b>No readable EXIF fields found</b><span>This image may already have little or no EXIF metadata.</span></div>}
             {active.cleanError && <p className="error-text">{active.cleanError}</p>}
             {active.status === "clean" ? <div className="clean-success"><CheckCircle2 size={17} /><span>Clean copy is ready</span><button className="button button-primary" onClick={() => downloadItem(active)}><Download size={15} /> Download</button></div> :
               <button className="button button-primary clean-button" onClick={() => void cleanOne(active)} disabled={active.status === "cleaning" || busy}>{active.status === "cleaning" ? <><RefreshCw className="spin" size={16} /> Processing image…</> : <><ShieldCheck size={17} /> Remove metadata</>}</button>}
