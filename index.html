@@ -12,6 +12,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="CleanExif" />
+    <meta name="twitter:title" content="CleanExif — Your Photos. Your Privacy." />
+    <meta name="twitter:description" content="Inspect and remove supported image metadata locally in your browser. Your images stay on your device." />
+    <meta name="color-scheme" content="light" />
     <meta property="og:title" content="CleanExif — Your Photos. Your Privacy." />
     <meta property="og:description" content="Inspect and remove hidden photo metadata locally in your browser. Your images stay on your device." />
     <meta property="og:url" content="https://cleanexif.online/" />
@@ -35,10 +39,12 @@
         "@context": "https://schema.org",
         "@type": "FAQPage",
         "mainEntity": [
-          {"@type":"Question","name":"Does CleanExif upload my photos?","acceptedAnswer":{"@type":"Answer","text":"No. Image files are processed locally in your browser and are not sent to CleanExif image-processing servers."}},
-          {"@type":"Question","name":"Can I remove GPS location from an image?","acceptedAnswer":{"@type":"Answer","text":"CleanExif re-encodes supported images in your browser, which removes embedded metadata such as supported GPS and camera fields."}},
-          {"@type":"Question","name":"Which image formats are supported?","acceptedAnswer":{"@type":"Answer","text":"CleanExif currently supports JPEG, PNG and WebP images."}},
-          {"@type":"Question","name":"Does removing metadata affect image quality?","acceptedAnswer":{"@type":"Answer","text":"PNG output is re-encoded losslessly. JPEG and WebP are re-encoded with a high quality setting, so a small quality or file-size difference may occur."}}
+          {"@type":"Question","name":"What is EXIF data?","acceptedAnswer":{"@type":"Answer","text":"EXIF is information stored inside many image files. It can include camera details, capture date, lens settings and, when enabled, GPS coordinates."}},
+          {"@type":"Question","name":"Does CleanExif upload my photos?","acceptedAnswer":{"@type":"Answer","text":"No. Image processing happens locally in your browser. Your selected image files are not sent to CleanExif image-processing servers."}},
+          {"@type":"Question","name":"Can I remove GPS location from an image?","acceptedAnswer":{"@type":"Answer","text":"Re-encoding a supported image removes embedded metadata commonly used for GPS and camera details. Always inspect the exported file if location privacy is critical."}},
+          {"@type":"Question","name":"Which image formats are supported?","acceptedAnswer":{"@type":"Answer","text":"CleanExif supports JPEG, PNG and WebP images up to 25 MB each, with a maximum of 20 images and 100 MB total per batch. HEIC, animated GIF and SVG are not supported."}},
+          {"@type":"Question","name":"Does removing EXIF data affect image quality?","acceptedAnswer":{"@type":"Answer","text":"PNG is re-encoded losslessly. JPEG and WebP are exported at a high quality setting, but re-encoding can cause a small quality or file-size difference."}},
+          {"@type":"Question","name":"Can I clean multiple images at once?","acceptedAnswer":{"@type":"Answer","text":"Yes. Add up to 20 supported images and use Clean all to download the cleaned files together in a ZIP archive."}}
         ]
       }
     </script>
