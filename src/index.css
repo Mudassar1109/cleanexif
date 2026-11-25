@@ -23,3 +23,5 @@
 
 .comparison-panel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px;padding:11px;border:1px solid #e2eaf5;border-radius:11px;background:#f8fbff}.comparison-panel>div{display:flex;flex-direction:column;gap:5px;min-width:0}.comparison-panel span{font-size:9px;line-height:1.4;color:#77869b}.comparison-panel b{font-size:12px;line-height:1.4;color:#18385f;overflow-wrap:anywhere}.button:disabled,.icon-button:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}.remove-disabled{opacity:.35;pointer-events:none}
 @media(max-width:480px){.comparison-panel{grid-template-columns:1fr 1fr}.comparison-panel>div:last-child{grid-column:1/-1}}
+
+.batch-progress .processing-track span{animation:none;transition:width .2s ease}
