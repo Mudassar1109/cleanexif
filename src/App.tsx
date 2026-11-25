@@ -289,7 +289,7 @@ function App() {
           const verification = await verifyMetadata(blob);
           const url = URL.createObjectURL(blob);
           zip.file(uniqueZipFilename(item.file.name, usedZipNames), blob);
-          setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", cleanCheck: verification.metadata, cleanCheckError: verification.error } : entry));
+          setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", cleanError: undefined, cleanCheck: verification.metadata, cleanCheckError: verification.error } : entry));
           success++;
         } catch (error) {
           failed++;
