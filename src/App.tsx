@@ -210,14 +210,15 @@ function App() {
     URL.revokeObjectURL(url);
   };
   const cleanAll = async () => {
-    setBusy(true); setNotice("Cleaning images locally in your browser…");
+    setBusy(true); setCleaningStage("Preparing batch"); setNotice("Cleaning images locally in your browser…");
     const zip = new JSZip();
     let success = 0;
     for (const item of items) {
       if (item.cleaned) { zip.file("clean-" + item.file.name, item.cleaned); success++; continue; }
       try {
         setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "cleaning" } : entry));
-        const blob = await cleanImage(item.file);
+        const blob = await cleanImage(item.file, setCleaningStage);
+        setCleaningStage("Verifying " + item.file.name);
         const after = await readMetadata(blob);
         const url = URL.createObjectURL(blob);
         zip.file("clean-" + item.file.name, blob);
@@ -229,13 +230,14 @@ function App() {
       }
     }
     if (success) {
+      setCleaningStage("Building ZIP archive");
       const archive = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(archive);
       const anchor = document.createElement("a"); anchor.href = url; anchor.download = "cleanexif-images.zip";
       document.body.appendChild(anchor); anchor.click(); anchor.remove(); URL.revokeObjectURL(url);
       setNotice(success + " cleaned image" + (success === 1 ? "" : "s") + " downloaded as a ZIP file.");
     } else setNotice("No images could be cleaned. Please try another supported image.");
-    setBusy(false);
+    setBusy(false); setCleaningStage("");
   };
   const faqs = [
     ["What is EXIF data?", "EXIF is information stored inside many image files. It can include camera details, capture date, lens settings and, when enabled, GPS coordinates."],
