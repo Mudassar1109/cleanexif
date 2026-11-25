@@ -50,8 +50,22 @@ async function readMetadata(blob: Blob): Promise<Meta | null> {
 }
 async function verifyMetadata(blob: Blob): Promise<{ metadata: Meta | null; error: boolean }> {
   try {
-    const result = await exifr.parse(blob as File, { exif: true, gps: true, iptc: true, xmp: true, icc: true });
-    return { metadata: result && typeof result === "object" ? result as Meta : null, error: false };
+    // Verify privacy-sensitive metadata only. ICC profile fields describe color
+    // rendering and are not camera, location, date, or user-identifying metadata.
+    const result = await exifr.parse(blob as File, { exif: true, gps: true, iptc: true, xmp: true, icc: false });
+    if (!result || typeof result !== "object") return { metadata: null, error: false };
+    const nonPrivacyKeys = new Set([
+      "ProfileCMMType", "ProfileVersion", "ProfileClass", "ColorSpaceData",
+      "ProfileConnectionSpace", "ProfileDateTime", "ProfileFileSignature",
+      "PrimaryPlatform", "RenderingIntent", "ProfileCreator", "ProfileID",
+      "ProfileDescription", "ProfileCopyright", "MediaWhitePoint",
+      "RedMatrixColumn", "GreenMatrixColumn", "BlueMatrixColumn",
+      "RedTRC", "GreenTRC", "BlueTRC", "ChromaticAdaptation", "Luminance"
+    ]);
+    const privacyFields = Object.fromEntries(
+      Object.entries(result as Record<string, unknown>).filter(([key]) => !nonPrivacyKeys.has(key))
+    );
+    return { metadata: Object.keys(privacyFields).length ? privacyFields as Meta : null, error: false };
   } catch { return { metadata: null, error: true }; }
 }
 async function cleanImage(file: File, onStage?: (stage: string) => void): Promise<Blob> {
