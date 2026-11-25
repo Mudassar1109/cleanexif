@@ -297,7 +297,7 @@ function App() {
           setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "ready", cleanError: message } : entry));
         } finally {
           processed++;
-          setBatchProgress({ done: processed, total: items.length });
+          setBatchProgress({ done: processed, total: targetItems.length });
         }
       }
       if (success) {
