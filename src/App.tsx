@@ -219,31 +219,51 @@ function App() {
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
     const zip = new JSZip();
     let success = 0;
-    for (const item of items) {
-      if (item.cleaned) { zip.file("clean-" + item.file.name, item.cleaned); success++; continue; }
-      try {
-        setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "cleaning" } : entry));
-        const blob = await cleanImage(item.file, setCleaningStage);
-        setCleaningStage("Verifying " + item.file.name);
-        const verification = await verifyMetadata(blob);
-        const url = URL.createObjectURL(blob);
-        zip.file("clean-" + item.file.name, blob);
-        setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", cleanCheck: verification.metadata, cleanCheckError: verification.error } : entry));
-        success++;
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Could not clean image";
-        setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "ready", cleanError: message } : entry));
+    let failed = 0;
+    try {
+      for (const item of items) {
+        if (item.cleaned) {
+          zip.file("clean-" + item.file.name, item.cleaned);
+          success++;
+          continue;
+        }
+        try {
+          setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "cleaning" } : entry));
+          const blob = await cleanImage(item.file, setCleaningStage);
+          setCleaningStage("Verifying " + item.file.name);
+          const verification = await verifyMetadata(blob);
+          const url = URL.createObjectURL(blob);
+          zip.file("clean-" + item.file.name, blob);
+          setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", cleanCheck: verification.metadata, cleanCheckError: verification.error } : entry));
+          success++;
+        } catch (error) {
+          failed++;
+          const message = error instanceof Error ? error.message : "Could not clean image";
+          setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "ready", cleanError: message } : entry));
+        }
       }
+      if (success) {
+        setCleaningStage("Building ZIP archive");
+        const archive = await zip.generateAsync({ type: "blob" });
+        const url = URL.createObjectURL(archive);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = "cleanexif-images.zip";
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+        setNotice(success + " cleaned image" + (success === 1 ? "" : "s") + " added to the ZIP download" + (failed ? "; " + failed + " failed." : "."));
+      } else {
+        setNotice("No images could be cleaned. Please try another supported image.");
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not create the ZIP archive.";
+      setNotice("Batch download failed: " + message);
+    } finally {
+      setBusy(false);
+      setCleaningStage("");
     }
-    if (success) {
-      setCleaningStage("Building ZIP archive");
-      const archive = await zip.generateAsync({ type: "blob" });
-      const url = URL.createObjectURL(archive);
-      const anchor = document.createElement("a"); anchor.href = url; anchor.download = "cleanexif-images.zip";
-      document.body.appendChild(anchor); anchor.click(); anchor.remove(); window.setTimeout(() => URL.revokeObjectURL(url), 1500);
-      setNotice(success + " cleaned image" + (success === 1 ? "" : "s") + " downloaded as a ZIP file.");
-    } else setNotice("No images could be cleaned. Please try another supported image.");
-    setBusy(false); setCleaningStage("");
   };
   const faqs = [
     ["What is EXIF data?", "EXIF is information stored inside many image files. It can include camera details, capture date, lens settings and, when enabled, GPS coordinates."],
@@ -297,6 +317,7 @@ function App() {
         <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {MAX_FILES} images selected · Files stay in this browser tab</p></div>
           <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()}><FilePlus2 size={16} /> Add images</button><button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll}><Trash2 size={17} /></button></div></div>
         {notice && <div className="notice"><CheckCircle2 size={16} />{notice}</div>}
+        {busy && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing batch"}</b><span>Working</span></div><div className="processing-track"><span /></div><p>Images are being cleaned and verified locally. The ZIP archive will download when ready.</p></div>}
         <div className="workspace-grid"><div className="image-list"><div className="panel-label">SELECTED IMAGES <span>{items.length}</span></div>
           {items.map(item => <button key={item.id} className={"image-list-item" + (active?.id === item.id ? " selected" : "")} onClick={() => setActiveId(item.id)}>
             <img src={item.preview} alt="" /><span className="image-list-copy"><b>{item.file.name}</b><small>{formatBytes(item.file.size)} · {item.width} × {item.height}</small></span>
