@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#102a56" />
+    <meta name="description" content="Remove EXIF data, GPS location and hidden photo metadata online for free. Clean images privately in your browser without uploading files." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://cleanexif.online/" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="CleanExif — Your Photos. Your Privacy." />
+    <meta property="og:description" content="Inspect and remove hidden photo metadata locally in your browser. Your images stay on your device." />
+    <meta property="og:url" content="https://cleanexif.online/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>CleanExif — Remove EXIF Data & Photo Metadata Online</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "CleanExif",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Any",
+        "url": "https://cleanexif.online/",
+        "description": "A privacy-first browser tool to inspect and remove supported image metadata without uploading image files.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "featureList": ["Inspect image metadata", "Remove supported metadata", "Local browser processing", "Batch image cleaning"]
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {"@type":"Question","name":"Does CleanExif upload my photos?","acceptedAnswer":{"@type":"Answer","text":"No. Image files are processed locally in your browser and are not sent to CleanExif image-processing servers."}},
+          {"@type":"Question","name":"Can I remove GPS location from an image?","acceptedAnswer":{"@type":"Answer","text":"CleanExif re-encodes supported images in your browser, which removes embedded metadata such as supported GPS and camera fields."}},
+          {"@type":"Question","name":"Which image formats are supported?","acceptedAnswer":{"@type":"Answer","text":"CleanExif currently supports JPEG, PNG and WebP images."}},
+          {"@type":"Question","name":"Does removing metadata affect image quality?","acceptedAnswer":{"@type":"Answer","text":"PNG output is re-encoded losslessly. JPEG and WebP are re-encoded with a high quality setting, so a small quality or file-size difference may occur."}}
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
