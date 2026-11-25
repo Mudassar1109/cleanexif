@@ -46,9 +46,11 @@ async function readMetadata(blob: Blob): Promise<Meta | null> {
     return result && typeof result === "object" ? result as Meta : null;
   } catch { return null; }
 }
-async function cleanImage(file: File): Promise<Blob> {
+async function cleanImage(file: File, onStage?: (stage: string) => void): Promise<Blob> {
+  onStage?.("Decoding image");
   const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
   try {
+    onStage?.("Preparing clean image");
     const canvas = document.createElement("canvas");
     canvas.width = bitmap.width;
     canvas.height = bitmap.height;
@@ -59,6 +61,7 @@ async function cleanImage(file: File): Promise<Blob> {
       context.fillRect(0, 0, canvas.width, canvas.height);
     }
     context.drawImage(bitmap, 0, 0);
+    onStage?.("Re-encoding image");
     const output = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Image export failed. Please try another image.")), file.type, 0.94);
     });
@@ -122,6 +125,7 @@ function App() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [cleaningStage, setCleaningStage] = useState("");
   const [notice, setNotice] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -178,16 +182,22 @@ function App() {
     setItems([]); setActiveId(null); setNotice("");
   };
   const cleanOne = async (item: ImageRecord) => {
+    setCleaningStage("Starting local processing");
     setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "cleaning", cleanError: undefined } : entry));
     try {
-      const blob = await cleanImage(item.file);
+      // Let React paint the processing state before CPU work begins.
+      await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+      const blob = await cleanImage(item.file, setCleaningStage);
+      setCleaningStage("Verifying exported image");
       const after = await readMetadata(blob);
       const url = URL.createObjectURL(blob);
       setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", metadata: item.metadata, cleanError: undefined, cleanCheck: after } : entry));
+      setCleaningStage("Complete");
       setNotice(item.file.name + " is ready to download.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Could not clean this image.";
       setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "ready", cleanError: message } : entry));
+      setCleaningStage("");
     }
   };
   const downloadItem = (item: ImageRecord) => {
@@ -290,7 +300,8 @@ function App() {
             {metadataRows.length ? <div className="metadata-table">{metadataRows.map(row => <div className="metadata-row" key={row.key}><span>{row.label}</span><b>{row.value}</b></div>)}</div> : <div className="empty-metadata"><Fingerprint size={25} /><b>No readable EXIF fields found</b><span>This image may already have little or no EXIF metadata.</span></div>}
             {active.cleanError && <p className="error-text">{active.cleanError}</p>}
             {active.status === "clean" ? <div className="clean-success"><CheckCircle2 size={17} /><span>Clean copy is ready</span><button className="button button-primary" onClick={() => downloadItem(active)}><Download size={15} /> Download</button></div> :
-              <button className="button button-primary clean-button" onClick={() => void cleanOne(active)} disabled={active.status === "cleaning" || busy}>{active.status === "cleaning" ? <><RefreshCw className="spin" size={16} /> Cleaning locally…</> : <><ShieldCheck size={17} /> Remove metadata</>}</button>}
+              <button className="button button-primary clean-button" onClick={() => void cleanOne(active)} disabled={active.status === "cleaning" || busy}>{active.status === "cleaning" ? <><RefreshCw className="spin" size={16} /> Processing image…</> : <><ShieldCheck size={17} /> Remove metadata</>}</button>
+            {active.status === "cleaning" && <div className="processing-panel" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing locally"}</b><span>In progress</span></div><div className="processing-track"><span /></div><p>Decoding pixels, creating a fresh image and checking its metadata — all in your browser.</p></div>}}
             {active.status === "clean" && <p className="verification-note"><ShieldCheck size={14} /> {active.cleanCheck && Object.keys(active.cleanCheck).length ? "Some readable metadata fields remain. Review this file before sharing." : "No readable EXIF fields were detected after export. This check is not a forensic guarantee."}</p>}<p className="small-disclaimer">A fresh image copy is created. JPEG and WebP are re-encoded at high quality; a small quality or file-size difference may occur.</p>
           </div></div>}
         </div>
