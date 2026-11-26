@@ -439,7 +439,7 @@ function DemoPage() {
 type RepeatWatermarkSettings = { text: string; opacity: number; size: number; spacing: number; rotation: number; color: "white" | "charcoal" };
 type WatermarkFile = { id: string; file: File; url: string; width: number; height: number; output?: Blob; outputUrl?: string };
 function WatermarkPage() {
-  const { limits, email, isPaid } = usePlanAccess();
+  const { limits, email, isPaid, dailyUsage, consumeImage, isLocked, resetCountdown, loading: planLoading } = usePlanAccess();
   const [files, setFiles] = useState<WatermarkFile[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [settings, setSettings] = useState<RepeatWatermarkSettings>({ text: "@Mudassar", opacity: 28, size: 34, spacing: 190, rotation: -28, color: "white" });
@@ -541,36 +541,62 @@ function WatermarkPage() {
     };
   }, [active?.id, active?.file, settings.text, settings.opacity, settings.size, settings.spacing, settings.rotation, settings.color]);
   const exportOne = async (item: WatermarkFile) => {
+    if (!email) { setNotice("Please sign in from Account before watermarking. Your selected images will remain in this tab."); return; }
+    if (planLoading) { setNotice("Checking your account plan. Please try again in a moment."); return; }
+    if (isLocked) { setNotice("Daily limit reached. Your allowance resets in " + resetCountdown + "."); return; }
     if (!settings.text.trim()) { setNotice("Enter watermark text first."); return; }
     setBusy(true);
     try {
       const blob = await renderWatermark(item);
+      await consumeImage();
       const url = URL.createObjectURL(blob);
       setFiles(previous => previous.map(file => file.id === item.id ? { ...file, output: blob, outputUrl: url } : file));
       const anchor = document.createElement("a"); anchor.href = url; anchor.download = "watermarked-" + item.file.name;
       document.body.appendChild(anchor); anchor.click(); anchor.remove();
-      setNotice("Download started: " + item.file.name + ". Check your browser downloads.");
+      setNotice("Watermark applied and download started: " + item.file.name + ".");
     } catch (error) { setNotice(error instanceof Error ? error.message : "Could not export this image."); }
     finally { setBusy(false); }
   };
   const exportAll = async () => {
     if (!files.length || busy) return;
+    if (!email) { setNotice("Please sign in from Account before watermarking. Your selected images will remain in this tab."); return; }
+    if (planLoading) { setNotice("Checking your account plan. Please try again in a moment."); return; }
+    if (isLocked) { setNotice("Daily limit reached. Your allowance resets in " + resetCountdown + "."); return; }
     if (!settings.text.trim()) { setNotice("Enter watermark text first."); return; }
     setBusy(true);
     setExportProgress({ done: 0, total: files.length, stage: "Applying watermark" });
     try {
       const zip = new JSZip();
+      let success = 0;
+      let quotaReached = false;
       for (const item of files) {
-        zip.file("watermarked-" + item.file.name, await renderWatermark(item));
-        setExportProgress(previous => ({ ...previous, done: previous.done + 1 }));
+        try {
+          const output = await renderWatermark(item);
+          await consumeImage();
+          zip.file("watermarked-" + item.file.name, output);
+          success++;
+        } catch (error) {
+          if (/daily limit reached/i.test(error instanceof Error ? error.message : "")) {
+            quotaReached = true;
+            setNotice("Daily limit reached. " + success + " image(s) are ready; remaining images are locked until " + resetCountdown + ".");
+            break;
+          }
+          throw error;
+        } finally {
+          setExportProgress(previous => ({ ...previous, done: Math.min(files.length, previous.done + 1) }));
+        }
+      }
+      if (!success) {
+        if (quotaReached) return;
+        throw new Error("No images could be exported.");
       }
       setExportProgress(previous => ({ ...previous, stage: "Building ZIP archive" }));
-      const blob = await zip.generateAsync({ type: "blob" }, metadata => setExportProgress({ done: files.length, total: files.length, stage: "Building ZIP archive · " + Math.round(metadata.percent) + "%" }));
+      const blob = await zip.generateAsync({ type: "blob" }, metadata => setExportProgress({ done: success, total: files.length, stage: "Building ZIP archive · " + Math.round(metadata.percent) + "%" }));
       const url = URL.createObjectURL(blob); const anchor = document.createElement("a");
       anchor.href = url; anchor.download = "cleanexif-watermarked-images.zip";
       document.body.appendChild(anchor); anchor.click(); anchor.remove();
       window.setTimeout(() => URL.revokeObjectURL(url),30000);
-      setNotice("ZIP download started. " + files.length + " watermarked images are included.");
+      setNotice("ZIP download started. " + success + " watermarked image(s) included." + (quotaReached ? " Daily limit reached; remaining images are locked until reset." : ""));
     } catch (error) { setNotice(error instanceof Error ? error.message : "Could not export images."); }
     finally { setBusy(false); setExportProgress({ done: 0, total: 0, stage: "" }); }
   };
@@ -578,7 +604,7 @@ function WatermarkPage() {
     <header className="site-header"><div className="container nav-inner"><Logo /><nav className="wm-nav"><a href="/">Image metadata inspector</a><a href="/plans">Plans</a><a className="button button-primary" href="/">Open CleanExif <ArrowRight size={15}/></a></nav></div></header>
     <main className="container wm-main">
       <div className="wm-heading"><span className="eyebrow">FREE ONLINE WATERMARK MAKER</span><h1>Protect your photos.<br/><span>Your name, across every image.</span></h1><p>Add a repeating, diagonal copyright watermark across the full image. Preview the pattern and export privately in your browser.</p></div>
-      <div className="wm-plan-banner"><div><b>{limits.name} plan</b><span>{files.length}/{limits.maxImages} images · {limits.totalMB} MB batch · {limits.maxFileMB} MB per file{email?" · "+email:""}</span></div><a className="button button-secondary" href="/plans">{files.length>=limits.maxImages || files.reduce((sum,file)=>sum+file.file.size,0)>=limits.totalMB*1024*1024 ? "Batch limit reached · Upgrade" : isPaid?"View plan details":"View upgrade plans"} <ArrowRight size={14}/></a></div>
+      <div className="wm-plan-banner"><div><b>{limits.name} plan · {dailyUsage ? dailyUsage.remaining + " / " + dailyUsage.limit + " daily images left" : email ? "Checking daily allowance…" : "Sign in to use daily credits"}</b><span>{files.length}/{limits.maxImages} images selected for this batch · {limits.totalMB} MB batch · {limits.maxFileMB} MB per file{email?" · "+email:""}</span><small>{dailyUsage ? (isLocked ? "Daily limit reached · Unlocks in " + resetCountdown : dailyUsage.used + " used today · Resets in " + resetCountdown) : "Daily credits are shared by metadata cleaning and watermarking."}</small></div><a className="button button-secondary" href="/plans">{isLocked ? "Daily limit reached · Upgrade" : files.length>=limits.maxImages || files.reduce((sum,file)=>sum+file.file.size,0)>=limits.totalMB*1024*1024 ? "Batch size reached" : isPaid?"View plan details":"View upgrade plans"} <ArrowRight size={14}/></a></div>
       <div className={"wm-editor" + (dragging ? " wm-drag-active" : "")}
         onDragEnter={event => { event.preventDefault(); setDragging(true); }}
         onDragOver={event => { event.preventDefault(); setDragging(true); }}
@@ -603,7 +629,7 @@ function WatermarkPage() {
           <div className="wm-canvas-preview">{active ? <img src={previewUrl || active.url} alt="Live watermark preview"/> : <div className="wm-empty"><ImageIcon size={42}/><b>Your image preview will appear here</b><span>Choose one or more photos to start</span><button className="button button-primary" onClick={()=>inputRef.current?.click()}>Choose images</button></div>}</div>
           {files.length>0 && <div className="wm-file-list">{files.map(file=><button key={file.id} className={active?.id===file.id?"selected":""} onClick={()=>setActiveId(file.id)}><img src={file.url} alt=""/><span>{file.file.name}</span><small>{file.width} × {file.height}</small></button>)}</div>}
           {busy && <div className="wm-progress wm-export-progress" role="status" aria-live="polite"><span>{exportProgress.stage || "Preparing export"} · {exportProgress.done}/{exportProgress.total}</span><div><i style={{width:(exportProgress.total ? exportProgress.done/exportProgress.total*100 : 0)+"%"}}/></div></div>}
-          {active && <div className="wm-export-actions"><span>{files.length} image{files.length===1?"":"s"} selected</span><button className="button button-outline" onClick={()=>void exportOne(active)} disabled={busy}><Download size={16}/> Download current</button><button className="button button-primary" onClick={()=>void exportAll()} disabled={busy}>{busy?"Applying watermark…": "Watermark all & download ZIP"} <ArrowRight size={15}/></button></div>}
+          {active && <div className="wm-export-actions"><span>{files.length} image{files.length===1?"":"s"} selected</span><button className="button button-outline" onClick={()=>void exportOne(active)} disabled={busy || planLoading || isLocked || !email}><Download size={16}/> Download current</button><button className="button button-primary" onClick={()=>void exportAll()} disabled={busy || planLoading || isLocked || !email}>{busy?"Applying watermark…": "Watermark all & download ZIP"} <ArrowRight size={15}/></button></div>}
         </section>
       </div>
       {notice && <p className="wm-notice" role="status">{notice}</p>}
