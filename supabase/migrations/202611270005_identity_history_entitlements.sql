@@ -205,6 +205,7 @@ $$;
 revoke all on function public.cleanexif_admin_save_customer_access(text,text,uuid,text,timestamptz,timestamptz,text,uuid) from public,anon;
 grant execute on function public.cleanexif_admin_save_customer_access(text,text,uuid,text,timestamptz,timestamptz,text,uuid) to authenticated;
 
+drop function if exists public.cleanexif_admin_list_customer_access();
 create or replace function public.cleanexif_admin_list_customer_access()
 returns table(
   id uuid,user_id uuid,email text,whatsapp text,plan_id uuid,status text,
