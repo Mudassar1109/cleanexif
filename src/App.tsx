@@ -14,7 +14,7 @@ import {
 type Meta = Record<string, unknown>;
 type ImageRecord = {
   id: string; file: File; preview: string; width: number; height: number;
-  metadata: Meta | null; cleaned?: Blob; cleanedUrl?: string; cleanError?: string; cleanCheck?: Meta | null; cleanCheckError?: boolean; downloaded?: boolean;
+  metadata: Meta | null; cleaned?: Blob; cleanedUrl?: string; cleanError?: string; cleanCheck?: Meta | null; cleanCheckError?: boolean; downloaded?: boolean; downloaded?: boolean;
   status: "ready" | "cleaning" | "clean";
 };
 
