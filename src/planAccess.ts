@@ -14,7 +14,7 @@ export function usePlanAccess(){
    const row=!error&&Array.isArray(data)?data[0]:null;
    setLimits(row?{code:row.plan_code,name:row.plan_name,maxImages:row.watermark_images_per_batch,totalMB:row.watermark_total_mb,maxFileMB:row.max_file_mb,expiresAt:row.expires_at}:FREE);setLoading(false);
   };
-  void load();const {data:{subscription}}=cleanexifSupabase.auth.onAuthStateChange(()=>{setLoading(true);void load();});
+  void load();const {data:{subscription}}=cleanexifSupabase.auth.onAuthStateChange(()=>{window.setTimeout(()=>{if(alive){setLoading(true);void load();}},0);});
   return()=>{alive=false;subscription.unsubscribe();};
  },[]);
  useEffect(()=>{if(!limits.expiresAt)return;const remaining=new Date(limits.expiresAt).getTime()-Date.now();if(remaining<=0){setLimits(FREE);return;}const timer=window.setTimeout(()=>setLimits(FREE),remaining);return()=>window.clearTimeout(timer);},[limits.expiresAt]);

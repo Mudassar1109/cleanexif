@@ -581,7 +581,7 @@ function WatermarkPage() {
     <header className="site-header"><div className="container nav-inner"><Logo /><nav className="wm-nav"><a href="/">Image metadata inspector</a><a className="button button-primary" href="/">Open CleanExif <ArrowRight size={15}/></a></nav></div></header>
     <main className="container wm-main">
       <div className="wm-heading"><span className="eyebrow">FREE ONLINE WATERMARK MAKER</span><h1>Protect your photos.<br/><span>Your name, across every image.</span></h1><p>Add a repeating, diagonal copyright watermark across the full image. Preview the pattern and export privately in your browser.</p></div>
-      <div className="wm-plan-banner"><div><b>{limits.name} plan</b><span>{files.length}/{limits.maxImages} images · {limits.totalMB} MB batch · {limits.maxFileMB} MB per file{email?" · "+email:""}</span></div><a className="button button-secondary" href="/plans">{isPaid?"View plan details":"View upgrade plans"} <ArrowRight size={14}/></a></div>
+      <div className="wm-plan-banner"><div><b>{limits.name} plan</b><span>{files.length}/{limits.maxImages} images · {limits.totalMB} MB batch · {limits.maxFileMB} MB per file{email?" · "+email:""}</span></div><a className="button button-secondary" href="/plans">{files.length>=limits.maxImages || files.reduce((sum,file)=>sum+file.file.size,0)>=limits.totalMB*1024*1024 ? "Batch limit reached · Upgrade" : isPaid?"View plan details":"View upgrade plans"} <ArrowRight size={14}/></a></div>
       <div className={"wm-editor" + (dragging ? " wm-drag-active" : "")}
         onDragEnter={event => { event.preventDefault(); setDragging(true); }}
         onDragOver={event => { event.preventDefault(); setDragging(true); }}
