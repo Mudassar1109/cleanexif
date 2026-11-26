@@ -485,7 +485,8 @@ function App() {
   const [batchProgress, setBatchProgress] = useState({ done: 0, total: 0 });
   const [notice, setNotice] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(0);\n  const [watermark, setWatermark] = useState<WatermarkSettings>({ enabled: false, text: "", position: "bottom-right", opacity: 35, color: "white" });
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [watermark, setWatermark] = useState<WatermarkSettings>({ enabled: false, text: "", position: "bottom-right", opacity: 35, color: "white" });
   const active = items.find(item => item.id === activeId) ?? items[0] ?? null;
   const metadataCategories = useMemo(() => getMetaCategories(active?.metadata ?? null), [active]);
   const metadataRows = useMemo(() => metadataCategories.flatMap(group => group.rows), [metadataCategories]);
@@ -640,7 +641,8 @@ function App() {
     ["Can I remove GPS location from an image?", "Re-encoding a supported image removes embedded metadata commonly used for GPS and camera details. Always inspect the exported file if location privacy is critical."],
     ["Which image formats are supported?", "CleanExif supports JPEG, PNG and WebP images up to 25 MB each, with a maximum of 20 images and 100 MB total per batch. HEIC, animated GIF and SVG are not supported."],
     ["Does removing EXIF data affect image quality?", "PNG is re-encoded losslessly. JPEG and WebP are exported at a high quality setting, but re-encoding can cause a small quality or file-size difference."],
-    ["Can I clean multiple images at once?", "Yes. Add up to 20 supported images and use Clean all to download the cleaned files together in a ZIP archive."],\n    ["Can I add a copyright watermark to multiple photos?", "Yes. Open Add Copyright Watermark (Optional), enter your text and choose its position, opacity and color. CleanExif draws the watermark into each exported image while re-encoding it to remove supported metadata. You can download one image or the whole batch as a ZIP. Processing stays in your browser."]
+    ["Can I clean multiple images at once?", "Yes. Add up to 20 supported images and use Clean all to download the cleaned files together in a ZIP archive."],
+    ["Can I add a copyright watermark to multiple photos?", "Yes. Open Add Copyright Watermark (Optional), enter your text and choose its position, opacity and color. CleanExif draws the watermark into each exported image while re-encoding it to remove supported metadata. You can download one image or the whole batch as a ZIP. Processing stays in your browser."]
   ];
   return <div className="app-shell">
     <header className="site-header"><div className="container nav-inner"><Logo />
