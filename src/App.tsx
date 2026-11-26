@@ -454,6 +454,18 @@ function WatermarkPage() {
   const active = files.find(file => file.id === activeId) ?? files[0] ?? null;
   const filesRef = useRef<WatermarkFile[]>([]);
   filesRef.current = files;
+  const clearAllFiles = () => {
+    if (busy || addingFiles) return;
+    files.forEach(file => {
+      URL.revokeObjectURL(file.url);
+      if (file.outputUrl) URL.revokeObjectURL(file.outputUrl);
+    });
+    setFiles([]);
+    setActiveId(null);
+    setPreviewUrl(null);
+    setNotice("All selected images have been removed.");
+    if (inputRef.current) inputRef.current.value = "";
+  };
   useEffect(() => () => filesRef.current.forEach(file => { URL.revokeObjectURL(file.url); if (file.outputUrl) URL.revokeObjectURL(file.outputUrl); }), []);
   const addFiles = async (list: FileList | File[]) => {
     const incoming = Array.from(list);
@@ -604,6 +616,18 @@ function WatermarkPage() {
     <header className="site-header"><div className="container nav-inner"><Logo /><nav className="wm-nav"><a href="/">Image metadata inspector</a><a href="/plans">Plans</a><a className="button button-primary" href="/">Open CleanExif <ArrowRight size={15}/></a></nav></div></header>
     <main className="container wm-main">
       <div className="wm-heading"><span className="eyebrow">FREE ONLINE WATERMARK MAKER</span><h1>Protect your photos.<br/><span>Your name, across every image.</span></h1><p>Add a repeating, diagonal copyright watermark across the full image. Preview the pattern and export privately in your browser.</p></div>
+      <div className="wm-toolbar" aria-label="Watermark image controls">
+        <button className="button button-outline wm-toolbar-add" onClick={()=>inputRef.current?.click()} disabled={busy || addingFiles}>
+          <FilePlus2 size={17}/> {addingFiles ? "Adding images…" : "Add images"}
+        </button>
+        <div className={"wm-toolbar-quota" + (isLocked ? " is-locked" : "")} role="status" aria-live="polite">
+          <b>{planLoading ? "Checking daily allowance…" : !email ? "Sign in required" : isLocked ? "Daily limit reached" : dailyUsage ? dailyUsage.remaining + " / " + dailyUsage.limit + " daily images left" : "Daily allowance unavailable"}</b>
+          <span>{dailyUsage ? "Resets in " + resetCountdown : "Daily credits are shared across both tools"}</span>
+        </div>
+        <button className="button button-outline wm-toolbar-clear" onClick={clearAllFiles} disabled={!files.length || busy || addingFiles} aria-label="Remove all selected images" title="Remove all selected images">
+          <Trash2 size={18}/>
+        </button>
+      </div>
       <div className="wm-plan-banner"><div><b>{limits.name} plan · {dailyUsage ? dailyUsage.remaining + " / " + dailyUsage.limit + " daily images left" : email ? "Checking daily allowance…" : "Sign in to use daily credits"}</b><span>{files.length}/{limits.maxImages} images selected for this batch · {limits.totalMB} MB batch · {limits.maxFileMB} MB per file{email?" · "+email:""}</span><small>{dailyUsage ? (isLocked ? "Daily limit reached · Unlocks in " + resetCountdown : dailyUsage.used + " used today · Resets in " + resetCountdown) : "Daily credits are shared by metadata cleaning and watermarking."}</small></div><a className="button button-secondary" href="/plans">{isLocked ? "Daily limit reached · Upgrade" : files.length>=limits.maxImages || files.reduce((sum,file)=>sum+file.file.size,0)>=limits.totalMB*1024*1024 ? "Batch size reached" : isPaid?"View plan details":"View upgrade plans"} <ArrowRight size={14}/></a></div>
       <div className={"wm-editor" + (dragging ? " wm-drag-active" : "")}
         onDragEnter={event => { event.preventDefault(); setDragging(true); }}
