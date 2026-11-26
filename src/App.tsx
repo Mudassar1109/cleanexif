@@ -18,9 +18,6 @@ type ImageRecord = {
   status: "ready" | "cleaning" | "clean";
 };
 
-const MAX_FILE_SIZE = 25 * 1024 * 1024;
-const MAX_TOTAL_SIZE = 100 * 1024 * 1024;
-const MAX_FILES = 20;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 const formatBytes = (bytes: number) => bytes < 1024 * 1024
   ? (bytes / 1024).toFixed(0) + " KB" : (bytes / (1024 * 1024)).toFixed(2) + " MB";
@@ -616,6 +613,7 @@ function WatermarkPage() {
 }
 
 function App() {
+  const { limits, email, loading: planLoading } = usePlanAccess();
   const legalPath = window.location.pathname.replace(/^\/|\/$/g, "");
   if (legalPath === "admin") return <AdminPage />;
   if (legalPath === "plans") return <PlansPage />;
@@ -641,7 +639,7 @@ function App() {
   const metadataCategories = useMemo(() => getMetaCategories(active?.metadata ?? null), [active]);
   const metadataRows = useMemo(() => metadataCategories.flatMap(group => group.rows), [metadataCategories]);
   const failedItems = useMemo(() => items.filter(item => !!item.cleanError && !item.cleaned), [items]);
-  const noticeIsError = /unsupported format|larger than 25 MB|Maximum 20 images|total batch limit|could not read image|Could not clean|Batch download failed|No images could be cleaned/i.test(notice);
+  const noticeIsError = /unsupported format|larger than|plan allows|batch limit|could not read image|Could not clean|Batch download failed|No images could be cleaned|daily limit/i.test(notice);
   useEffect(() => {
     if (!notice || busy) return;
     const timeout = window.setTimeout(() => setNotice(""), 6000);
@@ -657,9 +655,9 @@ function App() {
     let totalSize = items.reduce((sum, item) => sum + item.file.size, 0);
     for (const file of incoming) {
       if (!ACCEPTED.includes(file.type)) { errors.push(file.name + ": unsupported format"); continue; }
-      if (file.size > MAX_FILE_SIZE) { errors.push(file.name + ": larger than 25 MB"); continue; }
-      if (items.length + valid.length >= MAX_FILES) { errors.push("Maximum 20 images per batch"); break; }
-      if (totalSize + file.size > MAX_TOTAL_SIZE) { errors.push(file.name + ": total batch limit is 100 MB"); continue; }
+      if (file.size > limits.maxFileMB * 1024 * 1024) { errors.push(file.name + ": larger than your " + limits.maxFileMB + " MB per-file limit"); continue; }
+      if (items.length + valid.length >= limits.maxImages) { errors.push("Your " + limits.name + " plan allows " + limits.maxImages + " images per batch. Upgrade your plan to add more."); break; }
+      if (totalSize + file.size > limits.totalMB * 1024 * 1024) { errors.push(file.name + ": your " + limits.name + " plan allows " + limits.totalMB + " MB total per batch"); continue; }
       valid.push(file);
       totalSize += file.size;
     }
@@ -684,7 +682,7 @@ function App() {
     setNotice(errors.length ? (usable.length ? usable.length + " image(s) added. " : "") + errors.slice(0, 3).join(" · ") + (errors.length > 3 ? " · +" + (errors.length - 3) + " more issue(s)" : "") : usable.length ? usable.length + " image" + (usable.length === 1 ? "" : "s") + " ready to inspect." : "No supported images were added.");
     setAddingFiles(false);
     setAddProgress({ done: 0, total: 0 });
-  }, [items, activeId]);
+  }, [items, activeId, limits]);
   const handleInput = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) void addFiles(event.target.files);
     event.target.value = "";
@@ -797,9 +795,9 @@ function App() {
     ["What is EXIF data?", "EXIF is information stored inside many image files. It can include camera details, capture date, lens settings and, when enabled, GPS coordinates."],
     ["Does CleanExif upload my photos?", "No. Image processing happens locally in your browser. Your selected image files are not sent to CleanExif image-processing servers."],
     ["Can I remove GPS location from an image?", "Re-encoding a supported image removes embedded metadata commonly used for GPS and camera details. Always inspect the exported file if location privacy is critical."],
-    ["Which image formats are supported?", "CleanExif supports JPEG, PNG and WebP images up to 25 MB each, with a maximum of 20 images and 100 MB total per batch. HEIC, animated GIF and SVG are not supported."],
+    ["Which image formats are supported?", "CleanExif supports JPEG, PNG and WebP. Your " + limits.name + " plan allows " + limits.maxFileMB + " MB per image, " + limits.maxImages + " images and " + limits.totalMB + " MB total per batch. HEIC, animated GIF and SVG are not supported."],
     ["Does removing EXIF data affect image quality?", "PNG is re-encoded losslessly. JPEG and WebP are exported at a high quality setting, but re-encoding can cause a small quality or file-size difference."],
-    ["Can I clean multiple images at once?", "Yes. Add up to 20 supported images and use Clean all to download the cleaned files together in a ZIP archive."],
+    ["Can I clean multiple images at once?", "Yes. Add up to " + limits.maxImages + " supported images under your " + limits.name + " plan and use Clean all to download the cleaned files together in a ZIP archive."],
   ];
   return <div className="app-shell">
     <header className="site-header"><div className="container nav-inner"><Logo />
@@ -827,7 +825,7 @@ function App() {
                 <div className="upload-icon"><UploadCloud size={47} strokeWidth={1.7} /></div>
                 <h2>{dragging ? "Drop to add your images" : "Drop your images here"}</h2><p>{dragging ? "Release to add supported photos" : "or click to choose files"}</p>
                 <div className="upload-actions"><button className="button button-primary choose-button" onClick={() => inputRef.current?.click()}><FilePlus2 size={18} /> Choose images</button><a className="button button-demo" href="/demo"><Zap size={16} /> Try interactive demo</a></div>
-                {addingFiles ? <div className="upload-progress" role="status" aria-live="polite"><span>Reading images… {addProgress.done} / {addProgress.total}</span><div><i style={{width: (addProgress.total ? addProgress.done / addProgress.total * 100 : 0) + "%"}}/></div></div> : <span className="format-note">JPG, JPEG, PNG or WebP · Up to 25 MB each · 20 images / 100 MB per batch</span>}
+                {addingFiles ? <div className="upload-progress" role="status" aria-live="polite"><span>Reading images… {addProgress.done} / {addProgress.total}</span><div><i style={{width: (addProgress.total ? addProgress.done / addProgress.total * 100 : 0) + "%"}}/></div></div> : <span className="format-note">JPG, JPEG, PNG or WebP · Up to {limits.maxFileMB} MB each · {limits.maxImages} images / {limits.totalMB} MB per batch · {limits.name} plan</span>}
                 <input ref={inputRef} type="file" multiple hidden disabled={busy || addingFiles} onChange={handleInput} />
               </div>
               <div className="upload-card-bottom"><span><LockKeyhole size={14} /> Processed locally</span><span><CheckCircle2 size={14} /> No account needed</span></div>
@@ -844,7 +842,7 @@ function App() {
       </section>
 
       {items.length > 0 && <section className="tool-workspace" aria-live="polite"><div className="container">
-        <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {MAX_FILES} images selected · Files stay in this browser tab</p></div>
+        <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {limits.maxImages} images selected · {limits.name} plan · Files stay in this browser tab</p></div>
           <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()} disabled={busy || addingFiles}><FilePlus2 size={16} /> Add images</button>{failedItems.length > 0 && <button className="button button-outline" onClick={() => void cleanAll(failedItems)} disabled={busy}><RefreshCw size={15} /> Retry failed ({failedItems.length})</button>}<button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || addingFiles || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll} disabled={busy}><Trash2 size={17} /></button></div></div>
         {addingFiles && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><UploadCloud size={15}/><b>Preparing selected images</b><span>{addProgress.done}/{addProgress.total}</span></div><div className="processing-track"><span style={{width:(addProgress.total ? addProgress.done/addProgress.total*100 : 0)+"%"}}/></div><p>Reading image dimensions and metadata locally in your browser.</p></div>}
         {busy && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing batch"}</b><span>Working</span></div><div className="processing-track"><span style={{ width: batchProgress.total ? ((batchProgress.done / batchProgress.total) * 100) + "%" : "0%" }} /></div><p>{batchProgress.done} of {batchProgress.total} images processed. Images are cleaned and verified locally; the ZIP archive downloads when ready.</p></div>}
