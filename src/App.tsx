@@ -648,7 +648,6 @@ function App() {
   const addFiles = useCallback(async (list: FileList | File[]) => {
     const incoming = Array.from(list);
     if (!incoming.length) return;
-    if (planLoading) { setNotice("Checking your account plan. Please try again in a moment."); return; }
     setAddingFiles(true);
     setAddProgress({ done: 0, total: incoming.length });
     const valid: File[] = [];
@@ -706,8 +705,6 @@ function App() {
     setItems([]); setActiveId(null); setNotice("");
   };
   const cleanOne = async (item: ImageRecord) => {
-    if (planLoading) { setNotice("Checking your account plan. Please try again in a moment."); return; }
-    if (!email) { setNotice("Please sign in to use daily image credits and track your allowance. Open Account to sign in."); return; }
     if (isLocked) { setNotice("Daily limit reached. Your allowance resets in " + resetCountdown + "."); return; }
     setBusy(true);
     setCleaningStage("Starting local processing");
@@ -744,8 +741,6 @@ function App() {
   };
   const cleanAll = async (targetItems: ImageRecord[] = items) => {
     if (!targetItems.length || busy) return;
-    if (planLoading) { setNotice("Checking your account plan. Please try again in a moment."); return; }
-    if (!email) { setNotice("Please sign in to use daily image credits and track your allowance. Open Account to sign in."); return; }
     if (isLocked) { setNotice("Daily limit reached. Your allowance resets in " + resetCountdown + "."); return; }
     setBusy(true); setCleaningStage("Preparing batch"); setNotice("Cleaning images locally in your browser…");
     setBatchProgress({ done: 0, total: targetItems.length });
