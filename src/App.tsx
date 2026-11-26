@@ -750,6 +750,7 @@ function App() {
     const usedZipNames = new Set<string>();
     let success = 0;
     let failed = 0;
+    let quotaReached = false;
     let processed = 0;
     try {
       for (const item of targetItems) {
@@ -772,7 +773,7 @@ function App() {
           failed++;
           const message = error instanceof Error ? error.message : "Could not clean image";
           setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "ready", cleanError: message } : entry));
-          if (/daily limit reached/i.test(message)) { setNotice(message); break; }
+          if (/daily limit reached/i.test(message)) { quotaReached = true; setNotice(message); break; }
         } finally {
           processed++;
           setBatchProgress({ done: processed, total: targetItems.length });
@@ -789,7 +790,7 @@ function App() {
         anchor.click();
         anchor.remove();
         window.setTimeout(() => URL.revokeObjectURL(url), 30000);
-        setNotice("ZIP download started. " + success + " cleaned image" + (success === 1 ? "" : "s") + " added to the ZIP download" + (failed ? "; " + failed + " failed." : ".") + (dailyUsage && dailyUsage.remaining <= success ? " Daily allowance reached; cleaning is locked until reset." : ""));
+        setNotice("ZIP download started. " + success + " cleaned image" + (success === 1 ? "" : "s") + " added to the ZIP download" + (failed ? "; " + failed + " failed." : ".") + (quotaReached ? " Daily allowance reached; cleaning is locked until reset." : ""));
       } else {
         setNotice("No images could be cleaned. Please try another supported image.");
       }
