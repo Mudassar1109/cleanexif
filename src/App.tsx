@@ -618,7 +618,8 @@ function WatermarkPage() {
 function App() {
   const legalPath = window.location.pathname.replace(/^\/|\/$/g, "");
   if (legalPath === "admin") return <AdminPage />;
-  if (legalPath === "plans") return <PlansPage />;\n  if (["account","login","signup"].includes(legalPath)) return <PlansPage accountOnly />;
+  if (legalPath === "plans") return <PlansPage />;
+  if (["account","login","signup"].includes(legalPath)) return <PlansPage accountOnly />;
   if (legalPath === "demo") return <DemoPage />;
   if (legalPath === "watermark") return <WatermarkPage />;
   if (legalPath === "blog") return <BlogPage />;
