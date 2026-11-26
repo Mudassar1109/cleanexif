@@ -35,6 +35,10 @@ export function usePlanAccess(tool: CleanExifTool = "metadata"){
  },[refresh]);
  const resetMs=dailyUsage?Math.max(0,new Date(dailyUsage.resetsAt).getTime()-now):0;
  const resetCountdown=Math.floor(resetMs/3600000)+"h "+Math.floor((resetMs%3600000)/60000)+"m "+Math.floor((resetMs%60000)/1000)+"s";
+ const expiryMs=limits.expiresAt?new Date(limits.expiresAt).getTime()-now:null;
+ const isPlanExpired=expiryMs!==null&&expiryMs<=0;
+ const expiryCountdown=expiryMs===null?null:isPlanExpired?"Expired":Math.floor(expiryMs/86400000)+"d "+Math.floor((expiryMs%86400000)/3600000)+"h "+Math.floor((expiryMs%3600000)/60000)+"m "+Math.floor((expiryMs%60000)/1000)+"s";
+ const effectiveLimits=isPlanExpired?FREE:limits;
  const isLocked=!!dailyUsage&&dailyUsage.remaining<=0;
  const consumeImage=async()=>{
   if(!cleanexifSupabase)throw new Error("Daily usage service is unavailable. Please try again later.");
@@ -47,5 +51,5 @@ export function usePlanAccess(tool: CleanExifTool = "metadata"){
   if(!row.allowed)throw new Error("Daily limit reached ("+row.daily_limit+" images). Your credits reset at "+new Date(row.resets_at).toLocaleTimeString()+".");
   return row;
  };
- return {limits,email,loading,isPaid:limits.code!=="free",dailyUsage,consumeImage,refresh,isLocked,resetCountdown};
+ return {limits:effectiveLimits,email,loading,isPaid:effectiveLimits.code!=="free",dailyUsage,consumeImage,refresh,isLocked,resetCountdown,isPlanExpired,expiryCountdown};
 }
