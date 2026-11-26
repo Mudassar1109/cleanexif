@@ -12,7 +12,8 @@ export function usePlanAccess(){
    if(!session){setLimits(FREE);setDailyUsage(null);setLoading(false);return;}
    const {data,error}=await cleanexifSupabase!.rpc("cleanexif_get_my_access");if(!alive)return;
    const row=!error&&Array.isArray(data)?data[0]:null;
-   setLimits(row?{code:row.plan_code,name:row.plan_name,maxImages:row.watermark_images_per_batch,totalMB:row.watermark_total_mb,maxFileMB:row.max_file_mb,dailyImages:row.daily_images_limit??10,expiresAt:row.expires_at}:FREE);\n   const usage=await cleanexifSupabase!.rpc("cleanexif_get_my_daily_usage");\n   if(alive&&!usage.error&&Array.isArray(usage.data)&&usage.data[0]){const u=usage.data[0];setDailyUsage({used:u.used_count,limit:u.daily_limit,remaining:u.remaining,resetsAt:u.resets_at});}\n   else if(alive)setDailyUsage(null);setLoading(false);
+   setLimits(row?{code:row.plan_code,name:row.plan_name,maxImages:row.watermark_images_per_batch,totalMB:row.watermark_total_mb,maxFileMB:row.max_file_mb,dailyImages:row.daily_images_limit??10,expiresAt:row.expires_at} : FREE);
+   const usage=await cleanexifSupabase!.rpc("cleanexif_get_my_daily_usage");\n   if(alive&&!usage.error&&Array.isArray(usage.data)&&usage.data[0]){const u=usage.data[0];setDailyUsage({used:u.used_count,limit:u.daily_limit,remaining:u.remaining,resetsAt:u.resets_at});}\n   else if(alive)setDailyUsage(null);setLoading(false);
   };
   void load();const {data:{subscription}}=cleanexifSupabase.auth.onAuthStateChange(()=>{window.setTimeout(()=>{if(alive){setLoading(true);void load();}},0);});
   return()=>{alive=false;subscription.unsubscribe();};
