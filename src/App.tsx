@@ -197,32 +197,187 @@ function Footer() {
 }
 
 const blogArticles = [
-{slug:"what-is-exif-data",title:"What Is EXIF Data? A Complete Beginner's Guide",description:"Learn what EXIF data is, what information photos can contain, how GPS location gets embedded, and how to inspect and remove image metadata.",intro:"A photo can contain more information than the pixels you see. Alongside the visible image, many files store details about the camera, capture settings, date and sometimes the location where the photo was taken. This information is commonly called image metadata. One widely used part of it is EXIF data.",sections:[
-["What does EXIF mean?",["EXIF stands for Exchangeable Image File Format. It is a standard for storing information inside image files, especially photographs captured by digital cameras and smartphones. EXIF data is separate from the visible image itself: it describes details about how the image was created.","Not every image contains the same fields. Available information depends on the device, camera app, settings, editing software and services that have processed the file."]],
-["What information can EXIF contain?",["Depending on the camera and settings, EXIF fields may include:"],["Camera manufacturer and model","Date and time the photo was captured","Lens, focal length and exposure settings","Image orientation and dimensions","GPS coordinates, if location tagging was enabled","Software or application used to edit or export the image"]],
-["Why can photo metadata matter for privacy?",["GPS coordinates can reveal where a photo was taken. A picture shared publicly might disclose a home, workplace or another frequently visited place if location information remains embedded in the original file.","Capture dates, device details and software fields can also reveal context about a photo. Metadata is not automatically dangerous, but it is worth checking before sharing images when privacy matters."]],
-["How can you check EXIF data?",["You can inspect metadata with a desktop photo application, a dedicated metadata viewer or a browser-based tool. CleanExif lets you select a supported JPEG, PNG or WebP image and view readable metadata in your browser. Image processing happens locally rather than uploading selected photos to CleanExif image-processing servers.","A metadata viewer can only show fields it understands. Different formats and applications store information differently, so no single viewer should be treated as a complete forensic inspection."]],
-["How do you remove EXIF data?",["One common approach is to export or re-encode a fresh image copy. CleanExif uses browser image decoding and canvas export for supported formats. This creates a new image rather than editing the original file, and commonly embedded EXIF, GPS and related metadata are not carried into the exported copy.","The export process can change file size and may slightly affect JPEG or WebP image quality. Keep your original file and inspect the downloaded copy before sharing it, especially when handling sensitive images."]],
-["Does every image have EXIF data?",["No. Screenshots, graphics, images downloaded from websites and files processed by social platforms may have little or no EXIF information. PNG and WebP can also contain metadata in ways that differ from JPEG. An image with no readable EXIF fields is not necessarily free of every possible type of embedded information."]],
-["Check your image before sharing",["The practical habit is simple: inspect images when location or device privacy matters, remove metadata when appropriate, and verify the exported copy. Try the free CleanExif metadata inspector from the homepage. CleanExif currently supports JPEG, PNG and WebP files, with a 25 MB per-file limit."]]
-]}
+  {
+    slug: "what-is-exif-data",
+    title: "What Is EXIF Data? A Complete Beginner's Guide",
+    description: "Learn what EXIF data is, which details a photo can store, how GPS tags work, and how to inspect or remove common image metadata.",
+    intro: "A digital photo can contain more than the image you see. Many image files also carry information about the camera, capture settings, date and sometimes the location. This information is called metadata; EXIF is one of its best-known forms.",
+    sections: [
+      ["What does EXIF mean?", ["EXIF stands for Exchangeable Image File Format. It is a specification for storing information in image files, especially photographs made by digital cameras and smartphones. EXIF information describes aspects of how a photograph was captured; it is not part of the visible scene itself.", "The fields present in a file depend on the camera, phone, app, settings and later editing or export steps. Two photos from the same phone may therefore contain different metadata."]],
+      ["What information can EXIF contain?", ["Depending on the device and settings, a photo may include:"], ["Camera make and model", "Capture date and time", "Lens model, focal length and exposure settings", "Orientation and image dimensions", "GPS coordinates when location tagging was enabled", "Software used to edit or export the image"]],
+      ["Why does photo metadata matter for privacy?", ["GPS coordinates can disclose where a photo was taken. If a file contains precise location tags, sharing the original may reveal a home, school, workplace or another place connected to the photographer. Dates, device details and author fields can also provide context that a person did not intend to publish.", "Metadata is not automatically harmful. It can be useful for organizing photos, documenting camera settings or preserving a photographic workflow. The important point is to understand what a particular file contains before sharing it publicly."]],
+      ["Does every image contain EXIF data?", ["No. Screenshots, graphics, images exported by editing apps and files processed by websites may contain little or no EXIF information. JPEG, PNG and WebP also have different metadata structures. A viewer that reports no EXIF fields has not necessarily checked every possible kind of embedded data.", "A missing GPS field does not prove that a photo has never contained location information. It only means the tool did not find a readable GPS field in the file it inspected."]],
+      ["How can you check EXIF data?", ["Use a reputable metadata viewer or an image application that displays file properties. Check the exact copy you intend to share, not an older original or a different download. Look for location, date, camera, author and software fields, and remember that different viewers support different metadata formats.", "CleanExif can inspect readable metadata in supported JPEG, PNG and WebP images directly in your browser. The selected image is processed locally by the application rather than uploaded to CleanExif image-processing servers."]],
+      ["How can you remove common photo metadata?", ["A common approach is to decode an image and export a fresh copy. CleanExif uses browser image decoding and canvas export for its supported formats. This re-encoding usually leaves common EXIF, GPS, IPTC and XMP fields out of the newly exported image, but the result should still be checked.", "Re-encoding is not a forensic guarantee. It may change file size and can slightly affect JPEG or WebP quality. Keep your original file and inspect the exported copy with another metadata reader if the image is especially sensitive."]],
+      ["A practical privacy checklist", ["Before posting a photo, consider whether the original file contains GPS coordinates or personal details, whether the platform will transform the image, and whether you need to preserve capture information. If you remove metadata, inspect the exported file and share that copy—not the original.", "CleanExif currently supports JPEG, PNG and WebP images, with a 25 MB per-file limit. You can start from the CleanExif homepage and review the result before downloading."]]
+    ]
+  },
+  {
+    slug: "how-to-remove-exif-data",
+    title: "How to Remove EXIF Data from Photos",
+    description: "A step-by-step guide to checking photo metadata and creating a cleaner JPEG, PNG or WebP copy before sharing.",
+    intro: "Removing EXIF data can help reduce the amount of camera, date and location information attached to a photo. The safest workflow is to inspect the exact file, create a separate cleaned copy and verify that copy before sharing it.",
+    sections: [
+      ["1. Understand what you are removing", ["EXIF can contain camera details, capture dates, exposure settings and—when location tagging is enabled—GPS coordinates. Other image metadata standards, such as IPTC and XMP, can store captions, author details, copyright information and editing notes.", "Decide whether you want to remove common embedded metadata or only check for a particular field. A simple EXIF viewer may not inspect every metadata container or proprietary format."]],
+      ["2. Keep the original file", ["Make a copy or leave the original untouched. This gives you a way to recover the original image and its capture information if you need it later. Avoid overwriting the only copy of a photo.", "Choose the exact image you plan to publish. A screenshot, messaging-app download and original camera file may all have different metadata."]],
+      ["3. Use a tool that explains its processing", ["A metadata-removal tool should clearly state which formats it accepts, whether files leave your device, and what its cleaning method can and cannot guarantee. CleanExif runs its image inspection and re-encoding workflow in your browser; selected image files are not uploaded to its image-processing servers.", "To use CleanExif, open the homepage, choose a JPEG, PNG or WebP image, inspect the metadata fields, and select the option to remove metadata. The tool creates a new exported image for download."]],
+      ["4. Check the exported copy", ["Do not assume a successful download proves every possible metadata field is gone. Open the downloaded file in a separate metadata viewer and inspect the fields that matter to you, especially GPS coordinates, capture dates and author information.", "CleanExif performs a readable metadata check on its exported copy, but that check is not a complete forensic examination of every file structure. If the verification reports remaining fields or cannot complete, treat the result cautiously."]],
+      ["What can change during re-encoding?", ["A fresh export can change file size, color handling or image quality. CleanExif exports JPEG and WebP at a high quality setting; re-encoding can still introduce a small visual difference. PNG export is lossless for the pixel data rendered by the browser, but it does not preserve every possible original file property.", "The tool currently accepts JPEG, PNG and WebP, up to 25 MB per file. It does not accept formats such as HEIC, animated GIF or SVG."]],
+      ["Common mistakes to avoid", ["Do not clean one copy and accidentally upload the original. Do not rely only on a social platform's processing behavior. Do not treat an empty EXIF report as proof that every hidden data format has been removed. And do not discard the original if you may need its capture details later.", "For a related privacy check, read our guide on removing GPS location from photos and our beginner's guide to EXIF data."]]
+    ]
+  },
+  {
+    slug: "remove-gps-location-from-photos",
+    title: "How to Remove GPS Location from Photos",
+    description: "Find out how photos can store GPS coordinates, how to inspect location tags and how to share a cleaner image copy.",
+    intro: "Some phones and cameras can add location coordinates to a photo when location tagging is enabled. Before sharing an image publicly, check whether the exact file contains GPS metadata.",
+    sections: [
+      ["How does a photo get GPS coordinates?", ["A camera or phone may use its location services to record latitude, longitude, altitude or related GPS fields when a photo is captured. The setting is often called Location Tags, Save Location or Geo-tagging, depending on the device and camera app.", "The setting and behavior vary by device. Turning off location tagging can reduce location data in future photos, but it does not remove coordinates already stored in older files."]],
+      ["What can GPS metadata reveal?", ["Coordinates can point to the place where a photo was taken. Depending on the precision and context, that may identify a residence, workplace or another regularly visited location. A public photo caption may reveal additional context when combined with the coordinates.", "Not every image has GPS metadata, and a location field does not always mean the coordinates are perfectly accurate. Check the file rather than assuming based on the device or the appearance of the photo."]],
+      ["How to check a photo for GPS data", ["Open the exact image file in a metadata viewer and look for GPS Latitude, GPS Longitude, GPS Position or related fields. Some tools show a map; others display coordinates as text. If no GPS fields appear, the viewer may not have found readable GPS metadata, but it may not inspect every possible metadata format.", "CleanExif displays readable metadata found in supported JPEG, PNG and WebP images. You can inspect the file in your browser before deciding whether to export a clean copy."]],
+      ["How to make a copy without common GPS tags", ["One option is to export a new image by decoding and re-encoding the pixels. CleanExif uses this browser-based approach for supported formats. The new export is designed to omit common embedded metadata, including typical EXIF GPS fields.", "Keep the original and download the newly exported copy. Then inspect that downloaded copy with a separate metadata reader. CleanExif's built-in verification checks readable metadata, but it is not a forensic guarantee for every proprietary or non-standard data structure."]],
+      ["Will turning off location tagging remove old GPS data?", ["No. Changing a camera setting affects future captures; it does not retroactively edit files already saved. Older photos need to be checked and, if appropriate, exported or edited separately.", "Also check copies shared through messaging apps, cloud services or social platforms individually. Each service may transform or preserve different file properties."]],
+      ["A safer sharing habit", ["Before posting, inspect the exact file, create a clean copy if needed, verify the downloaded copy and make sure you select that copy for upload. For especially sensitive images, use a specialist workflow and do not rely on a single automated viewer.", "For broader background, see What Is EXIF Data? and How to Remove EXIF Data from Photos."]]
+    ]
+  },
+  {
+    slug: "does-instagram-remove-exif-data",
+    title: "Does Instagram Remove EXIF Data from Photos?",
+    description: "Learn why social platforms may transform uploaded photos, why you should not rely on that behavior for privacy and how to check your own files.",
+    intro: "Uploading a photo to a social platform is not the same as sharing the original file directly. Platforms commonly process images for delivery, but the exact metadata behavior can change and should not be treated as a privacy guarantee.",
+    sections: [
+      ["What happens when you upload a photo?", ["A social platform may resize, recompress, convert or otherwise process an uploaded image to prepare versions for its apps and website. The file served to other users may therefore differ from the original file on your device.", "Image processing can affect metadata, but the details depend on the platform, upload path, file type and current implementation. A platform's public-facing image is not necessarily identical to the file you uploaded."]],
+      ["Does Instagram remove EXIF data?", ["You should not assume that Instagram—or any other social platform—removes every metadata field in every situation. Platform processing can change what is present in the version it serves, and behavior may vary over time. Public documentation and independent tests may not cover every device, upload route or future change.", "If you need to know what a particular image contains, inspect the original file and, where relevant, a copy downloaded from the platform. Testing your own workflow is more reliable than relying on a blanket claim about all uploads."]],
+      ["Does removing metadata before upload still matter?", ["Yes, if you want to control the file you send. Cleaning a copy before upload means you are not relying on a third party to remove fields for you. It also gives you a chance to inspect the exact output before it leaves your device.", "Keep in mind that a platform may still re-encode or otherwise alter the image after upload. Pre-cleaning is a privacy precaution, not a promise about how a platform will store, process or display the file."]],
+      ["How to check your own image workflow", ["First, inspect the original image for GPS coordinates, capture date, camera model and author fields. Next, if you choose to upload it, download the platform-served copy where that option is available and inspect that copy separately. Compare the results using a metadata viewer that supports the relevant format.", "Do not compare different versions of a photo and assume they are the same file. A messaging-app copy, screenshot or downloaded social image may have been transformed at a different stage."]],
+      ["How CleanExif fits into the process", ["CleanExif lets you inspect and create a fresh copy of supported JPEG, PNG and WebP images in your browser. Selected image files are not uploaded to CleanExif image-processing servers. You can inspect the exported copy before deciding whether to upload it elsewhere.", "CleanExif does not control Instagram or guarantee what another platform does after upload. For sensitive photos, verify the exact file you plan to share and review the platform's current privacy information."]],
+      ["Bottom line", ["Treat platform metadata handling as something that can change, not as your only privacy control. Inspect the original, clean a separate copy when appropriate, and verify the result. Read our guide to removing GPS location from photos for more detail on location tags."]]
+    ]
+  },
+  {
+    slug: "how-to-check-photo-metadata",
+    title: "How to Check Photo Metadata Online",
+    description: "Learn how to inspect photo metadata such as GPS location, camera model, capture date and editing details before sharing.",
+    intro: "Photo metadata can help explain how an image was captured and edited. Checking it before sharing gives you a clearer picture of what information may travel with the file.",
+    sections: [
+      ["What should you look for?", ["Start with the fields most relevant to your purpose. For privacy, check GPS coordinates, capture date and time, camera or device model, author names and software fields. For photography, exposure settings, focal length and lens information may be useful.", "Metadata standards include EXIF, IPTC and XMP. A viewer may support some fields but not others, so its report should be understood as the information it can read—not a complete inventory of every possible file structure."]],
+      ["Choose the exact file you will share", ["A camera original, edited export, screenshot and social-media download can contain different metadata. Inspect the exact file you intend to upload or send. If you edit the image after checking it, inspect the final export again.", "Avoid uploading private photos to an unknown viewer just to inspect them. Check whether a tool processes files locally or sends them to a remote server, and read its privacy explanation before use."]],
+      ["Check metadata in your browser", ["CleanExif supports JPEG, PNG and WebP. Open the tool, select an image and review the metadata categories shown in the inspector. The application processes selected images locally in your browser rather than uploading them to CleanExif image-processing servers.", "The current file limit is 25 MB per image. CleanExif can also handle a batch of up to 20 images within a 100 MB total batch limit. Unsupported formats such as HEIC, animated GIF and SVG are not accepted."]],
+      ["How to interpret an empty report", ["An empty report means the viewer did not find readable fields within the metadata types it checks. It does not prove that the file has never contained metadata or that every possible embedded data structure is absent.", "Different image formats store information differently. If the image is important or sensitive, consider checking it with another reputable metadata reader and compare the exact downloaded file."]],
+      ["What to do after checking", ["If you find location or personal details you do not want to share, keep the original and create a separate clean copy. Inspect the output again before sharing it. If the metadata is useful—for example, for photography records—you may prefer to retain the original and share a copy instead.", "For more detail, read What Is EXIF Data? or How to Remove EXIF Data from Photos."]]
+    ]
+  }
 ];
-function BlogPage({slug}:{slug?:string}) {
- const article=blogArticles.find(item=>item.slug===slug);
- const title=article?.title??"The CleanExif Blog";
- const description=article?.description??"Practical guides to EXIF data, photo metadata, GPS privacy and safer image sharing.";
- useEffect(()=>{
-  document.title=title+" | CleanExif";
-  const canonical=window.location.origin+window.location.pathname;
-  let meta=document.head.querySelector('meta[name="description"]') as HTMLMetaElement|null;
-  if(!meta){meta=document.createElement("meta");meta.name="description";document.head.appendChild(meta);} meta.content=description;
-  let link=document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement|null;
-  if(!link){link=document.createElement("link");link.rel="canonical";document.head.appendChild(link);} link.href=canonical;
-  if(article){let schema=document.getElementById("blog-article-schema");if(!schema){schema=document.createElement("script");schema.id="blog-article-schema";schema.setAttribute("type","application/ld+json");document.head.appendChild(schema);}schema.textContent=JSON.stringify({"@context":"https://schema.org","@type":"Article",headline:article.title,description:article.description,datePublished:"2026-11-26",dateModified:"2026-11-26",author:{"@type":"Organization",name:"CleanExif"},publisher:{"@type":"Organization",name:"CleanExif"},mainEntityOfPage:canonical});}
-  return ()=>{document.getElementById("blog-article-schema")?.remove();};
- },[title,description,article]);
- return <div className="blog-page"><header className="site-header"><div className="container nav-inner"><Logo/><div className="blog-nav"><a className="nav-link" href="/blog">Blog</a><a className="button button-primary" href="/">Open CleanExif</a></div></div></header><main className="container blog-content"><a className="blog-back" href="/blog">← All articles</a>
- {article?<article className="blog-article"><span className="eyebrow">CLEANEXIF GUIDES · 7 MIN READ</span><h1>{article.title}</h1><p className="blog-lead">{article.intro}</p><div className="blog-body">{article.sections.map(([heading,paragraphs,bullets]:any)=><section key={heading}><h2>{heading}</h2>{paragraphs.map((p:string)=><p key={p}>{p}</p>)}{bullets&&<ul>{bullets.map((v:string)=><li key={v}>{v}</li>)}</ul>}</section>)}</div><div className="blog-cta"><h2>Inspect and clean your photos</h2><p>View and remove common embedded metadata from supported images in your browser.</p><a className="button button-primary" href="/">Open the free tool →</a></div></article>:<><span className="eyebrow">PRIVACY · PHOTOGRAPHY · METADATA</span><h1 className="blog-heading">The CleanExif Blog</h1><p className="blog-lead">Straightforward guides to photo metadata, location privacy and safer image sharing.</p><div className="blog-grid">{blogArticles.map((item,index)=><article className="blog-card" key={item.slug}><span className="blog-card-number">GUIDE 0{index+1}</span><h2><a href={"/blog/"+item.slug}>{item.title}</a></h2><p>{item.description}</p><a className="blog-read" href={"/blog/"+item.slug}>Read article →</a></article>)}</div></>}</main><Footer/></div>;
+
+function BlogPage({ slug }: { slug?: string }) {
+  const article = blogArticles.find(item => item.slug === slug);
+  const isArticle = Boolean(slug && article);
+  const title = article?.title ?? (slug ? "Article not found" : "The CleanExif Blog");
+  const description = article?.description ?? (slug ? "This CleanExif article could not be found." : "Practical guides to EXIF data, photo metadata, GPS privacy and safer image sharing.");
+  const publishedDate = "2026-11-26";
+  useEffect(() => {
+    const canonical = window.location.origin + window.location.pathname;
+    document.title = title + " | CleanExif";
+    const setMeta = (selector: string, attribute: string, value: string) => {
+      let element = document.head.querySelector(selector) as HTMLMetaElement | null;
+      if (!element) {
+        element = document.createElement("meta");
+        const match = selector.match(/\[(name|property)="([^"]+)"\]/);
+        if (match) element.setAttribute(match[1], match[2]);
+        document.head.appendChild(element);
+      }
+      element.setAttribute(attribute, value);
+    };
+    setMeta('meta[name="description"]', "content", description);
+    setMeta('meta[property="og:type"]', "content", isArticle ? "article" : "website");
+    setMeta('meta[property="og:title"]', "content", title + " | CleanExif");
+    setMeta('meta[property="og:description"]', "content", description);
+    setMeta('meta[property="og:url"]', "content", canonical);
+    setMeta('meta[name="twitter:title"]', "content", title + " | CleanExif");
+    setMeta('meta[name="twitter:description"]', "content", description);
+    let canonicalLink = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonicalLink) {
+      canonicalLink = document.createElement("link");
+      canonicalLink.rel = "canonical";
+      document.head.appendChild(canonicalLink);
+    }
+    canonicalLink.href = canonical;
+    document.getElementById("blog-article-schema")?.remove();
+    document.getElementById("blog-breadcrumb-schema")?.remove();
+    if (article) {
+      const schema = document.createElement("script");
+      schema.id = "blog-article-schema";
+      schema.type = "application/ld+json";
+      schema.textContent = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline: article.title,
+        description: article.description,
+        datePublished: publishedDate,
+        dateModified: publishedDate,
+        author: { "@type": "Organization", name: "CleanExif" },
+        publisher: { "@type": "Organization", name: "CleanExif" },
+        mainEntityOfPage: canonical
+      });
+      document.head.appendChild(schema);
+    }
+    const breadcrumb = document.createElement("script");
+    breadcrumb.id = "blog-breadcrumb-schema";
+    breadcrumb.type = "application/ld+json";
+    breadcrumb.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: window.location.origin + "/" },
+        { "@type": "ListItem", position: 2, name: "Blog", item: window.location.origin + "/blog" },
+        ...(article ? [{ "@type": "ListItem", position: 3, name: article.title, item: canonical }] : [])
+      ]
+    });
+    document.head.appendChild(breadcrumb);
+    if (slug && !article) {
+      let robots = document.head.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+      if (!robots) {
+        robots = document.createElement("meta");
+        robots.name = "robots";
+        document.head.appendChild(robots);
+      }
+      robots.content = "noindex, follow";
+    }
+    return () => {
+      document.getElementById("blog-article-schema")?.remove();
+      document.getElementById("blog-breadcrumb-schema")?.remove();
+    };
+  }, [title, description, article, isArticle, slug]);
+  const related = article ? blogArticles.filter(item => item.slug !== article.slug).slice(0, 3) : [];
+  return <div className="blog-page">
+    <header className="site-header"><div className="container nav-inner"><Logo /><div className="blog-nav"><a className="nav-link" href="/blog">Blog</a><a className="button button-primary" href="/">Open CleanExif</a></div></div></header>
+    <main className="container blog-content">
+      <a className="blog-back" href="/blog">← All articles</a>
+      {article ? <article className="blog-article">
+        <span className="eyebrow">CLEANEXIF GUIDES · UPDATED NOVEMBER 26, 2026</span>
+        <h1>{article.title}</h1>
+        <p className="blog-lead">{article.intro}</p>
+        <div className="blog-body">{article.sections.map(([heading, paragraphs, bullets]: any) => <section key={heading}>
+          <h2>{heading}</h2>
+          {paragraphs.map((paragraph: string) => <p key={paragraph}>{paragraph}</p>)}
+          {bullets && <ul>{bullets.map((item: string) => <li key={item}>{item}</li>)}</ul>}
+        </section>)}</div>
+        <div className="blog-cta"><h2>Inspect and clean your photos</h2><p>Check readable metadata and create a fresh copy of supported images in your browser.</p><a className="button button-primary" href="/">Open the free tool →</a></div>
+        <section className="blog-related"><h2>Related guides</h2><div className="blog-related-grid">{related.map(item => <a className="blog-related-card" href={"/blog/" + item.slug} key={item.slug}><b>{item.title}</b><span>Read guide →</span></a>)}</div></section>
+      </article> : slug ? <section className="blog-not-found"><h1>Article not found</h1><p>This page may have moved or the address may be incorrect.</p><a className="button button-primary" href="/blog">Browse all guides</a></section> : <>
+        <span className="eyebrow">PRIVACY · PHOTOGRAPHY · METADATA</span>
+        <h1 className="blog-heading">The CleanExif Blog</h1>
+        <p className="blog-lead">Straightforward guides to photo metadata, location privacy and safer image sharing.</p>
+        <div className="blog-grid">{blogArticles.map((item, index) => <article className="blog-card" key={item.slug}>
+          <span className="blog-card-number">GUIDE 0{index + 1}</span>
+          <h2><a href={"/blog/" + item.slug}>{item.title}</a></h2>
+          <p>{item.description}</p>
+          <a className="blog-read" href={"/blog/" + item.slug}>Read article →</a>
+        </article>)}</div>
+      </>}
+    </main>
+    <Footer />
+  </div>;
 }
 
 function App() {
