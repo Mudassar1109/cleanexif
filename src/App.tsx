@@ -438,6 +438,8 @@ function DemoPage() {
 
 type RepeatWatermarkSettings = { text: string; opacity: number; size: number; spacing: number; rotation: number; color: "white" | "charcoal" };
 type WatermarkFile = { id: string; file: File; url: string; width: number; height: number; output?: Blob; outputUrl?: string };
+const WATERMARK_FREE_MAX_FILES = 10;
+const WATERMARK_FREE_MAX_TOTAL_SIZE = 100 * 1024 * 1024;
 function WatermarkPage() {
   const [files, setFiles] = useState<WatermarkFile[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -458,9 +460,27 @@ function WatermarkPage() {
     const incoming = Array.from(list);
     if (!incoming.length || addingFiles || busy) return;
     setAddingFiles(true);
-    const accepted = incoming.filter(file => ["image/jpeg","image/png","image/webp"].includes(file.type) && file.size <= 25 * 1024 * 1024);
+    const supported = incoming.filter(file => ["image/jpeg","image/png","image/webp"].includes(file.type));
+    const invalidCount = incoming.length - supported.length;
+    const remainingSlots = Math.max(0, WATERMARK_FREE_MAX_FILES - files.length);
+    const selectedBytes = files.reduce((sum, item) => sum + item.file.size, 0);
+    let remainingBytes = Math.max(0, WATERMARK_FREE_MAX_TOTAL_SIZE - selectedBytes);
+    const accepted: File[] = [];
+    let tooLarge = 0;
+    let overBatch = 0;
+    for (const file of supported) {
+      if (file.size > 25 * 1024 * 1024) { tooLarge++; continue; }
+      if (accepted.length >= remainingSlots) { overBatch++; continue; }
+      if (file.size > remainingBytes) { overBatch++; continue; }
+      accepted.push(file);
+      remainingBytes -= file.size;
+    }
     const records: WatermarkFile[] = [];
-    const errors: string[] = incoming.length - accepted.length ? ["Unsupported files or files over 25 MB were skipped."] : [];
+    const errors: string[] = [];
+    if (invalidCount) errors.push(invalidCount + " unsupported file(s) skipped. Use JPEG, PNG or WebP.");
+    if (tooLarge) errors.push(tooLarge + " file(s) exceed the 25 MB per-image limit.");
+    if (overBatch) errors.push("Free limit: up to 10 images and 100 MB total per batch. " + overBatch + " image(s) were not added.");
+    if (!remainingSlots && supported.length) errors.push("Your free batch is full. Remove selected images to add others.");
     setAddProgress({ done: 0, total: accepted.length });
     try {
       for (const file of accepted) {
@@ -590,7 +610,8 @@ function WatermarkPage() {
           <button className="button button-primary wm-upload" onClick={()=>inputRef.current?.click()} disabled={busy || addingFiles}><FilePlus2 size={17}/> {addingFiles ? "Adding images…" : "Choose images"}</button>
           {addingFiles && <div className="wm-progress" role="status" aria-live="polite"><span>Preparing images · {addProgress.done}/{addProgress.total}</span><div><i style={{width:(addProgress.total ? addProgress.done/addProgress.total*100 : 0)+"%"}}/></div></div>}
           <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={event=>{if(event.target.files)void addFiles(event.target.files);event.target.value="";}}/>
-          <p className="watermark-hint">JPEG, PNG and WebP · Up to 25 MB per image · Processing stays on your device.</p>
+          <p className="watermark-hint">Free plan: up to 10 images per batch · 100 MB total · 25 MB per image. JPEG, PNG and WebP · Processed on your device.</p>
+          <div className="wm-limit-meter" aria-live="polite"><span>Free batch usage</span><b>{files.length}/{WATERMARK_FREE_MAX_FILES} images · {(files.reduce((sum,item)=>sum+item.file.size,0)/1024/1024).toFixed(1)}/100 MB</b><div><i style={{width:Math.min(100,files.length/WATERMARK_FREE_MAX_FILES*100)+"%"}}/></div></div>
         </section>
         <section className="wm-preview-panel">
           <div className="wm-panel-title"><b>Full-image preview</b><span>{active ? active.width+" × "+active.height : "UPLOAD AN IMAGE"}</span></div>

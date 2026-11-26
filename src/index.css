@@ -215,3 +215,9 @@
 .wm-export-actions{flex-wrap:wrap}
 .wm-upload:disabled{opacity:.6;cursor:wait}
 @media(max-width:700px){.wm-drop-overlay{position:fixed;inset:12px;z-index:9999}.wm-export-actions{align-items:stretch}.wm-export-actions .button{width:100%;justify-content:center}}
+
+/* Watermark Maker free-tier usage meter */
+.wm-limit-meter{margin-top:12px;padding:10px 11px;border:1px solid #dce8f7;border-radius:10px;background:#f7faff;color:#66809f;font-size:10px;display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center}
+.wm-limit-meter b{color:#315b91;font-size:10px;font-weight:700}
+.wm-limit-meter>div{grid-column:1/-1;height:5px;border-radius:20px;background:#e1ebf8;overflow:hidden}
+.wm-limit-meter i{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,#1478f5,#62a8ff);transition:width .2s ease}
