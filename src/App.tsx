@@ -152,9 +152,8 @@ async function cleanImage(file: File, onStage?: (stage: string) => void): Promis
   } finally { bitmap.close(); }
 }
 function Logo({ small = false }: { small?: boolean }) {
-  return <a className={"brand" + (small ? " brand-small" : "")} href="/" aria-label="CleanExif home">
-    <span className="brand-mark" aria-hidden="true"><Aperture size={small ? 21 : 24} strokeWidth={1.9} /><span className="brand-crown"><Crown size={small ? 9 : 10} strokeWidth={2.2} /></span></span>
-    <span className="brand-wordmark"><span className="brand-name">Clean<span>Exif</span></span><span className="brand-tagline">PRIVACY STUDIO</span></span>
+  return <a className={"brand" + (small ? " brand-small" : "")} href="/" aria-label="CleanExif — Photo Privacy Tool">
+    <img className="brand-logo-image" src="/cleanexif-logo.svg" alt="CleanExif — Photo Privacy Tool" />
   </a>;
 }
 function LegalPage({ type }: { type: string }) {
