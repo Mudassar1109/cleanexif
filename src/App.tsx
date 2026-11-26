@@ -613,7 +613,7 @@ function WatermarkPage() {
 }
 
 function App() {
-  const { limits, email, loading: planLoading } = usePlanAccess();
+  const { limits, email, loading: planLoading, dailyUsage, consumeImage } = usePlanAccess();
   const legalPath = window.location.pathname.replace(/^\/|\/$/g, "");
   if (legalPath === "admin") return <AdminPage />;
   if (legalPath === "plans") return <PlansPage />;
@@ -706,6 +706,8 @@ function App() {
     setItems([]); setActiveId(null); setNotice("");
   };
   const cleanOne = async (item: ImageRecord) => {
+    if (planLoading) { setNotice("Checking your account plan. Please try again in a moment."); return; }
+    if (!email) { setNotice("Please sign in to use daily image credits and track your allowance. Open Account to sign in."); return; }
     setBusy(true);
     setCleaningStage("Starting local processing");
     setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "cleaning", cleanError: undefined } : entry));
@@ -715,6 +717,7 @@ function App() {
       const blob = await cleanImage(item.file, setCleaningStage);
       setCleaningStage("Verifying exported image");
       const verification = await verifyMetadata(blob);
+      await consumeImage();
       const url = URL.createObjectURL(blob);
       setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", metadata: item.metadata, cleanError: undefined, cleanCheck: verification.metadata, cleanCheckError: verification.error } : entry));
       setCleaningStage("Complete");
@@ -740,6 +743,8 @@ function App() {
   };
   const cleanAll = async (targetItems: ImageRecord[] = items) => {
     if (!targetItems.length || busy) return;
+    if (planLoading) { setNotice("Checking your account plan. Please try again in a moment."); return; }
+    if (!email) { setNotice("Please sign in to use daily image credits and track your allowance. Open Account to sign in."); return; }
     setBusy(true); setCleaningStage("Preparing batch"); setNotice("Cleaning images locally in your browser…");
     setBatchProgress({ done: 0, total: targetItems.length });
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -752,9 +757,15 @@ function App() {
       for (const item of targetItems) {
         try {
           setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "cleaning" } : entry));
+          if (item.cleaned) {
+            zip.file(uniqueZipFilename(item.file.name, usedZipNames), item.cleaned);
+            success++;
+            continue;
+          }
           const blob = await cleanImage(item.file, setCleaningStage);
           setCleaningStage("Verifying " + item.file.name);
           const verification = await verifyMetadata(blob);
+          await consumeImage();
           const url = URL.createObjectURL(blob);
           zip.file(uniqueZipFilename(item.file.name, usedZipNames), blob);
           setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, cleaned: blob, cleanedUrl: url, status: "clean", cleanError: undefined, cleanCheck: verification.metadata, cleanCheckError: verification.error } : entry));
@@ -843,7 +854,7 @@ function App() {
       </section>
 
       {items.length > 0 && <section className="tool-workspace" aria-live="polite"><div className="container">
-        <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {limits.maxImages} images selected · {limits.name} plan · Files stay in this browser tab</p></div>
+        <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {limits.maxImages} images selected · {limits.name} plan · {dailyUsage ? `${dailyUsage.used}/${dailyUsage.limit} daily images used · ${dailyUsage.remaining} remaining` : "Sign in to view daily credits"} · Files stay in this browser tab</p></div>
           <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()} disabled={busy || addingFiles}><FilePlus2 size={16} /> Add images</button>{failedItems.length > 0 && <button className="button button-outline" onClick={() => void cleanAll(failedItems)} disabled={busy}><RefreshCw size={15} /> Retry failed ({failedItems.length})</button>}<button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || addingFiles || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll} disabled={busy}><Trash2 size={17} /></button></div></div>
         {addingFiles && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><UploadCloud size={15}/><b>Preparing selected images</b><span>{addProgress.done}/{addProgress.total}</span></div><div className="processing-track"><span style={{width:(addProgress.total ? addProgress.done/addProgress.total*100 : 0)+"%"}}/></div><p>Reading image dimensions and metadata locally in your browser.</p></div>}
         {busy && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing batch"}</b><span>Working</span></div><div className="processing-track"><span style={{ width: batchProgress.total ? ((batchProgress.done / batchProgress.total) * 100) + "%" : "0%" }} /></div><p>{batchProgress.done} of {batchProgress.total} images processed. Images are cleaned and verified locally; the ZIP archive downloads when ready.</p></div>}
