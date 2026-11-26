@@ -173,3 +173,22 @@
 @keyframes demo-scan{0%{top:4%;opacity:.2}50%{opacity:1}100%{top:96%;opacity:.2}}
 @media(max-width:760px){.demo-header{height:64px;padding:0 16px}.demo-header .brand-logo-image{width:112px}.demo-label{font-size:8px}.demo-main{padding:42px 0 36px;width:calc(100% - 28px)}.demo-stage-body{grid-template-columns:1fr;padding:16px;gap:20px}.demo-photo{height:220px}.demo-console h2{font-size:22px}.demo-console>p{min-height:0}.demo-controls{padding:16px;display:grid}.demo-timeline{justify-content:center}.demo-control-buttons{display:grid;grid-template-columns:1fr 1fr}.demo-control-buttons .button{justify-content:center}.demo-control-buttons .button-primary{grid-column:span 2;grid-row:1}.demo-intro p{font-size:13px}.demo-stage-top{padding:0 16px;font-size:9px}}
 @media(prefers-reduced-motion:reduce){.demo-live-dot,.scan-step-1,.scan-step-2{animation:none}.demo-scan-line{display:none}}
+\n
+/* Optional bulk copyright watermark controls */
+.watermark-settings{margin:0 0 18px;border:1px solid #e2eaf5;border-radius:14px;background:#fff;box-shadow:0 5px 18px rgba(24,50,83,.035);overflow:hidden}
+.watermark-toggle{width:100%;display:flex;align-items:center;gap:13px;padding:16px 18px;border:0;background:transparent;text-align:left;cursor:pointer;color:#172a45}
+.watermark-toggle>span:nth-child(2){display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}
+.watermark-toggle b{font-size:13px}.watermark-toggle small{font-size:11px;color:#7b8ba1}
+.watermark-switch{width:38px;height:22px;border-radius:20px;background:#d9e1eb;padding:3px;transition:background .2s;flex:none}.watermark-switch i{display:block;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0002;transition:transform .2s}.watermark-switch.is-on{background:#176bd7}.watermark-switch.is-on i{transform:translateX(16px)}
+.watermark-chevron{color:#8191a6;transition:transform .2s}.watermark-chevron.is-open{transform:rotate(180deg)}
+.watermark-controls{display:grid;grid-template-columns:1.2fr 1fr;gap:16px 22px;padding:18px;border-top:1px solid #edf1f7;background:#fcfdff;animation:cx-fade-up .22s ease both}
+.watermark-field{display:flex;flex-direction:column;gap:9px;min-width:0}.watermark-field>span{font-size:11px;font-weight:750;color:#3c526f}.watermark-field>span b{float:right;color:#176bd7}
+.watermark-field input:not([type=range]){width:100%;height:40px;padding:0 12px;border:1px solid #dfe7f1;border-radius:9px;background:#fff;color:#203650;font:inherit;font-size:12px;outline:none}.watermark-field input:focus{border-color:#83b5f4;box-shadow:0 0 0 3px #eaf3ff}
+.watermark-field input[type=range]{width:100%;accent-color:#176bd7;cursor:pointer}
+.watermark-position-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.watermark-position-grid button,.watermark-colors button{min-height:34px;padding:7px 8px;border:1px solid #e0e8f2;border-radius:8px;background:#fff;color:#526780;font-size:10px;font-weight:650;cursor:pointer}.watermark-position-grid button.selected,.watermark-colors button.selected{border-color:#8db9f1;background:#eff6ff;color:#0756c9;box-shadow:inset 0 0 0 1px #c9defa}
+.watermark-colors{display:flex;gap:8px;flex-wrap:wrap}.watermark-colors button{display:flex;align-items:center;gap:7px}.watermark-swatch{width:13px;height:13px;border:1px solid #b8c3d1;border-radius:50%}.swatch-white{background:#fff}.swatch-charcoal{background:#20242b}
+.watermark-hint{grid-column:1/-1;margin:0;color:#7b8ba1;font-size:10px;line-height:1.6}
+.inspector-preview{position:relative}.watermark-live-preview{position:absolute;z-index:2;max-width:80%;font-weight:800;font-family:Arial,Helvetica,sans-serif;font-size:clamp(10px,1.3vw,18px);line-height:1.2;overflow-wrap:anywhere;pointer-events:none;text-shadow:0 1px 4px rgba(0,0,0,.75),1px 1px 1px rgba(0,0,0,.6)}
+.wm-bottom-right{right:18px;bottom:55px;text-align:right}.wm-bottom-left{left:18px;bottom:55px}.wm-top-right{right:18px;top:18px;text-align:right}.wm-top-left{left:18px;top:18px}.wm-center-diagonal{left:50%;top:48%;width:85%;text-align:center;transform:translate(-50%,-50%) rotate(-25deg)}
+.wm-white{color:#fff}.wm-charcoal{color:#20242b;text-shadow:0 1px 4px rgba(255,255,255,.8),1px 1px 1px rgba(255,255,255,.8)}
+@media(max-width:760px){.watermark-controls{grid-template-columns:1fr;gap:14px}.watermark-position-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.watermark-position-grid button:last-child{grid-column:1/-1}.watermark-hint{grid-column:auto}}
