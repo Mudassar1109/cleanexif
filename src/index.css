@@ -238,3 +238,16 @@
 .daily-quota-card.is-locked strong,.daily-quota-card.is-locked>a{color:#c03939}
 .daily-quota-card.is-locked .daily-quota-track span{background:#d94b4b}
 @media(max-width:560px){.daily-quota-card{margin:12px 10px 0;padding:12px}.daily-quota-card strong{font-size:14px}}
+
+
+/* Watermark toolbar: add images, live daily countdown and clear-all action */
+.wm-toolbar{display:grid;grid-template-columns:auto minmax(220px,1fr) auto;align-items:center;gap:12px;margin:0 0 14px}
+.wm-toolbar-add,.wm-toolbar-clear{min-height:48px;justify-content:center;gap:9px}
+.wm-toolbar-quota{min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:7px 14px;border:1px solid #dce8f7;border-radius:12px;background:#fff;text-align:center;color:#24527f}
+.wm-toolbar-quota b{font-size:13px;color:#176bd7}
+.wm-toolbar-quota span{font-size:11px;color:#73869f;font-variant-numeric:tabular-nums}
+.wm-toolbar-quota.is-locked{border-color:#f0caca;background:#fff7f7}
+.wm-toolbar-quota.is-locked b{color:#c03939}
+.wm-toolbar-clear{width:52px;padding:0;color:#526985}
+.wm-toolbar button:disabled{opacity:.48;cursor:not-allowed}
+@media(max-width:600px){.wm-toolbar{grid-template-columns:1fr 52px;gap:8px}.wm-toolbar-quota{grid-column:1/-1;grid-row:1;align-items:flex-start;text-align:left;padding:10px 13px}.wm-toolbar-add{grid-column:1;grid-row:2}.wm-toolbar-clear{grid-column:2;grid-row:2;width:52px}}
