@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useRef, useState, useEffect, type ChangeEvent } from "react";
 import exifr from "exifr";
 import AdminPage from "./AdminPage";
+import PlansPage from "./PlansPage";
+import { usePlanAccess } from "./planAccess";
 import JSZip from "jszip";
 import {
   AlertCircle, ArrowRight, Camera, Check, CheckCircle2, ChevronDown,
@@ -194,7 +196,7 @@ function LegalPage({ type }: { type: string }) {
 }
 function Footer() {
   return <footer className="footer"><div className="container footer-inner"><div className="footer-brand"><Logo small /><span>A simple, privacy-first image metadata tool.</span></div>
-    <div className="footer-links"><span>© 2026 CleanExif</span><a href="/blog">Blog</a><a href="/privacy-policy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="/disclaimer">Disclaimer</a><a href="/cookie-policy">Cookie Policy</a></div></div></footer>;
+    <div className="footer-links"><span>© 2026 CleanExif</span><a href="/plans">Plans</a><a href="/blog">Blog</a><a href="/privacy-policy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="/disclaimer">Disclaimer</a><a href="/cookie-policy">Cookie Policy</a></div></div></footer>;
 }
 
 const blogArticles = [
@@ -440,6 +442,7 @@ function DemoPage() {
 type RepeatWatermarkSettings = { text: string; opacity: number; size: number; spacing: number; rotation: number; color: "white" | "charcoal" };
 type WatermarkFile = { id: string; file: File; url: string; width: number; height: number; output?: Blob; outputUrl?: string };
 function WatermarkPage() {
+  const { limits, email, isPaid } = usePlanAccess();
   const [files, setFiles] = useState<WatermarkFile[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [settings, setSettings] = useState<RepeatWatermarkSettings>({ text: "@Mudassar", opacity: 28, size: 34, spacing: 190, rotation: -28, color: "white" });
@@ -459,12 +462,16 @@ function WatermarkPage() {
     const incoming = Array.from(list);
     if (!incoming.length || addingFiles || busy) return;
     setAddingFiles(true);
-    const accepted = incoming.filter(file => ["image/jpeg","image/png","image/webp"].includes(file.type) && file.size <= 25 * 1024 * 1024);
+    const accepted = incoming.filter(file => ["image/jpeg","image/png","image/webp"].includes(file.type) && file.size <= limits.maxFileMB * 1024 * 1024);
     const records: WatermarkFile[] = [];
-    const errors: string[] = incoming.length - accepted.length ? ["Unsupported files or files over 25 MB were skipped."] : [];
+    const errors: string[] = incoming.length - accepted.length ? ["Unsupported files or files over your "+limits.maxFileMB+" MB per-file limit were skipped."] : [];
+    const existingBytes = files.reduce((sum,file)=>sum+file.file.size,0);
     setAddProgress({ done: 0, total: accepted.length });
     try {
       for (const file of accepted) {
+        if (files.length + records.length >= limits.maxImages) { errors.push("Your "+limits.name+" plan allows "+limits.maxImages+" images per batch. Upgrade to add more."); break; }
+        const selectedBytes = records.reduce((sum,item)=>sum+item.file.size,0);
+        if (existingBytes + selectedBytes + file.size > limits.totalMB * 1024 * 1024) { errors.push("Your "+limits.name+" plan allows "+limits.totalMB+" MB total per batch. Upgrade for more capacity."); break; }
         try {
           const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
           const record = { id: crypto.randomUUID(), file, url: URL.createObjectURL(file), width: bitmap.width, height: bitmap.height };
@@ -574,6 +581,7 @@ function WatermarkPage() {
     <header className="site-header"><div className="container nav-inner"><Logo /><nav className="wm-nav"><a href="/">Image metadata inspector</a><a className="button button-primary" href="/">Open CleanExif <ArrowRight size={15}/></a></nav></div></header>
     <main className="container wm-main">
       <div className="wm-heading"><span className="eyebrow">FREE ONLINE WATERMARK MAKER</span><h1>Protect your photos.<br/><span>Your name, across every image.</span></h1><p>Add a repeating, diagonal copyright watermark across the full image. Preview the pattern and export privately in your browser.</p></div>
+      <div className="wm-plan-banner"><div><b>{limits.name} plan</b><span>{files.length}/{limits.maxImages} images · {limits.totalMB} MB batch · {limits.maxFileMB} MB per file{email?" · "+email:""}</span></div><a className="button button-secondary" href="/plans">{isPaid?"View plan details":"View upgrade plans"} <ArrowRight size={14}/></a></div>
       <div className={"wm-editor" + (dragging ? " wm-drag-active" : "")}
         onDragEnter={event => { event.preventDefault(); setDragging(true); }}
         onDragOver={event => { event.preventDefault(); setDragging(true); }}
@@ -610,6 +618,7 @@ function WatermarkPage() {
 function App() {
   const legalPath = window.location.pathname.replace(/^\/|\/$/g, "");
   if (legalPath === "admin") return <AdminPage />;
+  if (legalPath === "plans") return <PlansPage />;
   if (legalPath === "demo") return <DemoPage />;
   if (legalPath === "watermark") return <WatermarkPage />;
   if (legalPath === "blog") return <BlogPage />;
