@@ -435,7 +435,7 @@ function App() {
     setItems(previous => [...previous, ...usable]);
     if (!activeId && usable[0]) setActiveId(usable[0].id);
     setNotice(errors.length ? errors.join(" · ") : usable.length ? usable.length + " image" + (usable.length === 1 ? "" : "s") + " ready to inspect." : "");
-  }, [items.length, activeId]);
+  }, [items, activeId]);
   const handleInput = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) void addFiles(event.target.files);
     event.target.value = "";
@@ -561,7 +561,7 @@ function App() {
   return <div className="app-shell">
     <header className="site-header"><div className="container nav-inner"><Logo />
       <button className="mobile-toggle" aria-label="Toggle navigation" onClick={() => setMobileMenu(!mobileMenu)}><Menu size={22} /></button>
-      <nav className={mobileMenu ? "nav-links nav-open" : "nav-links"}><a href="#how-it-works" onClick={() => setMobileMenu(false)}>How it works</a><a href="#privacy" onClick={() => setMobileMenu(false)}>Privacy</a><a href="#faq" onClick={() => setMobileMenu(false)}>FAQ</a><a className="button button-primary nav-cta" href="#tool" onClick={() => setMobileMenu(false)}>Start cleaning <ArrowRight size={16} /></a></nav>
+      <nav className={mobileMenu ? "nav-links nav-open" : "nav-links"}><a href="/blog" onClick={() => setMobileMenu(false)}>Blog</a><a href="#how-it-works" onClick={() => setMobileMenu(false)}>How it works</a><a href="#privacy" onClick={() => setMobileMenu(false)}>Privacy</a><a href="#faq" onClick={() => setMobileMenu(false)}>FAQ</a><a className="button button-primary nav-cta" href="#tool" onClick={() => setMobileMenu(false)}>Start cleaning <ArrowRight size={16} /></a></nav>
     </div></header>
     {notice && <div className={"toast-notice" + (noticeIsError ? " toast-error" : " toast-success")} role={noticeIsError ? "alert" : "status"} aria-live="assertive"><span className="toast-icon">{noticeIsError ? <AlertCircle size={19} /> : <CheckCircle2 size={19} />}</span><span className="toast-message">{notice}</span><button className="toast-close" type="button" aria-label="Dismiss notification" onClick={() => setNotice("")}><X size={17} /></button></div>}
 
@@ -584,7 +584,7 @@ function App() {
                 <h2>Drop your images here</h2><p>or click to choose files</p>
                 <button className="button button-primary choose-button" onClick={() => inputRef.current?.click()}><FilePlus2 size={18} /> Choose images</button>
                 <span className="format-note">JPG, JPEG, PNG or WebP · Up to 25 MB each</span>
-                <input ref={inputRef} type="file" multiple hidden disabled={busy} onChange={handleInput} />
+                <input ref={inputRef} type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple hidden disabled={busy} onChange={handleInput} />
               </div>
               <div className="upload-card-bottom"><span><LockKeyhole size={14} /> Processed locally</span><span><CheckCircle2 size={14} /> No account needed</span></div>
             </div>
@@ -634,6 +634,13 @@ function App() {
       </div><div className="faq-column" id="faq"><span className="eyebrow">GOOD TO KNOW</span><h2>Frequently asked questions</h2><p>Clear answers about metadata and how CleanExif works.</p>
         <div className="faq-list">{faqs.map(([question, answer], index) => <div className={"faq-item" + (openFaq === index ? " faq-open" : "")} key={question}><button onClick={() => setOpenFaq(openFaq === index ? null : index)} aria-expanded={openFaq === index}><span>{question}</span><ChevronDown size={17} /></button>{openFaq === index && <p>{answer}</p>}</div>)}</div>
       </div></div></section>
+
+      <section className="home-guides section-pad" aria-labelledby="home-guides-title"><div className="container">
+        <div className="home-guides-heading"><div><span className="eyebrow">LEARN BEFORE YOU SHARE</span><h2 id="home-guides-title">Photo privacy, <span>made clearer.</span></h2><p>Practical guides to understanding metadata, checking images and protecting location privacy.</p></div><a className="button button-outline" href="/blog">View all guides <ArrowRight size={16} /></a></div>
+        <div className="home-guides-grid">{blogArticles.slice(0, 3).map((item, index) => <article className="home-guide-card" key={item.slug}>
+          <span className="blog-card-number">GUIDE 0{index + 1}</span><h3><a href={"/blog/" + item.slug}>{item.title}</a></h3><p>{item.description}</p><a className="blog-read" href={"/blog/" + item.slug}>Read guide <ArrowRight size={14} /></a>
+        </article>)}</div>
+      </div></section>
 
       <section className="final-cta"><div className="container final-cta-inner"><div><span className="eyebrow">YOUR PHOTOS, YOUR CHOICE</span><h2>Share the photo.<br /><span>Not the hidden details.</span></h2><p>Clean supported image metadata in a few clicks, right in your browser.</p></div><a className="button button-primary" href="#tool">Start with your images <ArrowRight size={17} /></a></div></section>
     </main>
