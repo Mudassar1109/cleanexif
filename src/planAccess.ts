@@ -17,5 +17,6 @@ export function usePlanAccess(){
   void load();const {data:{subscription}}=cleanexifSupabase.auth.onAuthStateChange(()=>{setLoading(true);void load();});
   return()=>{alive=false;subscription.unsubscribe();};
  },[]);
+ useEffect(()=>{if(!limits.expiresAt)return;const remaining=new Date(limits.expiresAt).getTime()-Date.now();if(remaining<=0){setLimits(FREE);return;}const timer=window.setTimeout(()=>setLimits(FREE),remaining);return()=>window.clearTimeout(timer);},[limits.expiresAt]);
  return {limits,email,loading,isPaid:limits.code!=="free"};
 }
