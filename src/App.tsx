@@ -613,7 +613,7 @@ function WatermarkPage() {
 }
 
 function App() {
-  const { limits, email, loading: planLoading, dailyUsage, consumeImage } = usePlanAccess();
+  const { limits, email, loading: planLoading, dailyUsage, consumeImage, isLocked, resetCountdown } = usePlanAccess();
   const legalPath = window.location.pathname.replace(/^\/|\/$/g, "");
   if (legalPath === "admin") return <AdminPage />;
   if (legalPath === "plans") return <PlansPage />;
@@ -708,6 +708,7 @@ function App() {
   const cleanOne = async (item: ImageRecord) => {
     if (planLoading) { setNotice("Checking your account plan. Please try again in a moment."); return; }
     if (!email) { setNotice("Please sign in to use daily image credits and track your allowance. Open Account to sign in."); return; }
+    if (isLocked) { setNotice("Daily limit reached. Your allowance resets in " + resetCountdown + "."); return; }
     setBusy(true);
     setCleaningStage("Starting local processing");
     setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "cleaning", cleanError: undefined } : entry));
@@ -745,6 +746,7 @@ function App() {
     if (!targetItems.length || busy) return;
     if (planLoading) { setNotice("Checking your account plan. Please try again in a moment."); return; }
     if (!email) { setNotice("Please sign in to use daily image credits and track your allowance. Open Account to sign in."); return; }
+    if (isLocked) { setNotice("Daily limit reached. Your allowance resets in " + resetCountdown + "."); return; }
     setBusy(true); setCleaningStage("Preparing batch"); setNotice("Cleaning images locally in your browser…");
     setBatchProgress({ done: 0, total: targetItems.length });
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
@@ -774,6 +776,7 @@ function App() {
           failed++;
           const message = error instanceof Error ? error.message : "Could not clean image";
           setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "ready", cleanError: message } : entry));
+          if (/daily limit reached/i.test(message)) { setNotice(message); break; }
         } finally {
           processed++;
           setBatchProgress({ done: processed, total: targetItems.length });
@@ -840,7 +843,7 @@ function App() {
                 {addingFiles ? <div className="upload-progress" role="status" aria-live="polite"><span>Reading images… {addProgress.done} / {addProgress.total}</span><div><i style={{width: (addProgress.total ? addProgress.done / addProgress.total * 100 : 0) + "%"}}/></div></div> : <span className="format-note">JPG, JPEG, PNG or WebP · Up to {limits.maxFileMB} MB each · {limits.maxImages} images / {limits.totalMB} MB per batch · {limits.name} plan</span>}
                 <input ref={inputRef} type="file" multiple hidden disabled={busy || addingFiles} onChange={handleInput} />
               </div>
-              <div className="upload-card-bottom"><span><LockKeyhole size={14} /> Processed locally</span><span><CheckCircle2 size={14} /> No account needed</span></div>
+              <div className="upload-card-bottom"><span><LockKeyhole size={14} /> Processed locally</span><span><CheckCircle2 size={14} /> Account required for daily credits</span></div>\n              <div className={"daily-quota-card" + (isLocked ? " is-locked" : "")}><div><b>{dailyUsage ? limits.name + " daily allowance" : "Daily image allowance"}</b><strong>{dailyUsage ? dailyUsage.remaining + " / " + dailyUsage.limit + " images left" : email ? "Loading your allowance…" : "Sign in to view your allowance"}</strong></div><div className="daily-quota-track"><span style={{width:(dailyUsage ? Math.min(100,dailyUsage.used/Math.max(1,dailyUsage.limit)*100) : 0)+"%"}}/></div><small>{dailyUsage ? (isLocked ? "Limit reached · Unlocks in " + resetCountdown : dailyUsage.used + " used today · Resets in " + resetCountdown) : "Free 10 · Pro 50 · Business 200 images per day"}</small><a href="/plans">{isLocked ? "Upgrade your plan" : "View plans"}</a></div>
             </div>
             <div className="floating-meta"><div className="floating-image"><ImageIcon size={30} /><span>Private image</span></div><div className="meta-chip"><MapPin size={16} /> GPS location</div><div className="meta-chip"><Camera size={16} /> Camera details</div><div className="meta-chip"><Fingerprint size={16} /> EXIF metadata</div><div className="floating-shield"><ShieldCheck size={24} /></div></div>
           </div>
@@ -855,7 +858,7 @@ function App() {
 
       {items.length > 0 && <section className="tool-workspace" aria-live="polite"><div className="container">
         <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {limits.maxImages} images selected · {limits.name} plan · {dailyUsage ? `${dailyUsage.used}/${dailyUsage.limit} daily images used · ${dailyUsage.remaining} remaining` : "Sign in to view daily credits"} · Files stay in this browser tab</p></div>
-          <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()} disabled={busy || addingFiles}><FilePlus2 size={16} /> Add images</button>{failedItems.length > 0 && <button className="button button-outline" onClick={() => void cleanAll(failedItems)} disabled={busy}><RefreshCw size={15} /> Retry failed ({failedItems.length})</button>}<button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || addingFiles || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll} disabled={busy}><Trash2 size={17} /></button></div></div>
+          <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()} disabled={busy || addingFiles}><FilePlus2 size={16} /> Add images</button>{failedItems.length > 0 && <button className="button button-outline" onClick={() => void cleanAll(failedItems)} disabled={busy}><RefreshCw size={15} /> Retry failed ({failedItems.length})</button>}<button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || addingFiles || items.length === 0 || isLocked}><Download size={16} /> {busy ? "Cleaning…" : isLocked ? "Daily limit reached" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll} disabled={busy}><Trash2 size={17} /></button></div></div>
         {addingFiles && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><UploadCloud size={15}/><b>Preparing selected images</b><span>{addProgress.done}/{addProgress.total}</span></div><div className="processing-track"><span style={{width:(addProgress.total ? addProgress.done/addProgress.total*100 : 0)+"%"}}/></div><p>Reading image dimensions and metadata locally in your browser.</p></div>}
         {busy && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing batch"}</b><span>Working</span></div><div className="processing-track"><span style={{ width: batchProgress.total ? ((batchProgress.done / batchProgress.total) * 100) + "%" : "0%" }} /></div><p>{batchProgress.done} of {batchProgress.total} images processed. Images are cleaned and verified locally; the ZIP archive downloads when ready.</p></div>}
         <div className="workspace-grid"><div className="image-list"><div className="panel-label">SELECTED IMAGES <span>{items.length}</span></div>
@@ -869,7 +872,7 @@ function App() {
             {metadataRows.length ? <div className="metadata-categories">{metadataCategories.map(group => <section className="metadata-category" key={group.id}><h4>{group.label}<span>{group.rows.length}</span></h4><div className="metadata-table">{group.rows.map(row => <div className="metadata-row" key={row.key}><span>{row.label}</span><b>{row.value}</b></div>)}</div></section>)}</div> : <div className="empty-metadata"><Fingerprint size={25} /><b>No readable EXIF fields found</b><span>This image may already have little or no EXIF metadata.</span></div>}
             {active.cleanError && <p className="error-text">{active.cleanError}</p>}
             {active.status === "clean" ? <div className="clean-success"><CheckCircle2 size={17} /><span>Clean copy is ready</span><button className="button button-primary" onClick={() => downloadItem(active)}><Download size={15} /> Download</button></div> :
-              <button className="button button-primary clean-button" onClick={() => void cleanOne(active)} disabled={active.status === "cleaning" || busy}>{active.status === "cleaning" ? <><RefreshCw className="spin" size={16} /> Processing image…</> : <><ShieldCheck size={17} /> Remove metadata</>}</button>}
+              <button className="button button-primary clean-button" onClick={() => void cleanOne(active)} disabled={active.status === "cleaning" || busy || isLocked}>{active.status === "cleaning" ? <><RefreshCw className="spin" size={16} /> Processing image…</> : isLocked ? <><LockKeyhole size={17} /> Daily limit reached · {resetCountdown}</> : <><ShieldCheck size={17} /> Remove metadata</>}</button>}
             {active.status === "cleaning" && <div className="processing-panel" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing locally"}</b><span>In progress</span></div><div className="processing-track"><span /></div><p>Decoding pixels, creating a fresh image and checking its metadata — all in your browser.</p></div>}
             {active.status === "clean" && <div className="comparison-panel"><div><span>Original privacy fields</span><b>{metadataRows.length}</b></div><div><span>Clean copy fields</span><b>{active.cleanCheckError ? "Not verified" : active.cleanCheck ? Object.keys(active.cleanCheck).length : 0}</b></div><div><span>File size</span><b>{formatBytes(active.file.size)} → {formatBytes(active.cleaned?.size ?? 0)}</b></div></div>}
             {active.status === "clean" && <p className={"verification-note" + (active.cleanCheckError || (active.cleanCheck && Object.keys(active.cleanCheck).length) ? " verification-warning" : "")}><ShieldCheck size={14} /> {active.cleanCheckError ? "The clean copy is ready, but automatic metadata verification was unavailable. Check the downloaded file with another metadata reader before sharing sensitive images." : active.cleanCheck && Object.keys(active.cleanCheck).length ? "Verification detected remaining readable fields: " + Object.keys(active.cleanCheck).slice(0, 6).join(", ") + ". Review the exported file before sharing." : "No readable metadata fields were detected in the exported copy. This check is not a forensic guarantee."}</p>}<p className="small-disclaimer">A fresh image copy is created. JPEG and WebP are re-encoded at high quality; a small quality or file-size difference may occur.</p>
