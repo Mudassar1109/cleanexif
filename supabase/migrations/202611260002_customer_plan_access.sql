@@ -8,8 +8,8 @@ grant select on public.cleanexif_plans to anon, authenticated;
 insert into public.cleanexif_plans(code,name,description,price_monthly,watermark_images_per_batch,watermark_total_mb,max_file_mb,active,sort_order)
 values
  ('free','Free','Starter watermark allowance',0,10,100,25,true,0),
- ('pro','Pro','For creators and regular workflows',0,100,500,50,true,1),
- ('business','Business','For teams and higher-volume workflows',0,200,1024,100,true,2)
+ ('pro','Pro','For creators and regular workflows',4.99,100,500,50,true,1),
+ ('business','Business','For teams and higher-volume workflows',12.99,200,1024,100,true,2)
 on conflict (code) do update set name=excluded.name,description=excluded.description,
  watermark_images_per_batch=excluded.watermark_images_per_batch,
  watermark_total_mb=excluded.watermark_total_mb,max_file_mb=excluded.max_file_mb,
