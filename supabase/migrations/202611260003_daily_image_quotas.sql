@@ -3,6 +3,14 @@
 
 drop function if exists public.cleanexif_get_my_access();
 
+alter table public.cleanexif_plans
+  add column if not exists daily_images_limit integer not null default 10
+  check (daily_images_limit > 0);
+
+update public.cleanexif_plans
+set daily_images_limit = case code when 'free' then 10 when 'pro' then 50 when 'business' then 200 else daily_images_limit end
+where code in ('free','pro','business');
+
 create function public.cleanexif_get_my_access()
 returns table(plan_code text,plan_name text,watermark_images_per_batch integer,watermark_total_mb integer,max_file_mb integer,daily_images_limit integer,expires_at timestamptz)
 language sql stable security definer set search_path=public,auth
@@ -18,14 +26,6 @@ as $
 $;
 revoke all on function public.cleanexif_get_my_access() from public,anon;
 grant execute on function public.cleanexif_get_my_access() to authenticated;
-
-alter table public.cleanexif_plans
-  add column if not exists daily_images_limit integer not null default 10
-  check (daily_images_limit > 0);
-
-update public.cleanexif_plans
-set daily_images_limit = case code when 'free' then 10 when 'pro' then 50 when 'business' then 200 else daily_images_limit end
-where code in ('free','pro','business');
 
 create table if not exists public.cleanexif_daily_usage (
   user_id uuid not null references auth.users(id) on delete cascade,
