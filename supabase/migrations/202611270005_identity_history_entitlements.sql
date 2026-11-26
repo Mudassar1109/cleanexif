@@ -208,7 +208,7 @@ revoke all on function public.cleanexif_admin_save_customer_access(text,text,uui
 grant execute on function public.cleanexif_admin_save_customer_access(text,text,uuid,text,timestamptz,timestamptz,text,uuid) to authenticated;
 
 drop function if exists public.cleanexif_admin_list_customer_access();
-create or replace function public.cleanexif_admin_list_customer_access()
+create function public.cleanexif_admin_list_customer_access()
 returns table(
   id uuid,user_id uuid,email text,whatsapp text,plan_id uuid,status text,
   starts_at timestamptz,expires_at timestamptz,notes text,created_at timestamptz,
@@ -223,29 +223,52 @@ begin
     raise exception 'You are not authorized to view customer plans.' using errcode='42501';
   end if;
 
-  -- Expire due subscriptions once, preserve the event in history, and leave
-  -- all old rows available for audit.
+  -- Expire due subscriptions once and preserve the transition in history.
   with expired as (
     update public.cleanexif_customer_access
     set status='expired',updated_at=now()
     where status='active' and expires_at is not null and expires_at<=now()
-    returning id,user_id,email,plan_id,starts_at,expires_at,created_by,notes
+    returning id,user_id,email,plan_id,starts_at,expires_at,notes
   )
   insert into public.cleanexif_subscriptions
     (access_id,user_id,email,plan_id,status,starts_at,expires_at,event,changed_by,notes)
   select id,user_id,email,plan_id,'expired',starts_at,expires_at,'expired',auth.uid(),notes
   from expired;
 
+  -- One row per registered Auth account, including Free customers without a
+  -- paid access row. The latest subscription remains visible for management.
   return query
-  select a.id,a.user_id,a.email,a.whatsapp,a.plan_id,
+  select a.id,u.id,lower(u.email),a.whatsapp,coalesce(a.plan_id,fp.id),
+    case when a.id is null then 'free'
+         when a.status='active' and a.expires_at is not null and a.expires_at<=now()
+           then 'expired'
+         else a.status end,
+    coalesce(a.starts_at,u.created_at),a.expires_at,a.notes,u.created_at,
+    coalesce(p.name,fp.name),coalesce(p.code,fp.code)
+  from auth.users u
+  cross join (select id,name,code from public.cleanexif_plans where code='free' limit 1) fp
+  left join lateral (
+    select x.* from public.cleanexif_customer_access x
+    where x.user_id=u.id
+    order by case when x.status='active' then 0 else 1 end,x.created_at desc
+    limit 1
+  ) a on true
+  left join public.cleanexif_plans p on p.id=a.plan_id
+
+  union all
+
+  -- Keep legacy records visible when they could not be linked to an Auth user.
+  select a.id,null::uuid,a.email,a.whatsapp,a.plan_id,
     case when a.status='active' and a.expires_at is not null and a.expires_at<=now()
          then 'expired' else a.status end,
     a.starts_at,a.expires_at,a.notes,a.created_at,p.name,p.code
   from public.cleanexif_customer_access a
   join public.cleanexif_plans p on p.id=a.plan_id
-  order by a.created_at desc;
+  where a.user_id is null
+  order by 10 desc;
 end;
 $$;
+
 revoke all on function public.cleanexif_admin_list_customer_access() from public,anon;
 grant execute on function public.cleanexif_admin_list_customer_access() to authenticated;
 
