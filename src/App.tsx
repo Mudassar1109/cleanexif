@@ -741,6 +741,7 @@ function App() {
   };
   const cleanAll = async (targetItems: ImageRecord[] = items) => {
     if (!targetItems.length || busy) return;
+    if (!email) { setNotice("Please sign in from Account before cleaning images. Your selected images are still available in this tab."); return; }
     if (isLocked) { setNotice("Daily limit reached. Your allowance resets in " + resetCountdown + "."); return; }
     setBusy(true); setCleaningStage("Preparing batch"); setNotice("Cleaning images locally in your browser…");
     setBatchProgress({ done: 0, total: targetItems.length });
@@ -788,7 +789,7 @@ function App() {
         anchor.click();
         anchor.remove();
         window.setTimeout(() => URL.revokeObjectURL(url), 30000);
-        setNotice("ZIP download started. " + success + " cleaned image" + (success === 1 ? "" : "s") + " added to the ZIP download" + (failed ? "; " + failed + " failed. Use Retry failed to try them again." : "."));
+        setNotice("ZIP download started. " + success + " cleaned image" + (success === 1 ? "" : "s") + " added to the ZIP download" + (failed ? "; " + failed + " failed." : ".") + (dailyUsage && dailyUsage.remaining <= success ? " Daily allowance reached; cleaning is locked until reset." : ""));
       } else {
         setNotice("No images could be cleaned. Please try another supported image.");
       }
