@@ -439,7 +439,7 @@ function DemoPage() {
 type RepeatWatermarkSettings = { text: string; opacity: number; size: number; spacing: number; rotation: number; color: "white" | "charcoal" };
 type WatermarkFile = { id: string; file: File; url: string; width: number; height: number; output?: Blob; outputUrl?: string };
 function WatermarkPage() {
-  const { limits, email, isPaid, dailyUsage, consumeImage, isLocked, resetCountdown, loading: planLoading } = usePlanAccess();
+  const { limits, email, isPaid, dailyUsage, consumeImage, isLocked, resetCountdown, loading: planLoading } = usePlanAccess("watermark");
   const [files, setFiles] = useState<WatermarkFile[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [settings, setSettings] = useState<RepeatWatermarkSettings>({ text: "@Mudassar", opacity: 28, size: 34, spacing: 190, rotation: -28, color: "white" });
@@ -663,7 +663,7 @@ function WatermarkPage() {
 }
 
 function App() {
-  const { limits, email, loading: planLoading, dailyUsage, consumeImage, isLocked, resetCountdown } = usePlanAccess();
+  const { limits, email, loading: planLoading, dailyUsage, consumeImage, isLocked, resetCountdown } = usePlanAccess("metadata");
   const legalPath = window.location.pathname.replace(/^\/|\/$/g, "");
   if (legalPath === "admin") return <AdminPage />;
   if (legalPath === "plans") return <PlansPage />;
@@ -706,7 +706,7 @@ function App() {
     for (const file of incoming) {
       if (!ACCEPTED.includes(file.type)) { errors.push(file.name + ": unsupported format"); continue; }
       if (file.size > limits.maxFileMB * 1024 * 1024) { errors.push(file.name + ": larger than your " + limits.maxFileMB + " MB per-file limit"); continue; }
-      if (items.length + valid.length >= limits.maxImages) { errors.push("Your " + limits.name + " plan allows " + limits.maxImages + " images per batch. Upgrade your plan to add more."); break; }
+      if (items.length + valid.length >= Math.min(limits.maxImages, limits.dailyImages)) { errors.push("Your " + limits.name + " plan allows " + limits.maxImages + " images can be selected in the Metadata Inspector for your current plan. Upgrade your plan to add more."); break; }
       if (totalSize + file.size > limits.totalMB * 1024 * 1024) { errors.push(file.name + ": your " + limits.name + " plan allows " + limits.totalMB + " MB total per batch"); continue; }
       valid.push(file);
       totalSize += file.size;
