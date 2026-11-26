@@ -219,6 +219,20 @@ begin
   if not coalesce(public.is_cleanexif_admin(),false) then
     raise exception 'You are not authorized to view customer plans.' using errcode='42501';
   end if;
+
+  -- Expire due subscriptions once, preserve the event in history, and leave
+  -- all old rows available for audit.
+  with expired as (
+    update public.cleanexif_customer_access
+    set status='expired',updated_at=now()
+    where status='active' and expires_at is not null and expires_at<=now()
+    returning id,user_id,email,plan_id,starts_at,expires_at,created_by,notes
+  )
+  insert into public.cleanexif_subscriptions
+    (access_id,user_id,email,plan_id,status,starts_at,expires_at,event,changed_by,notes)
+  select id,user_id,email,plan_id,'expired',starts_at,expires_at,'expired',auth.uid(),notes
+  from expired;
+
   return query
   select a.id,a.user_id,a.email,a.whatsapp,a.plan_id,
     case when a.status='active' and a.expires_at is not null and a.expires_at<=now()
