@@ -39,7 +39,7 @@ export default function AdminPage(){
   if(result.error)setError(result.error.message);else{setNotice(editingPlan?"Plan updated.":"Plan created.");setShowForm(false);setEditingPlan(null);await loadData();}setSaving(false);
  }
  async function saveCustomer(e:FormEvent){e.preventDefault();if(!supabase)return;setSaving(true);setError("");setNotice("");
-  const payload={email:customerForm.email.trim().toLowerCase(),whatsapp:customerForm.whatsapp.trim()||null,plan_id:customerForm.plan_id,status:customerForm.status,starts_at:new Date(customerForm.starts_at+"T00:00:00Z").toISOString(),expires_at:customerForm.expires_at?new Date(customerForm.expires_at+"T23:59:59Z").toISOString():null,notes:customerForm.notes.trim()||null};
+  const payload={email:customerForm.email.trim().toLowerCase(),whatsapp:customerForm.whatsapp.trim()||null,plan_id:customerForm.plan_id,status:customerForm.status,starts_at:new Date(customerForm.starts_at+"T00:00:00+05:00").toISOString(),expires_at:customerForm.expires_at?new Date(customerForm.expires_at+"T23:59:59+05:00").toISOString():null,notes:customerForm.notes.trim()||null};
   const {error:saveError}=await supabase.rpc("cleanexif_admin_save_customer_access",{
    p_email:payload.email,
    p_whatsapp:payload.whatsapp,
