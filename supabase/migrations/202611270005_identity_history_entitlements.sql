@@ -140,7 +140,9 @@ begin
 
   if p_access_id is not null then
     select * into v_customer from public.cleanexif_customer_access
-    where id=p_access_id and user_id=v_auth_user_id for update;
+    where id=p_access_id
+      and (user_id=v_auth_user_id or (user_id is null and lower(email)=v_email))
+    for update;
     if not found then raise exception 'Customer access record was not found for this account.'; end if;
   else
     select * into v_customer from public.cleanexif_customer_access
