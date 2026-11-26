@@ -211,7 +211,7 @@ returns table(
   starts_at timestamptz,expires_at timestamptz,notes text,created_at timestamptz,
   plan_name text,plan_code text
 )
-language plpgsql stable security definer
+language plpgsql volatile security definer
 set search_path=public,auth,pg_temp
 as $$
 begin
