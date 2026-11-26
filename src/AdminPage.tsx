@@ -10,7 +10,8 @@ const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const anon = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 const supabase: SupabaseClient | null = url && anon ? createClient(url,anon,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}) : null;
 const money = (n:number) => new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
-const dateLabel = (s:string|null) => s ? new Date(s).toLocaleDateString() : "No expiry";
+const dateLabel = (s:string|null) => s ? new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Karachi",day:"2-digit",month:"2-digit",year:"numeric"}).format(new Date(s)) : "No expiry";
+const todayPakistanInput = () => new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Karachi",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
 const pakistanDateInput = (s:string|null) => s ? new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Karachi",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(s)) : "";
 
 export default function AdminPage(){
@@ -20,7 +21,7 @@ export default function AdminPage(){
  const [query,setQuery]=useState(""),[tab,setTab]=useState<"customers"|"plans"|"history">("customers"),[showForm,setShowForm]=useState(false);
  const [editingPlan,setEditingPlan]=useState<Plan|null>(null),[editingCustomer,setEditingCustomer]=useState<Customer|null>(null);
  const [planForm,setPlanForm]=useState({code:"",name:"",description:"",price_monthly:"0",watermark_images_per_batch:"10",watermark_total_mb:"100",max_file_mb:"25",daily_images_limit:"10",active:true,sort_order:"0"});
- const [customerForm,setCustomerForm]=useState({email:"",whatsapp:"",plan_id:"",status:"active" as Customer["status"],starts_at:new Date().toISOString().slice(0,10),expires_at:"",notes:""});
+ const [customerForm,setCustomerForm]=useState({email:"",whatsapp:"",plan_id:"",status:"active" as Customer["status"],starts_at:todayPakistanInput(),expires_at:"",notes:""});
  const [showPassword,setShowPassword]=useState(false);
  const adminReady=!!supabase;
  useEffect(()=>{ if(!supabase){setLoading(false);return;} supabase.auth.getSession().then(({data})=>setSession(data.session)).finally(()=>setLoading(false)); const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,s)=>setSession(s)); return ()=>subscription.unsubscribe(); },[]);
@@ -53,7 +54,7 @@ export default function AdminPage(){
   });
   if(saveError)setError(saveError.message);else{setNotice(editingCustomer?"Customer plan updated.":"Plan activated for customer.");setShowForm(false);setEditingCustomer(null);await loadData();}setSaving(false);
  }
- function openNewCustomer(){setEditingCustomer(null);setEditingPlan(null);setCustomerForm({email:"",whatsapp:"",plan_id:plans.find(p=>p.active)?.id||"",status:"active",starts_at:new Date().toISOString().slice(0,10),expires_at:"",notes:""});setShowForm(true);}
+ function openNewCustomer(){setEditingCustomer(null);setEditingPlan(null);setCustomerForm({email:"",whatsapp:"",plan_id:plans.find(p=>p.active)?.id||"",status:"active",starts_at:todayPakistanInput(),expires_at:"",notes:""});setShowForm(true);}
  function openEditCustomer(c:Customer){setEditingCustomer(c);setEditingPlan(null);setCustomerForm({email:c.email,whatsapp:c.whatsapp||"",plan_id:c.plan_id,status:c.status,starts_at:pakistanDateInput(c.starts_at),expires_at:pakistanDateInput(c.expires_at),notes:c.notes||""});setShowForm(true);}
  function openNewPlan(){setEditingPlan(null);setEditingCustomer(null);setPlanForm({code:"",name:"",description:"",price_monthly:"0",watermark_images_per_batch:"10",watermark_total_mb:"100",max_file_mb:"25",daily_images_limit:"10",active:true,sort_order:String(plans.length)});setShowForm(true);}
  function openEditPlan(p:Plan){setEditingPlan(p);setEditingCustomer(null);setPlanForm({code:p.code,name:p.name,description:p.description||"",price_monthly:String(p.price_monthly),watermark_images_per_batch:String(p.watermark_images_per_batch),watermark_total_mb:String(p.watermark_total_mb),max_file_mb:String(p.max_file_mb),daily_images_limit:String(p.daily_images_limit??10),active:p.active,sort_order:String(p.sort_order)});setShowForm(true);}
