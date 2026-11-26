@@ -153,7 +153,7 @@ async function cleanImage(file: File, onStage?: (stage: string) => void): Promis
 }
 function Logo({ small = false }: { small?: boolean }) {
   return <a className={"brand" + (small ? " brand-small" : "")} href="/" aria-label="CleanExif — Photo Privacy Tool">
-    <img className="brand-logo-image" src="/cleanexif-logo.svg" alt="CleanExif — Photo Privacy Tool" />
+    <img className="brand-logo-image" src="/cleanexif-logo-v2.svg" alt="CleanExif — Photo Privacy Tool" />
   </a>;
 }
 function LegalPage({ type }: { type: string }) {
