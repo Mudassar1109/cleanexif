@@ -648,6 +648,7 @@ function App() {
   const addFiles = useCallback(async (list: FileList | File[]) => {
     const incoming = Array.from(list);
     if (!incoming.length) return;
+    if (planLoading) { setNotice("Checking your account plan. Please try again in a moment."); return; }
     setAddingFiles(true);
     setAddProgress({ done: 0, total: incoming.length });
     const valid: File[] = [];
@@ -682,7 +683,7 @@ function App() {
     setNotice(errors.length ? (usable.length ? usable.length + " image(s) added. " : "") + errors.slice(0, 3).join(" · ") + (errors.length > 3 ? " · +" + (errors.length - 3) + " more issue(s)" : "") : usable.length ? usable.length + " image" + (usable.length === 1 ? "" : "s") + " ready to inspect." : "No supported images were added.");
     setAddingFiles(false);
     setAddProgress({ done: 0, total: 0 });
-  }, [items, activeId, limits]);
+  }, [items, activeId, limits, planLoading]);
   const handleInput = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) void addFiles(event.target.files);
     event.target.value = "";
