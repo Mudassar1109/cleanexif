@@ -416,8 +416,64 @@ function BlogPage({ slug }: { slug?: string }) {
   </div>;
 }
 
+
+function DemoPage() {
+  const [step, setStep] = useState(0);
+  const [playing, setPlaying] = useState(true);
+  const [finished, setFinished] = useState(false);
+  const steps = [
+    { title: "A photo can carry hidden details", description: "This synthetic sample contains example camera, capture-time and GPS metadata. Nothing here comes from a real person or device.", action: "Inspecting sample photo", detail: "Sample loaded · 1200 × 800 · JPEG" },
+    { title: "Inspect the metadata", description: "CleanExif reads supported metadata locally in your browser, so you can see what may be shared with an image.", action: "Reading image metadata", detail: "Camera: CleanExif Demo Camera · Model: CE-X1 Synthetic · Date: 26 Nov 2026 · GPS: 31.5204° N, 74.3587° E" },
+    { title: "Spot the location disclosure", description: "Location tags can reveal where a photo was captured. This sample uses fictional coordinates around Lahore only for demonstration.", action: "GPS location detected", detail: "31.5204° N, 74.3587° E · Synthetic demo coordinates" },
+    { title: "Remove supported metadata", description: "The image is re-encoded in your browser to create a clean copy. The original sample remains unchanged.", action: "Re-encoding image locally", detail: "EXIF · GPS · IPTC · XMP — supported metadata removed" },
+    { title: "Verify the clean copy", description: "CleanExif re-reads the exported copy to check for readable privacy-related metadata fields.", action: "Verification complete", detail: "0 readable privacy metadata fields detected in this demo copy" }
+  ];
+  useEffect(() => {
+    if (!playing || finished) return;
+    const timer = window.setTimeout(() => {
+      setStep(current => {
+        if (current >= steps.length - 1) { setPlaying(false); setFinished(true); return current; }
+        return current + 1;
+      });
+    }, 3400);
+    return () => window.clearTimeout(timer);
+  }, [playing, finished, step]);
+  const restart = () => { setStep(0); setFinished(false); setPlaying(true); };
+  const goNext = () => { if (step >= steps.length - 1) { setFinished(true); setPlaying(false); } else setStep(value => value + 1); };
+  const current = steps[step];
+  return <div className="demo-page">
+    <header className="demo-header"><a href="/" className="demo-back"><ArrowRight size={17} /> Back to CleanExif</a><Logo /><span className="demo-label"><span className="demo-live-dot" /> INTERACTIVE WALKTHROUGH</span></header>
+    <main className="demo-main">
+      <div className="demo-intro"><span className="eyebrow">SEE HOW IT WORKS</span><h1>CleanExif, <span>in action.</span></h1><p>A guided, animated walkthrough using a synthetic sample photo. No upload, account or real personal data required.</p></div>
+      <section className="demo-stage" aria-label="Animated CleanExif walkthrough">
+        <div className="demo-stage-top"><span><span className="demo-live-dot" /> LIVE PRODUCT WALKTHROUGH</span><span>STEP 0{step + 1} / 0{steps.length}</span></div>
+        <div className="demo-stage-body">
+          <div className="demo-photo-wrap"><div className="demo-photo"><div className="demo-photo-sun" /><div className="demo-photo-hill hill-one" /><div className="demo-photo-hill hill-two" /><div className="demo-photo-caption">CLEANEXIF SAMPLE</div></div><div className={"demo-scan-line scan-step-" + step} /></div>
+          <div className="demo-console"><div className="demo-console-head"><span className="demo-console-icon"><ShieldCheck size={19}/></span><div><b>Privacy inspection</b><small>All processing stays in this demo experience</small></div><span className="demo-status">{finished ? "Verified" : "Running"}</span></div>
+            <h2 key={current.title}>{current.title}</h2><p>{current.description}</p>
+            <div className="demo-progress"><span style={{width: ((step + 1) / steps.length * 100) + "%"}} /></div>
+            <div className="demo-log"><span className="demo-log-dot"/><div><b>{current.action}</b><small>{current.detail}</small></div></div>
+            <div className="demo-metadata-grid">
+              <div className={step >= 1 ? "revealed" : ""}><Camera size={16}/><span>Camera</span><b>{step >= 1 ? "CE-X1" : "Waiting"}</b></div>
+              <div className={step >= 1 ? "revealed" : ""}><Fingerprint size={16}/><span>Date & time</span><b>{step >= 1 ? "26 Nov 2026" : "Waiting"}</b></div>
+              <div className={step >= 2 ? "revealed warning" : ""}><MapPin size={16}/><span>GPS location</span><b>{step >= 2 ? (step >= 3 ? "Removed" : "Detected") : "Waiting"}</b></div>
+              <div className={step >= 4 ? "revealed success" : ""}><CheckCircle2 size={16}/><span>Verification</span><b>{step >= 4 ? "0 fields left" : "Pending"}</b></div>
+            </div>
+          </div>
+        </div>
+        <div className="demo-controls"><div className="demo-timeline">{steps.map((item,index)=><button key={item.title} className={index===step?"active":index<step?"done":""} onClick={()=>{setStep(index);setFinished(false);setPlaying(false);}} aria-label={"Go to step "+(index+1)}><span/>{index+1}</button>)}</div>
+          <div className="demo-control-buttons"><button className="button button-secondary" onClick={restart}><RefreshCw size={16}/> Restart</button><button className="button button-primary" onClick={()=>{if(finished)restart();else if(playing)setPlaying(false);else setPlaying(true);}}>{playing ? "Pause walkthrough" : finished ? "Play again" : "Resume"} <ArrowRight size={16}/></button><button className="button button-secondary" onClick={goNext} disabled={finished}>Next step</button></div>
+        </div>
+      </section>
+      <div className="demo-disclaimer"><ShieldCheck size={17}/><span><b>Demonstration only.</b> Metadata and coordinates are synthetic examples. The walkthrough illustrates the workflow; it does not process or upload a real photo.</span></div>
+      <div className="demo-bottom-link"><a href="/#tool">Ready to inspect your own image? Start cleaning <ArrowRight size={16}/></a></div>
+    </main>
+  </div>;
+}
+
 function App() {
   const legalPath = window.location.pathname.replace(/^\/|\/$/g, "");
+  if (legalPath === "demo") return <DemoPage />;
   if (legalPath === "blog") return <BlogPage />;
   if (legalPath.startsWith("blog/")) return <BlogPage slug={legalPath.slice(5)} />;
   if (["privacy-policy", "terms", "disclaimer", "cookie-policy"].includes(legalPath)) return <LegalPage type={legalPath} />;
@@ -472,10 +528,6 @@ function App() {
     if (!activeId && usable[0]) setActiveId(usable[0].id);
     setNotice(errors.length ? errors.join(" · ") : usable.length ? usable.length + " image" + (usable.length === 1 ? "" : "s") + " ready to inspect." : "");
   }, [items.length, activeId]);
-  const loadInteractiveDemo = async () => {
-    try { const sample = await createDemoPhoto(); await addFiles([sample]); setNotice("Interactive demo loaded. Inspect the synthetic camera metadata, then clean and download the sample."); }
-    catch (error) { setNotice(error instanceof Error ? error.message : "Could not load the demo image."); }
-  };
   const handleInput = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) void addFiles(event.target.files);
     event.target.value = "";
@@ -622,7 +674,7 @@ function App() {
                 onDrop={event => { event.preventDefault(); setDragging(false); void addFiles(event.dataTransfer.files); }}>
                 <div className="upload-icon"><UploadCloud size={47} strokeWidth={1.7} /></div>
                 <h2>Drop your images here</h2><p>or click to choose files</p>
-                <div className="upload-actions"><button className="button button-primary choose-button" onClick={() => inputRef.current?.click()}><FilePlus2 size={18} /> Choose images</button><button className="button button-demo" onClick={() => void loadInteractiveDemo()} disabled={busy}><Zap size={16} /> Try interactive demo</button></div>
+                <div className="upload-actions"><button className="button button-primary choose-button" onClick={() => inputRef.current?.click()}><FilePlus2 size={18} /> Choose images</button><a className="button button-demo" href="/demo"><Zap size={16} /> Try interactive demo</a></div>
                 <span className="format-note">JPG, JPEG, PNG or WebP · Up to 25 MB each</span>
                 <input ref={inputRef} type="file" multiple hidden disabled={busy} onChange={handleInput} />
               </div>
