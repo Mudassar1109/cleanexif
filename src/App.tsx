@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState, useEffect, type ChangeEvent } f
 import exifr from "exifr";
 import JSZip from "jszip";
 import {
-  AlertCircle, ArrowRight, Camera, Check, CheckCircle2, ChevronDown,
+  AlertCircle, ArrowRight, Aperture, Camera, Check, CheckCircle2, ChevronDown, Crown,
   Download, Eye, FilePlus2, Fingerprint, Globe2, Image as ImageIcon,
   LockKeyhole, MapPin, Menu, Monitor, RefreshCw, ShieldCheck,
   Trash2, UploadCloud, X, Zap
@@ -153,8 +153,8 @@ async function cleanImage(file: File, onStage?: (stage: string) => void): Promis
 }
 function Logo({ small = false }: { small?: boolean }) {
   return <a className={"brand" + (small ? " brand-small" : "")} href="/" aria-label="CleanExif home">
-    <span className="brand-mark"><ImageIcon size={small ? 19 : 21} strokeWidth={2.4} /></span>
-    <span>Clean<span>Exif</span></span>
+    <span className="brand-mark" aria-hidden="true"><Aperture size={small ? 21 : 24} strokeWidth={1.9} /><span className="brand-crown"><Crown size={small ? 9 : 10} strokeWidth={2.2} /></span></span>
+    <span className="brand-wordmark"><span className="brand-name">Clean<span>Exif</span></span><span className="brand-tagline">PRIVACY STUDIO</span></span>
   </a>;
 }
 function LegalPage({ type }: { type: string }) {
