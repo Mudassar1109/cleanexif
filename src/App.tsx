@@ -586,6 +586,8 @@ function App() {
   const [items, setItems] = useState<ImageRecord[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [addingFiles, setAddingFiles] = useState(false);
+  const [addProgress, setAddProgress] = useState({ done: 0, total: 0 });
   const [busy, setBusy] = useState(false);
   const [cleaningStage, setCleaningStage] = useState("");
   const [batchProgress, setBatchProgress] = useState({ done: 0, total: 0 });
@@ -604,6 +606,9 @@ function App() {
   }, [notice, busy]);
   const addFiles = useCallback(async (list: FileList | File[]) => {
     const incoming = Array.from(list);
+    if (!incoming.length) return;
+    setAddingFiles(true);
+    setAddProgress({ done: 0, total: incoming.length });
     const valid: File[] = [];
     const errors: string[] = [];
     let totalSize = items.reduce((sum, item) => sum + item.file.size, 0);
@@ -626,13 +631,16 @@ function App() {
         preview = URL.createObjectURL(file);
       } catch { errors.push(file.name + ": could not read image"); }
       const metadata = await readMetadata(file);
+      setAddProgress(previous => ({ ...previous, done: previous.done + 1 }));
       return { id, file, preview, width, height, metadata, status: "ready" as const };
     }));
     const usable = records.filter(record => !!record.preview);
     setItems(previous => [...previous, ...usable]);
     if (!activeId && usable[0]) setActiveId(usable[0].id);
-    setNotice(errors.length ? errors.join(" · ") : usable.length ? usable.length + " image" + (usable.length === 1 ? "" : "s") + " ready to inspect." : "");
-  }, [items.length, activeId]);
+    setNotice(errors.length ? (usable.length ? usable.length + " image(s) added. " : "") + errors.slice(0, 3).join(" · ") + (errors.length > 3 ? " · +" + (errors.length - 3) + " more issue(s)" : "") : usable.length ? usable.length + " image" + (usable.length === 1 ? "" : "s") + " ready to inspect." : "No supported images were added.");
+    setAddingFiles(false);
+    setAddProgress({ done: 0, total: 0 });
+  }, [items, activeId]);
   const handleInput = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) void addFiles(event.target.files);
     event.target.value = "";
@@ -684,7 +692,8 @@ function App() {
     anchor.href = url;
     anchor.download = "clean-" + item.file.name.replace(/\.[^.]+$/, "") + (item.file.name.match(/\.[^.]+$/)?.[0] ?? "");
     document.body.appendChild(anchor); anchor.click(); anchor.remove();
-    if (!item.cleanedUrl) URL.revokeObjectURL(url);
+    if (!item.cleanedUrl) window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+    setNotice("Download started: " + item.file.name.replace(/\\.[^.]+$/, "") + ". Check your browser downloads.");
   };
   const cleanAll = async (targetItems: ImageRecord[] = items) => {
     if (!targetItems.length || busy) return;
@@ -726,8 +735,8 @@ function App() {
         document.body.appendChild(anchor);
         anchor.click();
         anchor.remove();
-        window.setTimeout(() => URL.revokeObjectURL(url), 1500);
-        setNotice(success + " cleaned image" + (success === 1 ? "" : "s") + " added to the ZIP download" + (failed ? "; " + failed + " failed. Use Retry failed to try them again." : "."));
+        window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+        setNotice("ZIP download started. " + success + " cleaned image" + (success === 1 ? "" : "s") + " added to the ZIP download" + (failed ? "; " + failed + " failed. Use Retry failed to try them again." : "."));
       } else {
         setNotice("No images could be cleaned. Please try another supported image.");
       }
@@ -767,14 +776,15 @@ function App() {
           <div className="hero-visual" id="tool">
             <div className="upload-card">
               <div className={"drop-zone" + (dragging ? " drop-active" : "")}
+                onDragEnter={event => { event.preventDefault(); setDragging(true); }}
                 onDragOver={event => { event.preventDefault(); setDragging(true); }}
-                onDragLeave={() => setDragging(false)}
-                onDrop={event => { event.preventDefault(); setDragging(false); void addFiles(event.dataTransfer.files); }}>
+                onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false); }}
+                onDrop={event => { event.preventDefault(); setDragging(false); if (!busy && !addingFiles) void addFiles(event.dataTransfer.files); }}>
                 <div className="upload-icon"><UploadCloud size={47} strokeWidth={1.7} /></div>
-                <h2>Drop your images here</h2><p>or click to choose files</p>
+                <h2>{dragging ? "Drop to add your images" : "Drop your images here"}</h2><p>{dragging ? "Release to add supported photos" : "or click to choose files"}</p>
                 <div className="upload-actions"><button className="button button-primary choose-button" onClick={() => inputRef.current?.click()}><FilePlus2 size={18} /> Choose images</button><a className="button button-demo" href="/demo"><Zap size={16} /> Try interactive demo</a></div>
-                <span className="format-note">JPG, JPEG, PNG or WebP · Up to 25 MB each</span>
-                <input ref={inputRef} type="file" multiple hidden disabled={busy} onChange={handleInput} />
+                {addingFiles ? <div className="upload-progress" role="status" aria-live="polite"><span>Reading images… {addProgress.done} / {addProgress.total}</span><div><i style={{width: (addProgress.total ? addProgress.done / addProgress.total * 100 : 0) + "%"}}/></div></div> : <span className="format-note">JPG, JPEG, PNG or WebP · Up to 25 MB each · 20 images / 100 MB per batch</span>}
+                <input ref={inputRef} type="file" multiple hidden disabled={busy || addingFiles} onChange={handleInput} />
               </div>
               <div className="upload-card-bottom"><span><LockKeyhole size={14} /> Processed locally</span><span><CheckCircle2 size={14} /> No account needed</span></div>
             </div>
@@ -791,7 +801,8 @@ function App() {
 
       {items.length > 0 && <section className="tool-workspace" aria-live="polite"><div className="container">
         <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {MAX_FILES} images selected · Files stay in this browser tab</p></div>
-          <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()} disabled={busy}><FilePlus2 size={16} /> Add images</button>{failedItems.length > 0 && <button className="button button-outline" onClick={() => void cleanAll(failedItems)} disabled={busy}><RefreshCw size={15} /> Retry failed ({failedItems.length})</button>}<button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll} disabled={busy}><Trash2 size={17} /></button></div></div>
+          <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()} disabled={busy || addingFiles}><FilePlus2 size={16} /> Add images</button>{failedItems.length > 0 && <button className="button button-outline" onClick={() => void cleanAll(failedItems)} disabled={busy}><RefreshCw size={15} /> Retry failed ({failedItems.length})</button>}<button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || addingFiles || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll} disabled={busy}><Trash2 size={17} /></button></div></div>
+        {addingFiles && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><UploadCloud size={15}/><b>Preparing selected images</b><span>{addProgress.done}/{addProgress.total}</span></div><div className="processing-track"><span style={{width:(addProgress.total ? addProgress.done/addProgress.total*100 : 0)+"%"}}/></div><p>Reading image dimensions and metadata locally in your browser.</p></div>}
         {busy && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing batch"}</b><span>Working</span></div><div className="processing-track"><span style={{ width: batchProgress.total ? ((batchProgress.done / batchProgress.total) * 100) + "%" : "0%" }} /></div><p>{batchProgress.done} of {batchProgress.total} images processed. Images are cleaned and verified locally; the ZIP archive downloads when ready.</p></div>}
         <div className="workspace-grid"><div className="image-list"><div className="panel-label">SELECTED IMAGES <span>{items.length}</span></div>
           {items.map(item => <button key={item.id} className={"image-list-item" + (active?.id === item.id ? " selected" : "")} onClick={() => setActiveId(item.id)}>
