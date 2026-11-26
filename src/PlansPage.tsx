@@ -4,7 +4,7 @@ import {cleanexifSupabase,usePlanAccess} from "./planAccess";
 import "./plans.css";
 const WA="https://wa.me/923197013743";
 const prices:Record<string,string>={free:"$0",pro:"$4.99",business:"$12.99"};
-const bullets:Record<string,string[]>={free:["10 images per batch","100 MB total batch size","25 MB maximum per file","Browser-based processing"],pro:["100 images per batch","500 MB total batch size","50 MB maximum per file","All Free features"],business:["200 images per batch","1 GB total batch size","100 MB maximum per file","All Pro features"]};
+const bullets:Record<string,string[]>={free:["10 images per day","10 images per batch","100 MB total batch size","25 MB maximum per file","Browser-based processing"],pro:["50 images per day","100 images per batch","500 MB total batch size","50 MB maximum per file","All Free features"],business:["200 images per day","200 images per batch","1 GB total batch size","100 MB maximum per file","All Pro features"]};
 export default function PlansPage({accountOnly=false}:{accountOnly?:boolean}){
  const {limits,email}=usePlanAccess();const [plans,setPlans]=useState<any[]>([]),[authEmail,setAuthEmail]=useState(""),[password,setPassword]=useState("");
  const [mode,setMode]=useState<"signin"|"signup">("signup"),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[error,setError]=useState("");
