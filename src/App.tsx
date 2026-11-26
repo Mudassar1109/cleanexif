@@ -558,6 +558,36 @@ function App() {
     ["Does removing EXIF data affect image quality?", "PNG is re-encoded losslessly. JPEG and WebP are exported at a high quality setting, but re-encoding can cause a small quality or file-size difference."],
     ["Can I clean multiple images at once?", "Yes. Add up to 20 supported images and use Clean all to download the cleaned files together in a ZIP archive."]
   ];
+  useEffect(() => {
+    const software = document.createElement("script");
+    software.id = "cleanexif-home-software-schema";
+    software.type = "application/ld+json";
+    software.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "CleanExif",
+      applicationCategory: "MultimediaApplication",
+      operatingSystem: "Any",
+      url: window.location.origin + "/",
+      description: "A privacy-first browser tool to inspect and remove supported image metadata without uploading image files.",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      featureList: ["Inspect image metadata", "Remove supported metadata", "Local browser processing", "Batch image cleaning"]
+    });
+    const faq = document.createElement("script");
+    faq.id = "cleanexif-home-faq-schema";
+    faq.type = "application/ld+json";
+    faq.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqs.map(([question, answer]) => ({
+        "@type": "Question",
+        name: question,
+        acceptedAnswer: { "@type": "Answer", text: answer }
+      }))
+    });
+    document.head.append(software, faq);
+    return () => { software.remove(); faq.remove(); };
+  }, []);
   return <div className="app-shell">
     <header className="site-header"><div className="container nav-inner"><Logo />
       <button className="mobile-toggle" aria-label="Toggle navigation" onClick={() => setMobileMenu(!mobileMenu)}><Menu size={22} /></button>
