@@ -54,3 +54,7 @@
 @media(max-width:760px){.site-header{height:68px}.nav-inner{padding-left:18px;padding-right:18px}.brand{font-size:22px}.nav-links{background:white;border:1px solid #e5edf8;box-shadow:0 14px 35px rgba(18,52,97,.12);padding:12px;border-radius:16px}.nav-links>a:not(.button){padding:12px 14px}.drop-zone{min-height:260px}}
 
 @media(max-width:760px){.brand{gap:10px}.brand-mark{width:39px;height:39px}.brand-name{font-size:23px}.brand-tagline{font-size:6px;letter-spacing:1.7px}}
+
+/* Official horizontal CleanExif wordmark */
+.brand{display:inline-flex;align-items:center;gap:0;flex-shrink:0}.brand-logo-image{display:block;width:236px;height:auto;max-width:100%}.brand-small .brand-logo-image{width:190px}
+@media(max-width:760px){.brand-logo-image{width:205px}.brand-small .brand-logo-image{width:175px}}
