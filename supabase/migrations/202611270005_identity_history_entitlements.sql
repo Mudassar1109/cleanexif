@@ -254,9 +254,10 @@ begin
     limit 1
   ) a on true
   left join public.cleanexif_plans p on p.id=a.plan_id
-  where not exists (
-    select 1 from public.cleanexif_admin_users au where au.user_id=u.id
-  )
+  where u.email is not null
+    and not exists (
+      select 1 from public.cleanexif_admin_users au where au.user_id=u.id
+    )
 
   union all
 
