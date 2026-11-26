@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState, useEffect, type ChangeEvent } from "react";
 import exifr from "exifr";
+import AdminPage from "./AdminPage";
 import JSZip from "jszip";
 import {
   AlertCircle, ArrowRight, Camera, Check, CheckCircle2, ChevronDown,
@@ -608,6 +609,7 @@ function WatermarkPage() {
 
 function App() {
   const legalPath = window.location.pathname.replace(/^\/|\/$/g, "");
+  if (legalPath === "admin") return <AdminPage />;
   if (legalPath === "demo") return <DemoPage />;
   if (legalPath === "watermark") return <WatermarkPage />;
   if (legalPath === "blog") return <BlogPage />;
