@@ -4,7 +4,7 @@ import JSZip from "jszip";
 import {
   AlertCircle, ArrowRight, Camera, Check, CheckCircle2, ChevronDown,
   Download, Eye, FilePlus2, Fingerprint, Globe2, Image as ImageIcon,
-  LockKeyhole, MapPin, Menu, Monitor, RefreshCw, Shield, ShieldCheck,
+  LockKeyhole, MapPin, Menu, Monitor, RefreshCw, ShieldCheck,
   Trash2, UploadCloud, X, Zap
 } from "lucide-react";
 
