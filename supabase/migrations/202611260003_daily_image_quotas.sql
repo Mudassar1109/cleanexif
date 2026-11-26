@@ -14,7 +14,7 @@ where code in ('free','pro','business');
 create function public.cleanexif_get_my_access()
 returns table(plan_code text,plan_name text,watermark_images_per_batch integer,watermark_total_mb integer,max_file_mb integer,daily_images_limit integer,expires_at timestamptz)
 language sql stable security definer set search_path=public,auth
-as $
+as $$
  select p.code,p.name,p.watermark_images_per_batch,p.watermark_total_mb,p.max_file_mb,p.daily_images_limit,a.expires_at
  from public.cleanexif_customer_access a
  join public.cleanexif_plans p on p.id=a.plan_id
@@ -23,7 +23,7 @@ as $
    and a.status='active' and p.active=true
    and a.starts_at<=now() and (a.expires_at is null or a.expires_at>now())
  order by a.created_at desc limit 1;
-$;
+$$;
 revoke all on function public.cleanexif_get_my_access() from public,anon;
 grant execute on function public.cleanexif_get_my_access() to authenticated;
 
