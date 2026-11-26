@@ -72,6 +72,7 @@ where a.id=r.id
   and (r.expires_at is not null and r.expires_at<=now()
        or (r.rn>1 and r.user_id is not null));
 
+drop function if exists public.cleanexif_get_my_access();
 create or replace function public.cleanexif_get_my_access()
 returns table(
   plan_code text,
