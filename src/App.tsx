@@ -92,11 +92,13 @@ async function verifyMetadata(blob: Blob): Promise<{ metadata: Meta | null; erro
   } catch { return { metadata: null, error: true }; }
 }
 
-async function cleanImage(file: File, onStage?: (stage: string) => void): Promise<Blob> {
+type WatermarkSettings = { enabled: boolean; text: string; position: "bottom-right" | "bottom-left" | "top-right" | "top-left" | "center-diagonal"; opacity: number; color: "white" | "charcoal" };
+
+async function cleanImage(file: File, onStage?: (stage: string) => void, watermark?: WatermarkSettings): Promise<Blob> {
   onStage?.("Decoding image");
   const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
   try {
-    onStage?.("Preparing clean image");
+    onStage?.(watermark?.enabled && watermark.text.trim() ? "Removing metadata and applying watermark" : "Preparing clean image");
     const canvas = document.createElement("canvas");
     canvas.width = bitmap.width;
     canvas.height = bitmap.height;
@@ -107,6 +109,39 @@ async function cleanImage(file: File, onStage?: (stage: string) => void): Promis
       context.fillRect(0, 0, canvas.width, canvas.height);
     }
     context.drawImage(bitmap, 0, 0);
+    const label = watermark?.text.trim().slice(0, 80);
+    if (watermark?.enabled && label) {
+      const size = Math.max(16, Math.min(64, Math.round(Math.min(canvas.width, canvas.height) * 0.038)));
+      const padding = Math.max(14, Math.round(size * 0.65));
+      context.save();
+      context.globalAlpha = Math.max(0.1, Math.min(0.8, watermark.opacity / 100));
+      context.font = `700 ${size}px Arial, Helvetica, sans-serif`;
+      context.textBaseline = "middle";
+      context.textAlign = "left";
+      context.lineJoin = "round";
+      const fill = watermark.color === "white" ? "#ffffff" : "#20242b";
+      const shadow = watermark.color === "white" ? "rgba(0,0,0,.72)" : "rgba(255,255,255,.78)";
+      context.fillStyle = fill;
+      context.shadowColor = shadow;
+      context.shadowBlur = Math.max(2, size * 0.18);
+      context.shadowOffsetX = 1;
+      context.shadowOffsetY = 1;
+      const width = context.measureText(label).width;
+      const xRight = canvas.width - padding - width;
+      const yTop = padding + size / 2;
+      const yBottom = canvas.height - padding - size / 2;
+      if (watermark.position === "center-diagonal") {
+        context.textAlign = "center";
+        context.translate(canvas.width / 2, canvas.height / 2);
+        context.rotate(-Math.PI / 6);
+        context.fillText(label, 0, 0, canvas.width * 0.88);
+      } else {
+        const x = watermark.position.endsWith("right") ? xRight : padding;
+        const y = watermark.position.startsWith("top") ? yTop : yBottom;
+        context.fillText(label, x, y, Math.max(20, canvas.width - padding * 2));
+      }
+      context.restore();
+    }
     onStage?.("Re-encoding image");
     const output = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Image export failed. Please try another image.")), file.type, 0.94);
@@ -450,7 +485,7 @@ function App() {
   const [batchProgress, setBatchProgress] = useState({ done: 0, total: 0 });
   const [notice, setNotice] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);\n  const [watermark, setWatermark] = useState<WatermarkSettings>({ enabled: false, text: "", position: "bottom-right", opacity: 35, color: "white" });
   const active = items.find(item => item.id === activeId) ?? items[0] ?? null;
   const metadataCategories = useMemo(() => getMetaCategories(active?.metadata ?? null), [active]);
   const metadataRows = useMemo(() => metadataCategories.flatMap(group => group.rows), [metadataCategories]);
@@ -520,7 +555,7 @@ function App() {
     try {
       // Let React paint the processing state before CPU work begins.
       await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
-      const blob = await cleanImage(item.file, setCleaningStage);
+      const blob = await cleanImage(item.file, setCleaningStage, watermark);
       setCleaningStage("Verifying exported image");
       const verification = await verifyMetadata(blob);
       const url = URL.createObjectURL(blob);
@@ -557,16 +592,9 @@ function App() {
     let processed = 0;
     try {
       for (const item of targetItems) {
-        if (item.cleaned) {
-          zip.file(uniqueZipFilename(item.file.name, usedZipNames), item.cleaned);
-          success++;
-          processed++;
-          setBatchProgress({ done: processed, total: targetItems.length });
-          continue;
-        }
         try {
           setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "cleaning" } : entry));
-          const blob = await cleanImage(item.file, setCleaningStage);
+          const blob = await cleanImage(item.file, setCleaningStage, watermark);
           setCleaningStage("Verifying " + item.file.name);
           const verification = await verifyMetadata(blob);
           const url = URL.createObjectURL(blob);
@@ -612,7 +640,7 @@ function App() {
     ["Can I remove GPS location from an image?", "Re-encoding a supported image removes embedded metadata commonly used for GPS and camera details. Always inspect the exported file if location privacy is critical."],
     ["Which image formats are supported?", "CleanExif supports JPEG, PNG and WebP images up to 25 MB each, with a maximum of 20 images and 100 MB total per batch. HEIC, animated GIF and SVG are not supported."],
     ["Does removing EXIF data affect image quality?", "PNG is re-encoded losslessly. JPEG and WebP are exported at a high quality setting, but re-encoding can cause a small quality or file-size difference."],
-    ["Can I clean multiple images at once?", "Yes. Add up to 20 supported images and use Clean all to download the cleaned files together in a ZIP archive."]
+    ["Can I clean multiple images at once?", "Yes. Add up to 20 supported images and use Clean all to download the cleaned files together in a ZIP archive."],\n    ["Can I add a copyright watermark to multiple photos?", "Yes. Open Add Copyright Watermark (Optional), enter your text and choose its position, opacity and color. CleanExif draws the watermark into each exported image while re-encoding it to remove supported metadata. You can download one image or the whole batch as a ZIP. Processing stays in your browser."]
   ];
   return <div className="app-shell">
     <header className="site-header"><div className="container nav-inner"><Logo />
@@ -650,7 +678,7 @@ function App() {
         <div className="container feature-strip">
           <div className="feature-item"><span className="feature-icon"><Eye /></span><div><b>View metadata</b><small>See what information your photos contain.</small></div></div>
           <div className="feature-item"><span className="feature-icon"><ImageIcon /></span><div><b>Remove EXIF</b><small>Strip supported hidden image metadata.</small></div></div>
-          <div className="feature-item"><span className="feature-icon"><Download /></span><div><b>Download clean</b><small>Save a fresh copy without embedded metadata.</small></div></div>
+          <div className="feature-item"><span className="feature-icon"><Download /></span><div><b>Download clean</b><small>Save a fresh copy without embedded metadata, with an optional copyright watermark.</small></div></div>
           <div className="feature-item"><span className="feature-icon"><ShieldCheck /></span><div><b>Privacy first</b><small>Processing happens locally in your browser.</small></div></div>
         </div>
       </section>
@@ -658,6 +686,25 @@ function App() {
       {items.length > 0 && <section className="tool-workspace" aria-live="polite"><div className="container">
         <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {MAX_FILES} images selected · Files stay in this browser tab</p></div>
           <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()} disabled={busy}><FilePlus2 size={16} /> Add images</button>{failedItems.length > 0 && <button className="button button-outline" onClick={() => void cleanAll(failedItems)} disabled={busy}><RefreshCw size={15} /> Retry failed ({failedItems.length})</button>}<button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || items.length === 0}><Download size={16} /> {busy ? "Cleaning…" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll} disabled={busy}><Trash2 size={17} /></button></div></div>
+        <section className="watermark-settings" aria-label="Optional copyright watermark">
+          <button type="button" className="watermark-toggle" aria-expanded={watermark.enabled} onClick={() => setWatermark(value => ({ ...value, enabled: !value.enabled }))}>
+            <span className={"watermark-switch" + (watermark.enabled ? " is-on" : "")}><i /></span>
+            <span><b>Add Copyright Watermark (Optional)</b><small>Stamp your brand or name onto each cleaned photo.</small></span>
+            <ChevronDown className={watermark.enabled ? "watermark-chevron is-open" : "watermark-chevron"} size={18} />
+          </button>
+          {watermark.enabled && <div className="watermark-controls">
+            <label className="watermark-field"><span>Watermark text</span><input value={watermark.text} maxLength={80} placeholder="© Your Brand or Name" onChange={event => setWatermark(value => ({ ...value, text: event.target.value }))} /></label>
+            <div className="watermark-field"><span>Position</span><div className="watermark-position-grid">
+              {(["bottom-right","bottom-left","top-right","top-left","center-diagonal"] as const).map(position => <button type="button" key={position} className={watermark.position === position ? "selected" : ""} onClick={() => setWatermark(value => ({ ...value, position }))}>{({ "bottom-right":"Bottom-Right", "bottom-left":"Bottom-Left", "top-right":"Top-Right", "top-left":"Top-Left", "center-diagonal":"Center Diagonal" })[position]}</button>)}
+            </div></div>
+            <label className="watermark-field"><span>Opacity <b>{watermark.opacity}%</b></span><input type="range" min="10" max="80" step="1" value={watermark.opacity} onChange={event => setWatermark(value => ({ ...value, opacity: Number(event.target.value) }))} /></label>
+            <div className="watermark-field"><span>Text color</span><div className="watermark-colors">
+              <button type="button" className={watermark.color === "white" ? "selected" : ""} onClick={() => setWatermark(value => ({ ...value, color: "white" }))}><i className="watermark-swatch swatch-white" /> White</button>
+              <button type="button" className={watermark.color === "charcoal" ? "selected" : ""} onClick={() => setWatermark(value => ({ ...value, color: "charcoal" }))}><i className="watermark-swatch swatch-charcoal" /> Dark Charcoal</button>
+            </div></div>
+            <p className="watermark-hint">The watermark is permanently drawn into the exported image pixels. Keep your original files unchanged.</p>
+          </div>}
+        </section>
         {busy && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing batch"}</b><span>Working</span></div><div className="processing-track"><span style={{ width: batchProgress.total ? ((batchProgress.done / batchProgress.total) * 100) + "%" : "0%" }} /></div><p>{batchProgress.done} of {batchProgress.total} images processed. Images are cleaned and verified locally; the ZIP archive downloads when ready.</p></div>}
         <div className="workspace-grid"><div className="image-list"><div className="panel-label">SELECTED IMAGES <span>{items.length}</span></div>
           {items.map(item => <button key={item.id} className={"image-list-item" + (active?.id === item.id ? " selected" : "")} onClick={() => setActiveId(item.id)}>
@@ -665,7 +712,7 @@ function App() {
             <span className={"status-dot " + item.status} title={item.status} /> <span className={"remove-image" + (busy ? " remove-disabled" : "")} role="button" aria-disabled={busy} aria-label={"Remove " + item.file.name} onClick={event => { event.stopPropagation(); if (!busy) removeItem(item.id); }}><X size={15} /></span>
           </button>)}
         </div>
-        {active && <div className="inspector-panel"><div className="inspector-preview"><img src={active.status === "clean" && active.cleanedUrl ? active.cleanedUrl : active.preview} alt={active.status === "clean" ? "Cleaned preview of " + active.file.name : active.file.name} /><div className="preview-caption"><b>{active.status === "clean" ? "Cleaned preview" : active.file.name}</b><span>{active.width} × {active.height} · {(active.cleaned?.type || active.file.type).split("/")[1]?.toUpperCase()} · {formatBytes(active.cleaned?.size ?? active.file.size)}</span></div></div>
+        {active && <div className="inspector-panel"><div className="inspector-preview"><img src={active.status === "clean" && active.cleanedUrl ? active.cleanedUrl : active.preview} alt={active.status === "clean" ? "Cleaned preview of " + active.file.name : active.file.name} />{active.status !== "clean" && watermark.enabled && watermark.text.trim() && <span className={"watermark-live-preview wm-" + watermark.position + " wm-" + watermark.color} style={{ opacity: watermark.opacity / 100 }}>{watermark.text.slice(0,80)}</span>}<div className="preview-caption"><b>{active.status === "clean" ? "Cleaned preview" : active.file.name}</b><span>{active.width} × {active.height} · {(active.cleaned?.type || active.file.type).split("/")[1]?.toUpperCase()} · {formatBytes(active.cleaned?.size ?? active.file.size)}</span></div></div>
           <div className="metadata-panel"><div className="panel-label">{active.status === "clean" ? "ORIGINAL METADATA (BEFORE CLEANING)" : "METADATA FOUND"} <span>{metadataRows.length} fields shown</span></div>
             {metadataRows.length ? <div className="metadata-categories">{metadataCategories.map(group => <section className="metadata-category" key={group.id}><h4>{group.label}<span>{group.rows.length}</span></h4><div className="metadata-table">{group.rows.map(row => <div className="metadata-row" key={row.key}><span>{row.label}</span><b>{row.value}</b></div>)}</div></section>)}</div> : <div className="empty-metadata"><Fingerprint size={25} /><b>No readable EXIF fields found</b><span>This image may already have little or no EXIF metadata.</span></div>}
             {active.cleanError && <p className="error-text">{active.cleanError}</p>}
@@ -678,7 +725,7 @@ function App() {
         </div>
       </div></section>}
 
-      <section className="how-section section-pad" id="how-it-works"><div className="container how-grid"><div className="how-left"><span className="eyebrow">SIMPLE BY DESIGN</span><h2>How <span>CleanExif</span> works</h2><p>Clean your photos in three simple steps. No technical knowledge required.</p>
+      <section className="how-section section-pad" id="how-it-works"><div className="container how-grid"><div className="how-left"><span className="eyebrow">SIMPLE BY DESIGN</span><h2>How <span>CleanExif</span> works</h2><p>Clean your photos, remove supported metadata and optionally add a copyright watermark to a batch — all locally in your browser.</p>
         <div className="steps-grid"><div className="step-card"><span className="step-number">01</span><UploadCloud /><b>Select images</b><small>Choose photos from your device.</small></div><ArrowRight className="step-arrow" /><div className="step-card"><span className="step-number">02</span><Eye /><b>Inspect & clean</b><small>View metadata and remove it locally.</small></div><ArrowRight className="step-arrow" /><div className="step-card"><span className="step-number">03</span><Download /><b>Download</b><small>Save your cleaned images.</small></div></div>
       </div><div className="privacy-card" id="privacy"><div className="privacy-heading"><span className="privacy-large-icon"><ShieldCheck size={30} /></span><div><h2>Your privacy comes first</h2><p>CleanExif is designed to keep image processing on your device.</p></div></div>
         <div className="privacy-points"><span><Check /> No image uploads</span><span><Check /> No account required</span><span><Check /> No image storage</span><span><Check /> No ad or analytics trackers</span><span><Check /> Works on desktop & mobile</span><span><Check /> No processing API</span></div>
