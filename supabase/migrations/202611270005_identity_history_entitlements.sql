@@ -349,12 +349,12 @@ begin
    where p.code='free' and p.active=true limit 1;
  end if;
  v_limit:=coalesce(v_limit,10);
- insert into public.cleanexif_tool_daily_usage(user_id,usage_date,tool_key,used_count)
+ insert into public.cleanexif_tool_daily_usage as usage(user_id,usage_date,tool_key,used_count)
  values(v_user_id,v_today,p_tool,1)
  on conflict(user_id,usage_date,tool_key) do update
-   set used_count=public.cleanexif_tool_daily_usage.used_count+1,updated_at=now()
-   where public.cleanexif_tool_daily_usage.used_count<v_limit
- returning public.cleanexif_tool_daily_usage.used_count into v_used;
+   set used_count=usage.used_count+1,updated_at=now()
+   where usage.used_count<v_limit
+ returning usage.used_count into v_used;
  if found then v_allowed:=true;
  else
    select u.used_count into v_used from public.cleanexif_tool_daily_usage u
