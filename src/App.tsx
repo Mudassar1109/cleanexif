@@ -14,7 +14,7 @@ import {
 type Meta = Record<string, unknown>;
 type ImageRecord = {
   id: string; file: File; preview: string; width: number; height: number;
-  metadata: Meta | null; cleaned?: Blob; cleanedUrl?: string; cleanError?: string; cleanCheck?: Meta | null; cleanCheckError?: boolean;
+  metadata: Meta | null; cleaned?: Blob; cleanedUrl?: string; cleanError?: string; cleanCheck?: Meta | null; cleanCheckError?: boolean; downloaded?: boolean;
   status: "ready" | "cleaning" | "clean";
 };
 
@@ -437,9 +437,9 @@ function DemoPage() {
 
 
 type RepeatWatermarkSettings = { text: string; opacity: number; size: number; spacing: number; rotation: number; color: "white" | "charcoal" };
-type WatermarkFile = { id: string; file: File; url: string; width: number; height: number; output?: Blob; outputUrl?: string };
+type WatermarkFile = { id: string; file: File; url: string; width: number; height: number; output?: Blob; outputUrl?: string; downloaded?: boolean };
 function WatermarkPage() {
-  const { limits, email, isPaid, dailyUsage, consumeImage, isLocked, resetCountdown, loading: planLoading } = usePlanAccess();
+  const { limits, email, isPaid, dailyUsage, consumeImage, isLocked, resetCountdown, loading: planLoading } = usePlanAccess("watermark");
   const [files, setFiles] = useState<WatermarkFile[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [settings, setSettings] = useState<RepeatWatermarkSettings>({ text: "@Mudassar", opacity: 28, size: 34, spacing: 190, rotation: -28, color: "white" });
@@ -565,9 +565,19 @@ function WatermarkPage() {
       setFiles(previous => previous.map(file => file.id === item.id ? { ...file, output: blob, outputUrl: url } : file));
       const anchor = document.createElement("a"); anchor.href = url; anchor.download = "watermarked-" + item.file.name;
       document.body.appendChild(anchor); anchor.click(); anchor.remove();
+      setFiles(previous => previous.map(file => file.id === item.id ? { ...file, downloaded: true } : file));
       setNotice("Watermark applied and download started: " + item.file.name + ".");
     } catch (error) { setNotice(error instanceof Error ? error.message : "Could not export this image."); }
     finally { setBusy(false); }
+  };
+  const downloadWatermark = (item: WatermarkFile) => {
+    if (!item.output || !item.outputUrl || item.downloaded) return;
+    const anchor = document.createElement("a");
+    anchor.href = item.outputUrl;
+    anchor.download = "watermarked-" + item.file.name;
+    document.body.appendChild(anchor); anchor.click(); anchor.remove();
+    setFiles(previous => previous.map(file => file.id === item.id ? { ...file, downloaded: true } : file));
+    setNotice("Download started: " + item.file.name + ".");
   };
   const exportAll = async () => {
     if (!files.length || busy) return;
@@ -622,13 +632,13 @@ function WatermarkPage() {
         </button>
         <div className={"wm-toolbar-quota" + (isLocked ? " is-locked" : "")} role="status" aria-live="polite">
           <b>{planLoading ? "Checking daily allowance…" : !email ? "Sign in required" : isLocked ? "Daily limit reached" : dailyUsage ? dailyUsage.remaining + " / " + dailyUsage.limit + " daily images left" : "Daily allowance unavailable"}</b>
-          <span>{dailyUsage ? "Resets in " + resetCountdown : "Daily credits are shared across both tools"}</span>
+          <span>{dailyUsage ? "Resets in " + resetCountdown : "Separate daily credits for this tool"}</span>
         </div>
         <button className="button button-outline wm-toolbar-clear" onClick={clearAllFiles} disabled={!files.length || busy || addingFiles} aria-label="Remove all selected images" title="Remove all selected images">
           <Trash2 size={18}/>
         </button>
       </div>
-      <div className="wm-plan-banner"><div><b>{limits.name} plan · {dailyUsage ? dailyUsage.remaining + " / " + dailyUsage.limit + " daily images left" : email ? "Checking daily allowance…" : "Sign in to use daily credits"}</b><span>{files.length}/{limits.maxImages} images selected for this batch · {limits.totalMB} MB batch · {limits.maxFileMB} MB per file{email?" · "+email:""}</span><small>{dailyUsage ? (isLocked ? "Daily limit reached · Unlocks in " + resetCountdown : dailyUsage.used + " used today · Resets in " + resetCountdown) : "Daily credits are shared by metadata cleaning and watermarking."}</small></div><a className="button button-secondary" href="/plans">{isLocked ? "Daily limit reached · Upgrade" : files.length>=limits.maxImages || files.reduce((sum,file)=>sum+file.file.size,0)>=limits.totalMB*1024*1024 ? "Batch size reached" : isPaid?"View plan details":"View upgrade plans"} <ArrowRight size={14}/></a></div>
+      <div className="wm-plan-banner"><div><b>{limits.name} plan · {dailyUsage ? dailyUsage.remaining + " / " + dailyUsage.limit + " daily images left" : email ? "Checking daily allowance…" : "Sign in to use daily credits"}</b><span>{files.length}/{limits.maxImages} images selected for this batch · {limits.totalMB} MB batch · {limits.maxFileMB} MB per file{email?" · "+email:""}</span><small>{dailyUsage ? (isLocked ? "Daily limit reached · Unlocks in " + resetCountdown : dailyUsage.used + " used today · Resets in " + resetCountdown) : "Watermark Maker has its own separate daily allowance."}</small></div><a className="button button-secondary" href="/plans">{isLocked ? "Daily limit reached · Upgrade" : files.length>=limits.maxImages || files.reduce((sum,file)=>sum+file.file.size,0)>=limits.totalMB*1024*1024 ? "Batch size reached" : isPaid?"View plan details":"View upgrade plans"} <ArrowRight size={14}/></a></div>
       <div className={"wm-editor" + (dragging ? " wm-drag-active" : "")}
         onDragEnter={event => { event.preventDefault(); setDragging(true); }}
         onDragOver={event => { event.preventDefault(); setDragging(true); }}
@@ -653,7 +663,7 @@ function WatermarkPage() {
           <div className="wm-canvas-preview">{active ? <img src={previewUrl || active.url} alt="Live watermark preview"/> : <div className="wm-empty"><ImageIcon size={42}/><b>Your image preview will appear here</b><span>Choose one or more photos to start</span><button className="button button-primary" onClick={()=>inputRef.current?.click()}>Choose images</button></div>}</div>
           {files.length>0 && <div className="wm-file-list">{files.map(file=><button key={file.id} className={active?.id===file.id?"selected":""} onClick={()=>setActiveId(file.id)}><img src={file.url} alt=""/><span>{file.file.name}</span><small>{file.width} × {file.height}</small></button>)}</div>}
           {busy && <div className="wm-progress wm-export-progress" role="status" aria-live="polite"><span>{exportProgress.stage || "Preparing export"} · {exportProgress.done}/{exportProgress.total}</span><div><i style={{width:(exportProgress.total ? exportProgress.done/exportProgress.total*100 : 0)+"%"}}/></div></div>}
-          {active && <div className="wm-export-actions"><span>{files.length} image{files.length===1?"":"s"} selected</span><button className="button button-outline" onClick={()=>void exportOne(active)} disabled={busy || planLoading || isLocked || !email}><Download size={16}/> Download current</button><button className="button button-primary" onClick={()=>void exportAll()} disabled={busy || planLoading || isLocked || !email}>{busy?"Applying watermark…": "Watermark all & download ZIP"} <ArrowRight size={15}/></button></div>}
+          {active && <div className="wm-export-actions"><span>{files.length} image{files.length===1?"":"s"} selected</span><button className="button button-outline" onClick={()=>void exportOne(active)} disabled={busy || planLoading || isLocked || !email}><ShieldCheck size={16}/> {active.output ? "Reapply watermark" : "Apply watermark"}</button>{active.output && <button className="button button-outline" onClick={()=>downloadWatermark(active)} disabled={busy || !!active.downloaded}><Download size={16}/> {active.downloaded ? "Downloaded" : "Download current"}</button>}<button className="button button-primary" onClick={()=>void exportAll()} disabled={busy || planLoading || isLocked || !email}>{busy?"Applying watermark…": "Watermark all & download ZIP"} <ArrowRight size={15}/></button></div>}
         </section>
       </div>
       {notice && <p className="wm-notice" role="status">{notice}</p>}
@@ -663,7 +673,7 @@ function WatermarkPage() {
 }
 
 function App() {
-  const { limits, email, loading: planLoading, dailyUsage, consumeImage, isLocked, resetCountdown } = usePlanAccess();
+  const { limits, email, loading: planLoading, dailyUsage, consumeImage, isLocked, resetCountdown } = usePlanAccess("metadata");
   const legalPath = window.location.pathname.replace(/^\/|\/$/g, "");
   if (legalPath === "admin") return <AdminPage />;
   if (legalPath === "plans") return <PlansPage />;
@@ -706,7 +716,8 @@ function App() {
     for (const file of incoming) {
       if (!ACCEPTED.includes(file.type)) { errors.push(file.name + ": unsupported format"); continue; }
       if (file.size > limits.maxFileMB * 1024 * 1024) { errors.push(file.name + ": larger than your " + limits.maxFileMB + " MB per-file limit"); continue; }
-      if (items.length + valid.length >= limits.maxImages) { errors.push("Your " + limits.name + " plan allows " + limits.maxImages + " images per batch. Upgrade your plan to add more."); break; }
+      const metadataSelectionLimit = Math.min(50, limits.dailyImages, limits.maxImages);
+      if (items.length + valid.length >= metadataSelectionLimit) { errors.push("The Metadata Inspector allows up to " + metadataSelectionLimit + " images per batch on your current plan."); break; }
       if (totalSize + file.size > limits.totalMB * 1024 * 1024) { errors.push(file.name + ": your " + limits.name + " plan allows " + limits.totalMB + " MB total per batch"); continue; }
       valid.push(file);
       totalSize += file.size;
@@ -787,6 +798,7 @@ function App() {
     anchor.download = "clean-" + item.file.name.replace(/\.[^.]+$/, "") + (item.file.name.match(/\.[^.]+$/)?.[0] ?? "");
     document.body.appendChild(anchor); anchor.click(); anchor.remove();
     if (!item.cleanedUrl) window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+    setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, downloaded: true } : entry));
     setNotice("Download started: " + item.file.name.replace(/\.[^.]+$/, "") + ". Check your browser downloads.");
   };
   const cleanAll = async (targetItems: ImageRecord[] = items) => {
@@ -887,7 +899,7 @@ function App() {
                 <div className="upload-icon"><UploadCloud size={47} strokeWidth={1.7} /></div>
                 <h2>{dragging ? "Drop to add your images" : "Drop your images here"}</h2><p>{dragging ? "Release to add supported photos" : "or click to choose files"}</p>
                 <div className="upload-actions"><button className="button button-primary choose-button" onClick={() => inputRef.current?.click()}><FilePlus2 size={18} /> Choose images</button><a className="button button-demo" href="/demo"><Zap size={16} /> Try interactive demo</a></div>
-                {addingFiles ? <div className="upload-progress" role="status" aria-live="polite"><span>Reading images… {addProgress.done} / {addProgress.total}</span><div><i style={{width: (addProgress.total ? addProgress.done / addProgress.total * 100 : 0) + "%"}}/></div></div> : <span className="format-note">JPG, JPEG, PNG or WebP · Up to {limits.maxFileMB} MB each · {limits.maxImages} images / {limits.totalMB} MB per batch · {limits.name} plan</span>}
+                {addingFiles ? <div className="upload-progress" role="status" aria-live="polite"><span>Reading images… {addProgress.done} / {addProgress.total}</span><div><i style={{width: (addProgress.total ? addProgress.done / addProgress.total * 100 : 0) + "%"}}/></div></div> : <span className="format-note">JPG, JPEG, PNG or WebP · Up to {limits.maxFileMB} MB each · {Math.min(limits.maxImages, limits.dailyImages)} images / {limits.totalMB} MB per batch · {limits.name} plan</span>}
                 <input ref={inputRef} type="file" multiple hidden disabled={busy || addingFiles} onChange={handleInput} />
               </div>
               <div className="upload-card-bottom"><span><LockKeyhole size={14} /> Processed locally</span><span><CheckCircle2 size={14} /> Account required for daily credits</span></div>\n              <div className={"daily-quota-card" + (isLocked ? " is-locked" : "")}><div><b>{dailyUsage ? limits.name + " daily allowance" : "Daily image allowance"}</b><strong>{dailyUsage ? dailyUsage.remaining + " / " + dailyUsage.limit + " images left" : email ? "Loading your allowance…" : "Sign in to view your allowance"}</strong></div><div className="daily-quota-track"><span style={{width:(dailyUsage ? Math.min(100,dailyUsage.used/Math.max(1,dailyUsage.limit)*100) : 0)+"%"}}/></div><small>{dailyUsage ? (isLocked ? "Limit reached · Unlocks in " + resetCountdown : dailyUsage.used + " used today · Resets in " + resetCountdown) : "Free 10 · Pro 50 · Business 200 images per day"}</small><a href="/plans">{isLocked ? "Upgrade your plan" : "View plans"}</a></div>
@@ -904,7 +916,7 @@ function App() {
       </section>
 
       {items.length > 0 && <section className="tool-workspace" aria-live="polite"><div className="container">
-        <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {limits.maxImages} images selected · {limits.name} plan · {dailyUsage ? `${dailyUsage.used}/${dailyUsage.limit} daily images used · ${dailyUsage.remaining} remaining` : "Sign in to view daily credits"} · Files stay in this browser tab</p></div>
+        <div className="workspace-heading"><div><span className="eyebrow">YOUR WORKSPACE</span><h2>Image metadata <span>inspector</span></h2><p>{items.length} of {Math.min(limits.maxImages, limits.dailyImages)} images selected · {limits.name} plan · {dailyUsage ? `${dailyUsage.used}/${dailyUsage.limit} daily images used · ${dailyUsage.remaining} remaining` : "Sign in to view daily credits"} · Files stay in this browser tab</p></div>
           <div className="workspace-actions"><button className="button button-outline" onClick={() => inputRef.current?.click()} disabled={busy || addingFiles}><FilePlus2 size={16} /> Add images</button>{failedItems.length > 0 && <button className="button button-outline" onClick={() => void cleanAll(failedItems)} disabled={busy}><RefreshCw size={15} /> Retry failed ({failedItems.length})</button>}<button className="button button-primary" onClick={() => void cleanAll()} disabled={busy || addingFiles || items.length === 0 || isLocked}><Download size={16} /> {busy ? "Cleaning…" : isLocked ? "Daily limit reached" : "Clean all & download ZIP"}</button><button className="icon-button" aria-label="Clear all images" onClick={clearAll} disabled={busy}><Trash2 size={17} /></button></div></div>
         {addingFiles && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><UploadCloud size={15}/><b>Preparing selected images</b><span>{addProgress.done}/{addProgress.total}</span></div><div className="processing-track"><span style={{width:(addProgress.total ? addProgress.done/addProgress.total*100 : 0)+"%"}}/></div><p>Reading image dimensions and metadata locally in your browser.</p></div>}
         {busy && <div className="processing-panel batch-progress" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing batch"}</b><span>Working</span></div><div className="processing-track"><span style={{ width: batchProgress.total ? ((batchProgress.done / batchProgress.total) * 100) + "%" : "0%" }} /></div><p>{batchProgress.done} of {batchProgress.total} images processed. Images are cleaned and verified locally; the ZIP archive downloads when ready.</p></div>}
@@ -918,7 +930,7 @@ function App() {
           <div className="metadata-panel"><div className="panel-label">{active.status === "clean" ? "ORIGINAL METADATA (BEFORE CLEANING)" : "METADATA FOUND"} <span>{metadataRows.length} fields shown</span></div>
             {metadataRows.length ? <div className="metadata-categories">{metadataCategories.map(group => <section className="metadata-category" key={group.id}><h4>{group.label}<span>{group.rows.length}</span></h4><div className="metadata-table">{group.rows.map(row => <div className="metadata-row" key={row.key}><span>{row.label}</span><b>{row.value}</b></div>)}</div></section>)}</div> : <div className="empty-metadata"><Fingerprint size={25} /><b>No readable EXIF fields found</b><span>This image may already have little or no EXIF metadata.</span></div>}
             {active.cleanError && <p className="error-text">{active.cleanError}</p>}
-            {active.status === "clean" ? <div className="clean-success"><CheckCircle2 size={17} /><span>Clean copy is ready</span><button className="button button-primary" onClick={() => downloadItem(active)}><Download size={15} /> Download</button></div> :
+            {active.status === "clean" ? <div className="clean-success"><CheckCircle2 size={17} /><span>Clean copy is ready</span><button className="button button-primary" onClick={() => downloadItem(active)} disabled={!!active.downloaded}><Download size={15} /> {active.downloaded ? "Downloaded" : "Download"}</button></div> :
               <button className="button button-primary clean-button" onClick={() => void cleanOne(active)} disabled={active.status === "cleaning" || busy || isLocked}>{active.status === "cleaning" ? <><RefreshCw className="spin" size={16} /> Processing image…</> : isLocked ? <><LockKeyhole size={17} /> Daily limit reached · {resetCountdown}</> : <><ShieldCheck size={17} /> Remove metadata</>}</button>}
             {active.status === "cleaning" && <div className="processing-panel" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing locally"}</b><span>In progress</span></div><div className="processing-track"><span /></div><p>Decoding pixels, creating a fresh image and checking its metadata — all in your browser.</p></div>}
             {active.status === "clean" && <div className="comparison-panel"><div><span>Original privacy fields</span><b>{metadataRows.length}</b></div><div><span>Clean copy fields</span><b>{active.cleanCheckError ? "Not verified" : active.cleanCheck ? Object.keys(active.cleanCheck).length : 0}</b></div><div><span>File size</span><b>{formatBytes(active.file.size)} → {formatBytes(active.cleaned?.size ?? 0)}</b></div></div>}
