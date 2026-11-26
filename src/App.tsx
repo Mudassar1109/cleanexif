@@ -483,8 +483,12 @@ function WatermarkPage() {
       ctx.shadowColor = config.color === "white" ? "rgba(0,0,0,.48)" : "rgba(255,255,255,.5)";
       ctx.shadowBlur = Math.max(1,fontSize * .12);
       const diagonal = Math.hypot(canvas.width,canvas.height);
-      const stepX = Math.max(fontSize * 2.5, fontSize * config.spacing / 100);
-      const stepY = stepX * .82;
+      const labelWidth = ctx.measureText(label).width;
+      // Space stamps by their measured text width, not merely by font size.
+      // This prevents long names from colliding and producing the dense,
+      // overlapping pattern seen in exported full-page screenshots.
+      const stepX = Math.max(labelWidth + fontSize, labelWidth * config.spacing / 100);
+      const stepY = Math.max(fontSize * 2.4, fontSize * config.spacing / 100 * 1.1);
       ctx.translate(canvas.width/2,canvas.height/2);
       ctx.rotate(config.rotation * Math.PI / 180);
       for (let y = -diagonal; y <= diagonal; y += stepY) {
