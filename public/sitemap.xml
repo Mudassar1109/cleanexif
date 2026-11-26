@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://cleanexif.vercel.app/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://cleanexif.vercel.app/privacy-policy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://cleanexif.vercel.app/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://cleanexif.vercel.app/disclaimer</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://cleanexif.vercel.app/cookie-policy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://cleanexif.vercel.app/blog</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://cleanexif.vercel.app/blog/what-is-exif-data</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://cleanexif.vercel.app/</loc><lastmod>2026-11-26</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/privacy-policy</loc><lastmod>2026-11-25</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/terms</loc><lastmod>2026-11-25</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/disclaimer</loc><lastmod>2026-11-25</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/cookie-policy</loc><lastmod>2026-11-25</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/blog</loc><lastmod>2026-11-26</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/blog/what-is-exif-data</loc><lastmod>2026-11-26</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/blog/how-to-remove-exif-data</loc><lastmod>2026-11-26</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/blog/remove-gps-location-from-photos</loc><lastmod>2026-11-26</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/blog/does-instagram-remove-exif-data</loc><lastmod>2026-11-26</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/blog/how-to-check-photo-metadata</loc><lastmod>2026-11-26</lastmod></url>
 </urlset>
