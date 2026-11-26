@@ -106,9 +106,9 @@ async function createDemoPhoto(): Promise<File> {
   ctx.fillStyle = "#1769d2"; ctx.fillRect(94, 465, 250, 8);
   const jpeg = await new Promise<Blob>((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Demo image export failed.")), "image/jpeg", 0.94));
   const source = new Uint8Array(await jpeg.arrayBuffer());
-  const make = new TextEncoder().encode("CleanExif Demo Camera\\0");
-  const model = new TextEncoder().encode("CE-X1 Synthetic\\0");
-  const date = new TextEncoder().encode("2026:11:26 10:30:00\\0");
+  const make = new TextEncoder().encode("CleanExif Demo Camera\0");
+  const model = new TextEncoder().encode("CE-X1 Synthetic\0");
+  const date = new TextEncoder().encode("2026:11:26 10:30:00\0");
   const ifdOffset = 8, entryCount = 3, dataOffset = ifdOffset + 2 + entryCount * 12 + 4;
   const tiff = new Uint8Array(dataOffset + make.length + model.length + date.length);
   const view = new DataView(tiff.buffer);
