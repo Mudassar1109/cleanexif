@@ -38,7 +38,7 @@ export default function PlansPage({accountOnly=false}:{accountOnly?:boolean}){
   if(!cleanexifSupabase){setError("Account service is not configured. Please contact support.");return;}
   setBusy(true);setError("");setNotice("");
   try{
-   const {error}=await cleanexifSupabase.auth.signInWithOAuth({provider:"google",options:{redirectTo:window.location.origin+"/plans",queryParams:{access_type:"offline",prompt:"select_account"}}});
+   const {error}=await cleanexifSupabase.auth.signInWithOAuth({provider:"google",options:{redirectTo:window.location.origin+"/",queryParams:{access_type:"offline",prompt:"select_account"}}});
    if(error){setError(error.message);setBusy(false);}
   }catch(err){setError(err instanceof Error?err.message:"Google sign-in could not be started. Please try again.");setBusy(false);}
  }
