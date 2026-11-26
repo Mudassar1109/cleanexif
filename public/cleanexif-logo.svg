@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 130" role="img" aria-labelledby="title desc">
+  <title id="title">CleanExif</title>
+  <desc id="desc">CleanExif photo privacy tool logo</desc>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#159BFF"/><stop offset="1" stop-color="#0649C7"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".95"/><stop offset="1" stop-color="#DCEBFF" stop-opacity=".8"/>
+    </linearGradient>
+  </defs>
+  <rect x="5" y="12" width="104" height="104" rx="25" fill="url(#tile)"/>
+  <path d="M79 12h10a20 20 0 0 1 20 20v10H89a10 10 0 0 1-10-10z" fill="url(#shine)" opacity=".9"/>
+  <rect x="25" y="39" width="64" height="53" rx="9" fill="none" stroke="#fff" stroke-width="5"/>
+  <path d="m30 82 17-19 12 12 9-10 16 17" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M68 29l4 9 9 4-9 4-4 9-4-9-9-4 9-4z" fill="#fff"/>
+  <path d="M132 26v78" stroke="#D7DFEA" stroke-width="2"/>
+  <text x="158" y="76" font-family="Manrope, Inter, Arial, sans-serif" font-size="59" font-weight="800" letter-spacing="-2.8" fill="#111827">Clean<tspan fill="#075BD8">Exif</tspan></text>
+  <text x="162" y="103" font-family="Inter, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="5.2" fill="#8792A5">PHOTO PRIVACY TOOL</text>
+</svg>
