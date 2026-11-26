@@ -437,7 +437,7 @@ function DemoPage() {
 
 
 type RepeatWatermarkSettings = { text: string; opacity: number; size: number; spacing: number; rotation: number; color: "white" | "charcoal" };
-type WatermarkFile = { id: string; file: File; url: string; width: number; height: number; output?: Blob; outputUrl?: string };
+type WatermarkFile = { id: string; file: File; url: string; width: number; height: number; output?: Blob; outputUrl?: string; downloaded?: boolean };
 function WatermarkPage() {
   const { limits, email, isPaid, dailyUsage, consumeImage, isLocked, resetCountdown, loading: planLoading } = usePlanAccess("watermark");
   const [files, setFiles] = useState<WatermarkFile[]>([]);
@@ -569,6 +569,15 @@ function WatermarkPage() {
     } catch (error) { setNotice(error instanceof Error ? error.message : "Could not export this image."); }
     finally { setBusy(false); }
   };
+  const downloadWatermark = (item: WatermarkFile) => {
+    if (!item.output || !item.outputUrl || item.downloaded) return;
+    const anchor = document.createElement("a");
+    anchor.href = item.outputUrl;
+    anchor.download = "watermarked-" + item.file.name;
+    document.body.appendChild(anchor); anchor.click(); anchor.remove();
+    setFiles(previous => previous.map(file => file.id === item.id ? { ...file, downloaded: true } : file));
+    setNotice("Download started: " + item.file.name + ".");
+  };
   const exportAll = async () => {
     if (!files.length || busy) return;
     if (!email) { setNotice("Please sign in from Account before watermarking. Your selected images will remain in this tab."); return; }
@@ -653,7 +662,7 @@ function WatermarkPage() {
           <div className="wm-canvas-preview">{active ? <img src={previewUrl || active.url} alt="Live watermark preview"/> : <div className="wm-empty"><ImageIcon size={42}/><b>Your image preview will appear here</b><span>Choose one or more photos to start</span><button className="button button-primary" onClick={()=>inputRef.current?.click()}>Choose images</button></div>}</div>
           {files.length>0 && <div className="wm-file-list">{files.map(file=><button key={file.id} className={active?.id===file.id?"selected":""} onClick={()=>setActiveId(file.id)}><img src={file.url} alt=""/><span>{file.file.name}</span><small>{file.width} × {file.height}</small></button>)}</div>}
           {busy && <div className="wm-progress wm-export-progress" role="status" aria-live="polite"><span>{exportProgress.stage || "Preparing export"} · {exportProgress.done}/{exportProgress.total}</span><div><i style={{width:(exportProgress.total ? exportProgress.done/exportProgress.total*100 : 0)+"%"}}/></div></div>}
-          {active && <div className="wm-export-actions"><span>{files.length} image{files.length===1?"":"s"} selected</span><button className="button button-outline" onClick={()=>void exportOne(active)} disabled={busy || planLoading || isLocked || !email}><Download size={16}/> Download current</button><button className="button button-primary" onClick={()=>void exportAll()} disabled={busy || planLoading || isLocked || !email}>{busy?"Applying watermark…": "Watermark all & download ZIP"} <ArrowRight size={15}/></button></div>}
+          {active && <div className="wm-export-actions"><span>{files.length} image{files.length===1?"":"s"} selected</span>{active.output ? <button className="button button-outline" onClick={()=>downloadWatermark(active)} disabled={busy || !!active.downloaded}><Download size={16}/> {active.downloaded ? "Downloaded" : "Download current"}</button> : <button className="button button-outline" onClick={()=>void exportOne(active)} disabled={busy || planLoading || isLocked || !email}><ShieldCheck size={16}/> Apply watermark</button>}<button className="button button-primary" onClick={()=>void exportAll()} disabled={busy || planLoading || isLocked || !email}>{busy?"Applying watermark…": "Watermark all & download ZIP"} <ArrowRight size={15}/></button></div>}
         </section>
       </div>
       {notice && <p className="wm-notice" role="status">{notice}</p>}
@@ -706,7 +715,7 @@ function App() {
     for (const file of incoming) {
       if (!ACCEPTED.includes(file.type)) { errors.push(file.name + ": unsupported format"); continue; }
       if (file.size > limits.maxFileMB * 1024 * 1024) { errors.push(file.name + ": larger than your " + limits.maxFileMB + " MB per-file limit"); continue; }
-      if (items.length + valid.length >= Math.min(limits.maxImages, limits.dailyImages)) { errors.push("Your " + limits.name + " plan allows " + limits.maxImages + " images can be selected in the Metadata Inspector for your current plan. Upgrade your plan to add more."); break; }
+      if (items.length + valid.length >= Math.min(limits.maxImages, limits.dailyImages)) { errors.push("Your " + limits.name + " plan allows up to " + Math.min(limits.maxImages, limits.dailyImages) + " images to be selected in the Metadata Inspector. Upgrade your plan to add more."); break; }
       if (totalSize + file.size > limits.totalMB * 1024 * 1024) { errors.push(file.name + ": your " + limits.name + " plan allows " + limits.totalMB + " MB total per batch"); continue; }
       valid.push(file);
       totalSize += file.size;
@@ -918,7 +927,7 @@ function App() {
           <div className="metadata-panel"><div className="panel-label">{active.status === "clean" ? "ORIGINAL METADATA (BEFORE CLEANING)" : "METADATA FOUND"} <span>{metadataRows.length} fields shown</span></div>
             {metadataRows.length ? <div className="metadata-categories">{metadataCategories.map(group => <section className="metadata-category" key={group.id}><h4>{group.label}<span>{group.rows.length}</span></h4><div className="metadata-table">{group.rows.map(row => <div className="metadata-row" key={row.key}><span>{row.label}</span><b>{row.value}</b></div>)}</div></section>)}</div> : <div className="empty-metadata"><Fingerprint size={25} /><b>No readable EXIF fields found</b><span>This image may already have little or no EXIF metadata.</span></div>}
             {active.cleanError && <p className="error-text">{active.cleanError}</p>}
-            {active.status === "clean" ? <div className="clean-success"><CheckCircle2 size={17} /><span>Clean copy is ready</span><button className="button button-primary" onClick={() => downloadItem(active)}><Download size={15} /> Download</button></div> :
+            {active.status === "clean" ? <div className="clean-success"><CheckCircle2 size={17} /><span>Clean copy is ready</span><button className="button button-primary" onClick={() => downloadItem(active)} disabled={!!active.downloaded}><Download size={15} /> {active.downloaded ? "Downloaded" : "Download"}</button></div> :
               <button className="button button-primary clean-button" onClick={() => void cleanOne(active)} disabled={active.status === "cleaning" || busy || isLocked}>{active.status === "cleaning" ? <><RefreshCw className="spin" size={16} /> Processing image…</> : isLocked ? <><LockKeyhole size={17} /> Daily limit reached · {resetCountdown}</> : <><ShieldCheck size={17} /> Remove metadata</>}</button>}
             {active.status === "cleaning" && <div className="processing-panel" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing locally"}</b><span>In progress</span></div><div className="processing-track"><span /></div><p>Decoding pixels, creating a fresh image and checking its metadata — all in your browser.</p></div>}
             {active.status === "clean" && <div className="comparison-panel"><div><span>Original privacy fields</span><b>{metadataRows.length}</b></div><div><span>Clean copy fields</span><b>{active.cleanCheckError ? "Not verified" : active.cleanCheck ? Object.keys(active.cleanCheck).length : 0}</b></div><div><span>File size</span><b>{formatBytes(active.file.size)} → {formatBytes(active.cleaned?.size ?? 0)}</b></div></div>}
