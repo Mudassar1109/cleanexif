@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
 import { ArrowLeft, LogOut, ShieldCheck, Users, CreditCard, Package, Plus, RefreshCw, Search, X, CheckCircle2, AlertCircle } from "lucide-react";
-import { Logo } from "./AdminShared";
+
 
 type Plan = { id:string; code:string; name:string; description:string|null; price_monthly:number; watermark_images_per_batch:number; watermark_total_mb:number; max_file_mb:number; active:boolean; sort_order:number };
 type Customer = { id:string; email:string; whatsapp:string|null; plan_id:string; status:"active"|"expired"|"cancelled"|"pending"; starts_at:string; expires_at:string|null; notes:string|null; created_at:string; cleanexif_plans?:{name:string;code:string} };
+function Logo(){return <a className="brand" href="/" aria-label="CleanExif home"><img className="brand-logo-image" src="/cleanexif-logo-v2.svg" alt="CleanExif"/></a>;}
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const anon = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 const supabase: SupabaseClient | null = url && anon ? createClient(url,anon,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}) : null;
@@ -30,14 +31,14 @@ export default function AdminPage(){
   else {setPlans(p.data||[]);setCustomers(c.data||[]);}
   setLoading(false);
  }
- async function signIn(e:React.FormEvent){e.preventDefault();if(!supabase)return;setSaving(true);setError("");const {error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)setError(error.message);setSaving(false);}
+ async function signIn(e:FormEvent){e.preventDefault();if(!supabase)return;setSaving(true);setError("");const {error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)setError(error.message);setSaving(false);}
  async function signOut(){await supabase?.auth.signOut();setSession(null);setPlans([]);setCustomers([]);}
- async function savePlan(e:React.FormEvent){e.preventDefault();if(!supabase)return;setSaving(true);setError("");setNotice("");
+ async function savePlan(e:FormEvent){e.preventDefault();if(!supabase)return;setSaving(true);setError("");setNotice("");
   const payload={code:planForm.code.trim().toLowerCase().replace(/[^a-z0-9-]/g,"-"),name:planForm.name.trim(),description:planForm.description.trim()||null,price_monthly:Number(planForm.price_monthly),watermark_images_per_batch:Number(planForm.watermark_images_per_batch),watermark_total_mb:Number(planForm.watermark_total_mb),max_file_mb:Number(planForm.max_file_mb),active:planForm.active,sort_order:Number(planForm.sort_order)};
   const result=editingPlan?await supabase.from("cleanexif_plans").update(payload).eq("id",editingPlan.id):await supabase.from("cleanexif_plans").insert(payload);
   if(result.error)setError(result.error.message);else{setNotice(editingPlan?"Plan updated.":"Plan created.");setShowForm(false);setEditingPlan(null);await loadData();}setSaving(false);
  }
- async function saveCustomer(e:React.FormEvent){e.preventDefault();if(!supabase)return;setSaving(true);setError("");setNotice("");
+ async function saveCustomer(e:FormEvent){e.preventDefault();if(!supabase)return;setSaving(true);setError("");setNotice("");
   const payload={email:customerForm.email.trim().toLowerCase(),whatsapp:customerForm.whatsapp.trim()||null,plan_id:customerForm.plan_id,status:customerForm.status,starts_at:new Date(customerForm.starts_at+"T00:00:00Z").toISOString(),expires_at:customerForm.expires_at?new Date(customerForm.expires_at+"T23:59:59Z").toISOString():null,notes:customerForm.notes.trim()||null};
   const result=editingCustomer?await supabase.from("cleanexif_customer_access").update(payload).eq("id",editingCustomer.id):await supabase.from("cleanexif_customer_access").insert(payload);
   if(result.error)setError(result.error.message);else{setNotice(editingCustomer?"Customer plan updated.":"Plan activated for customer.");setShowForm(false);setEditingCustomer(null);await loadData();}setSaving(false);
