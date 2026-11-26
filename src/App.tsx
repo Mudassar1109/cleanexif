@@ -443,6 +443,10 @@ function WatermarkPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [settings, setSettings] = useState<RepeatWatermarkSettings>({ text: "@Mudassar", opacity: 28, size: 34, spacing: 190, rotation: -28, color: "white" });
   const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [addingFiles, setAddingFiles] = useState(false);
+  const [addProgress, setAddProgress] = useState({ done: 0, total: 0 });
+  const [exportProgress, setExportProgress] = useState({ done: 0, total: 0, stage: "" });
   const [notice, setNotice] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -452,16 +456,29 @@ function WatermarkPage() {
   useEffect(() => () => filesRef.current.forEach(file => { URL.revokeObjectURL(file.url); if (file.outputUrl) URL.revokeObjectURL(file.outputUrl); }), []);
   const addFiles = async (list: FileList | File[]) => {
     const incoming = Array.from(list);
+    if (!incoming.length || addingFiles || busy) return;
+    setAddingFiles(true);
     const accepted = incoming.filter(file => ["image/jpeg","image/png","image/webp"].includes(file.type) && file.size <= 25 * 1024 * 1024);
-    const records = await Promise.all(accepted.map(async file => {
-      const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-      const record = { id: crypto.randomUUID(), file, url: URL.createObjectURL(file), width: bitmap.width, height: bitmap.height };
-      bitmap.close();
-      return record;
-    }));
-    setFiles(previous => [...previous, ...records]);
-    if (!activeId && records[0]) setActiveId(records[0].id);
-    setNotice(accepted.length === incoming.length ? records.length + " image(s) ready." : "Only JPEG, PNG and WebP images up to 25 MB each are supported.");
+    const records: WatermarkFile[] = [];
+    const errors: string[] = incoming.length - accepted.length ? ["Unsupported files or files over 25 MB were skipped."] : [];
+    setAddProgress({ done: 0, total: accepted.length });
+    try {
+      for (const file of accepted) {
+        try {
+          const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+          const record = { id: crypto.randomUUID(), file, url: URL.createObjectURL(file), width: bitmap.width, height: bitmap.height };
+          bitmap.close();
+          records.push(record);
+        } catch { errors.push(file.name + ": could not read image."); }
+        setAddProgress(previous => ({ ...previous, done: previous.done + 1 }));
+      }
+      setFiles(previous => [...previous, ...records]);
+      if (!activeId && records[0]) setActiveId(records[0].id);
+      setNotice(errors.length ? (records.length ? records.length + " image(s) added. " : "") + errors.join(" ") : records.length + " image(s) ready.");
+    } finally {
+      setAddingFiles(false);
+      setAddProgress({ done: 0, total: 0 });
+    }
   };
   const renderWatermark = async (item: WatermarkFile, config: RepeatWatermarkSettings = settings): Promise<Blob> => {
     const bitmap = await createImageBitmap(item.file, { imageOrientation: "from-image" });
@@ -525,8 +542,9 @@ function WatermarkPage() {
       const blob = await renderWatermark(item);
       const url = URL.createObjectURL(blob);
       setFiles(previous => previous.map(file => file.id === item.id ? { ...file, output: blob, outputUrl: url } : file));
-      const anchor = document.createElement("a"); anchor.href = url; anchor.download = "watermarked-" + item.file.name; anchor.click();
-      setNotice("Watermarked image exported.");
+      const anchor = document.createElement("a"); anchor.href = url; anchor.download = "watermarked-" + item.file.name;
+      document.body.appendChild(anchor); anchor.click(); anchor.remove();
+      setNotice("Download started: " + item.file.name + ". Check your browser downloads.");
     } catch (error) { setNotice(error instanceof Error ? error.message : "Could not export this image."); }
     finally { setBusy(false); }
   };
@@ -534,22 +552,33 @@ function WatermarkPage() {
     if (!files.length || busy) return;
     if (!settings.text.trim()) { setNotice("Enter watermark text first."); return; }
     setBusy(true);
+    setExportProgress({ done: 0, total: files.length, stage: "Applying watermark" });
     try {
       const zip = new JSZip();
-      for (const item of files) zip.file("watermarked-" + item.file.name, await renderWatermark(item));
-      const blob = await zip.generateAsync({ type: "blob" });
+      for (const item of files) {
+        zip.file("watermarked-" + item.file.name, await renderWatermark(item));
+        setExportProgress(previous => ({ ...previous, done: previous.done + 1 }));
+      }
+      setExportProgress(previous => ({ ...previous, stage: "Building ZIP archive" }));
+      const blob = await zip.generateAsync({ type: "blob" }, metadata => setExportProgress({ done: files.length, total: files.length, stage: "Building ZIP archive · " + Math.round(metadata.percent) + "%" }));
       const url = URL.createObjectURL(blob); const anchor = document.createElement("a");
-      anchor.href = url; anchor.download = "cleanexif-watermarked-images.zip"; anchor.click();
-      window.setTimeout(() => URL.revokeObjectURL(url),1500);
-      setNotice(files.length + " watermarked images exported in a ZIP.");
+      anchor.href = url; anchor.download = "cleanexif-watermarked-images.zip";
+      document.body.appendChild(anchor); anchor.click(); anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url),30000);
+      setNotice("ZIP download started. " + files.length + " watermarked images are included.");
     } catch (error) { setNotice(error instanceof Error ? error.message : "Could not export images."); }
-    finally { setBusy(false); }
+    finally { setBusy(false); setExportProgress({ done: 0, total: 0, stage: "" }); }
   };
   return <div className="wm-page">
     <header className="site-header"><div className="container nav-inner"><Logo /><nav className="wm-nav"><a href="/">Image metadata inspector</a><a className="button button-primary" href="/">Open CleanExif <ArrowRight size={15}/></a></nav></div></header>
     <main className="container wm-main">
       <div className="wm-heading"><span className="eyebrow">FREE ONLINE WATERMARK MAKER</span><h1>Protect your photos.<br/><span>Your name, across every image.</span></h1><p>Add a repeating, diagonal copyright watermark across the full image. Preview the pattern and export privately in your browser.</p></div>
-      <div className="wm-editor">
+      <div className={"wm-editor" + (dragging ? " wm-drag-active" : "")}
+        onDragEnter={event => { event.preventDefault(); setDragging(true); }}
+        onDragOver={event => { event.preventDefault(); setDragging(true); }}
+        onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false); }}
+        onDrop={event => { event.preventDefault(); setDragging(false); void addFiles(event.dataTransfer.files); }}>
+        {dragging && <div className="wm-drop-overlay" aria-live="polite"><UploadCloud size={34}/><b>Drop images to add them</b><span>JPEG, PNG or WebP · Up to 25 MB each</span></div>}
         <section className="wm-controls">
           <div className="wm-panel-title"><b>Watermark settings</b><span>LIVE EDITOR</span></div>
           <label className="watermark-field"><span>Watermark text</span><input value={settings.text} maxLength={80} placeholder="@YourName or © Your Brand" onChange={event => setSettings(value => ({...value,text:event.target.value}))}/></label>
@@ -558,7 +587,8 @@ function WatermarkPage() {
           <label className="watermark-field"><span>Pattern spacing <b>{settings.spacing}</b></span><input type="range" min="90" max="300" value={settings.spacing} onChange={event => setSettings(value => ({...value,spacing:Number(event.target.value)}))}/></label>
           <label className="watermark-field"><span>Rotation <b>{settings.rotation}°</b></span><input type="range" min="-60" max="60" value={settings.rotation} onChange={event => setSettings(value => ({...value,rotation:Number(event.target.value)}))}/></label>
           <div className="watermark-field"><span>Watermark color</span><div className="watermark-colors"><button type="button" className={settings.color==="white"?"selected":""} onClick={()=>setSettings(value=>({...value,color:"white"}))}><i className="watermark-swatch swatch-white"/> White</button><button type="button" className={settings.color==="charcoal"?"selected":""} onClick={()=>setSettings(value=>({...value,color:"charcoal"}))}><i className="watermark-swatch swatch-charcoal"/> Dark Charcoal</button></div></div>
-          <button className="button button-primary wm-upload" onClick={()=>inputRef.current?.click()}><FilePlus2 size={17}/> Choose images</button>
+          <button className="button button-primary wm-upload" onClick={()=>inputRef.current?.click()} disabled={busy || addingFiles}><FilePlus2 size={17}/> {addingFiles ? "Adding images…" : "Choose images"}</button>
+          {addingFiles && <div className="wm-progress" role="status" aria-live="polite"><span>Preparing images · {addProgress.done}/{addProgress.total}</span><div><i style={{width:(addProgress.total ? addProgress.done/addProgress.total*100 : 0)+"%"}}/></div></div>}
           <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={event=>{if(event.target.files)void addFiles(event.target.files);event.target.value="";}}/>
           <p className="watermark-hint">JPEG, PNG and WebP · Up to 25 MB per image · Processing stays on your device.</p>
         </section>
@@ -566,6 +596,7 @@ function WatermarkPage() {
           <div className="wm-panel-title"><b>Full-image preview</b><span>{active ? active.width+" × "+active.height : "UPLOAD AN IMAGE"}</span></div>
           <div className="wm-canvas-preview">{active ? <img src={previewUrl || active.url} alt="Live watermark preview"/> : <div className="wm-empty"><ImageIcon size={42}/><b>Your image preview will appear here</b><span>Choose one or more photos to start</span><button className="button button-primary" onClick={()=>inputRef.current?.click()}>Choose images</button></div>}</div>
           {files.length>0 && <div className="wm-file-list">{files.map(file=><button key={file.id} className={active?.id===file.id?"selected":""} onClick={()=>setActiveId(file.id)}><img src={file.url} alt=""/><span>{file.file.name}</span><small>{file.width} × {file.height}</small></button>)}</div>}
+          {busy && <div className="wm-progress wm-export-progress" role="status" aria-live="polite"><span>{exportProgress.stage || "Preparing export"} · {exportProgress.done}/{exportProgress.total}</span><div><i style={{width:(exportProgress.total ? exportProgress.done/exportProgress.total*100 : 0)+"%"}}/></div></div>}
           {active && <div className="wm-export-actions"><span>{files.length} image{files.length===1?"":"s"} selected</span><button className="button button-outline" onClick={()=>void exportOne(active)} disabled={busy}><Download size={16}/> Download current</button><button className="button button-primary" onClick={()=>void exportAll()} disabled={busy}>{busy?"Applying watermark…": "Watermark all & download ZIP"} <ArrowRight size={15}/></button></div>}
         </section>
       </div>
