@@ -92,42 +92,6 @@ async function verifyMetadata(blob: Blob): Promise<{ metadata: Meta | null; erro
   } catch { return { metadata: null, error: true }; }
 }
 
-async function createDemoPhoto(): Promise<File> {
-  const canvas = document.createElement("canvas");
-  canvas.width = 1200; canvas.height = 800;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Your browser could not create the demo image.");
-  const gradient = ctx.createLinearGradient(0, 0, 1200, 800);
-  gradient.addColorStop(0, "#dcecff"); gradient.addColorStop(1, "#f8fbff");
-  ctx.fillStyle = gradient; ctx.fillRect(0, 0, 1200, 800);
-  ctx.fillStyle = "#0d4fae"; ctx.beginPath(); ctx.arc(900, 250, 150, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = "#ffffff"; ctx.font = "700 66px Arial"; ctx.fillText("CleanExif Demo", 90, 340);
-  ctx.fillStyle = "#39516f"; ctx.font = "32px Arial"; ctx.fillText("A sample photo with synthetic camera metadata", 94, 405);
-  ctx.fillStyle = "#1769d2"; ctx.fillRect(94, 465, 250, 8);
-  const jpeg = await new Promise<Blob>((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Demo image export failed.")), "image/jpeg", 0.94));
-  const source = new Uint8Array(await jpeg.arrayBuffer());
-  const make = new TextEncoder().encode("CleanExif Demo Camera\0");
-  const model = new TextEncoder().encode("CE-X1 Synthetic\0");
-  const date = new TextEncoder().encode("2026:11:26 10:30:00\0");
-  const ifdOffset = 8, entryCount = 3, dataOffset = ifdOffset + 2 + entryCount * 12 + 4;
-  const tiff = new Uint8Array(dataOffset + make.length + model.length + date.length);
-  const view = new DataView(tiff.buffer);
-  tiff[0] = 0x49; tiff[1] = 0x49; view.setUint16(2, 42, true); view.setUint32(4, ifdOffset, true);
-  view.setUint16(ifdOffset, entryCount, true);
-  const entries = [[0x010f, make.length, dataOffset], [0x0110, model.length, dataOffset + make.length], [0x0132, date.length, dataOffset + make.length + model.length]];
-  entries.forEach(([tag, length, offset], index) => {
-    const pos = ifdOffset + 2 + index * 12;
-    view.setUint16(pos, tag, true); view.setUint16(pos + 2, 2, true); view.setUint32(pos + 4, length, true); view.setUint32(pos + 8, offset, true);
-  });
-  tiff.set(make, dataOffset); tiff.set(model, dataOffset + make.length); tiff.set(date, dataOffset + make.length + model.length);
-  const exifHeader = new Uint8Array([0x45,0x78,0x69,0x66,0,0]);
-  const payload = new Uint8Array(exifHeader.length + tiff.length); payload.set(exifHeader); payload.set(tiff, exifHeader.length);
-  const segment = new Uint8Array(4 + payload.length); segment[0] = 0xff; segment[1] = 0xe1;
-  new DataView(segment.buffer).setUint16(2, payload.length + 2, false); segment.set(payload, 4);
-  const output = new Uint8Array(source.length + segment.length); output.set(source.slice(0, 2)); output.set(segment, 2); output.set(source.slice(2), 2 + segment.length);
-  return new File([output], "cleanexif-interactive-demo.jpg", { type: "image/jpeg", lastModified: Date.now() });
-}
-
 async function cleanImage(file: File, onStage?: (stage: string) => void): Promise<Blob> {
   onStage?.("Decoding image");
   const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
