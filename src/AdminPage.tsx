@@ -40,8 +40,17 @@ export default function AdminPage(){
  }
  async function saveCustomer(e:FormEvent){e.preventDefault();if(!supabase)return;setSaving(true);setError("");setNotice("");
   const payload={email:customerForm.email.trim().toLowerCase(),whatsapp:customerForm.whatsapp.trim()||null,plan_id:customerForm.plan_id,status:customerForm.status,starts_at:new Date(customerForm.starts_at+"T00:00:00Z").toISOString(),expires_at:customerForm.expires_at?new Date(customerForm.expires_at+"T23:59:59Z").toISOString():null,notes:customerForm.notes.trim()||null};
-  const result=editingCustomer?await supabase.from("cleanexif_customer_access").update(payload).eq("id",editingCustomer.id):await supabase.from("cleanexif_customer_access").insert(payload);
-  if(result.error)setError(result.error.message);else{setNotice(editingCustomer?"Customer plan updated.":"Plan activated for customer.");setShowForm(false);setEditingCustomer(null);await loadData();}setSaving(false);
+  const {error:saveError}=await supabase.rpc("cleanexif_admin_save_customer_access",{
+   p_email:payload.email,
+   p_whatsapp:payload.whatsapp,
+   p_plan_id:payload.plan_id,
+   p_status:payload.status,
+   p_starts_at:payload.starts_at,
+   p_expires_at:payload.expires_at,
+   p_notes:payload.notes,
+   p_access_id:editingCustomer?.id??null
+  });
+  if(saveError)setError(saveError.message);else{setNotice(editingCustomer?"Customer plan updated.":"Plan activated for customer.");setShowForm(false);setEditingCustomer(null);await loadData();}setSaving(false);
  }
  function openNewCustomer(){setEditingCustomer(null);setEditingPlan(null);setCustomerForm({email:"",whatsapp:"",plan_id:plans.find(p=>p.active)?.id||"",status:"active",starts_at:new Date().toISOString().slice(0,10),expires_at:"",notes:""});setShowForm(true);}
  function openEditCustomer(c:Customer){setEditingCustomer(c);setEditingPlan(null);setCustomerForm({email:c.email,whatsapp:c.whatsapp||"",plan_id:c.plan_id,status:c.status,starts_at:c.starts_at.slice(0,10),expires_at:c.expires_at?.slice(0,10)||"",notes:c.notes||""});setShowForm(true);}
