@@ -446,7 +446,9 @@ function WatermarkPage() {
   const [notice, setNotice] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const active = files.find(file => file.id === activeId) ?? files[0] ?? null;
-  useEffect(() => () => files.forEach(file => { URL.revokeObjectURL(file.url); if (file.outputUrl) URL.revokeObjectURL(file.outputUrl); }), []);
+  const filesRef = useRef<WatermarkFile[]>([]);
+  filesRef.current = files;
+  useEffect(() => () => filesRef.current.forEach(file => { URL.revokeObjectURL(file.url); if (file.outputUrl) URL.revokeObjectURL(file.outputUrl); }), []);
   const addFiles = async (list: FileList | File[]) => {
     const incoming = Array.from(list);
     const accepted = incoming.filter(file => ["image/jpeg","image/png","image/webp"].includes(file.type) && file.size <= 25 * 1024 * 1024);
@@ -540,7 +542,7 @@ function WatermarkPage() {
         </section>
         <section className="wm-preview-panel">
           <div className="wm-panel-title"><b>Full-image preview</b><span>{active ? active.width+" × "+active.height : "UPLOAD AN IMAGE"}</span></div>
-          <div className="wm-canvas-preview">{active ? <><img src={active.url} alt="Selected image preview"/><div className={"wm-repeat-overlay " + (settings.color==="white"?"wm-white":"wm-charcoal")} style={{opacity:settings.opacity/100, fontSize:"clamp(12px, 2.2vw, 25px)", transform:"rotate("+settings.rotation+"deg)", backgroundSize:Math.max(115,settings.spacing)+"px "+Math.max(90,settings.spacing*.82)+"px"}}>{Array.from({length:80},(_,i)=><span key={i}>{settings.text || "@YourName"}</span>)}</div></> : <div className="wm-empty"><ImageIcon size={42}/><b>Your image preview will appear here</b><span>Choose one or more photos to start</span><button className="button button-primary" onClick={()=>inputRef.current?.click()}>Choose images</button></div>}</div>
+          <div className="wm-canvas-preview">{active ? <><img src={active.url} alt="Selected image preview"/><div className={"wm-repeat-overlay " + (settings.color==="white"?"wm-white":"wm-charcoal")} style={{opacity:settings.opacity/100, fontSize:"clamp(12px, 2.2vw, 25px)", transform:"rotate("+settings.rotation+"deg)", gridTemplateColumns:"repeat(8, "+Math.max(115,settings.spacing)+"px)", gridAutoRows:Math.max(90,settings.spacing*.82)+"px"}}>{Array.from({length:80},(_,i)=><span key={i}>{settings.text || "@YourName"}</span>)}</div></> : <div className="wm-empty"><ImageIcon size={42}/><b>Your image preview will appear here</b><span>Choose one or more photos to start</span><button className="button button-primary" onClick={()=>inputRef.current?.click()}>Choose images</button></div>}</div>
           {files.length>0 && <div className="wm-file-list">{files.map(file=><button key={file.id} className={active?.id===file.id?"selected":""} onClick={()=>setActiveId(file.id)}><img src={file.url} alt=""/><span>{file.file.name}</span><small>{file.width} × {file.height}</small></button>)}</div>}
           {active && <div className="wm-export-actions"><span>{files.length} image{files.length===1?"":"s"} selected</span><button className="button button-outline" onClick={()=>void exportOne(active)} disabled={busy}><Download size={16}/> Download current</button><button className="button button-primary" onClick={()=>void exportAll()} disabled={busy}>{busy?"Applying watermark…": "Watermark all & download ZIP"} <ArrowRight size={15}/></button></div>}
         </section>
