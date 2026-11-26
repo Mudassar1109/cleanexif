@@ -678,7 +678,7 @@ function App() {
       for (const item of targetItems) {
         try {
           setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, status: "cleaning" } : entry));
-          const blob = await cleanImage(item.file, setCleaningStage, watermark);
+          const blob = await cleanImage(item.file, setCleaningStage);
           setCleaningStage("Verifying " + item.file.name);
           const verification = await verifyMetadata(blob);
           const url = URL.createObjectURL(blob);
