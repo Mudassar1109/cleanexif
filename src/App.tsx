@@ -473,7 +473,11 @@ function App() {
     if (!activeId && usable[0]) setActiveId(usable[0].id);
     setNotice(errors.length ? errors.join(" · ") : usable.length ? usable.length + " image" + (usable.length === 1 ? "" : "s") + " ready to inspect." : "");
   }, [items.length, activeId]);
-  const loadInteractiveDemo = async () => {\n    try { const sample = await createDemoPhoto(); await addFiles([sample]); setNotice("Interactive demo loaded. Inspect the synthetic camera metadata, then clean and download the sample."); }\n    catch (error) { setNotice(error instanceof Error ? error.message : "Could not load the demo image."); }\n  };\n  const handleInput = (event: ChangeEvent<HTMLInputElement>) => {
+  const loadInteractiveDemo = async () => {
+    try { const sample = await createDemoPhoto(); await addFiles([sample]); setNotice("Interactive demo loaded. Inspect the synthetic camera metadata, then clean and download the sample."); }
+    catch (error) { setNotice(error instanceof Error ? error.message : "Could not load the demo image."); }
+  };
+  const handleInput = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) void addFiles(event.target.files);
     event.target.value = "";
   };
