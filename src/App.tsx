@@ -565,6 +565,7 @@ function WatermarkPage() {
       setFiles(previous => previous.map(file => file.id === item.id ? { ...file, output: blob, outputUrl: url } : file));
       const anchor = document.createElement("a"); anchor.href = url; anchor.download = "watermarked-" + item.file.name;
       document.body.appendChild(anchor); anchor.click(); anchor.remove();
+      setFiles(previous => previous.map(file => file.id === item.id ? { ...file, downloaded: true } : file));
       setNotice("Watermark applied and download started: " + item.file.name + ".");
     } catch (error) { setNotice(error instanceof Error ? error.message : "Could not export this image."); }
     finally { setBusy(false); }
@@ -715,7 +716,8 @@ function App() {
     for (const file of incoming) {
       if (!ACCEPTED.includes(file.type)) { errors.push(file.name + ": unsupported format"); continue; }
       if (file.size > limits.maxFileMB * 1024 * 1024) { errors.push(file.name + ": larger than your " + limits.maxFileMB + " MB per-file limit"); continue; }
-      if (items.length + valid.length >= Math.min(limits.maxImages, limits.dailyImages)) { errors.push("Your " + limits.name + " plan allows up to " + Math.min(limits.maxImages, limits.dailyImages) + " images to be selected in the Metadata Inspector. Upgrade your plan to add more."); break; }
+      const metadataSelectionLimit = Math.min(50, limits.dailyImages, limits.maxImages);
+      if (items.length + valid.length >= metadataSelectionLimit) { errors.push("The Metadata Inspector allows up to " + metadataSelectionLimit + " images per batch on your current plan."); break; }
       if (totalSize + file.size > limits.totalMB * 1024 * 1024) { errors.push(file.name + ": your " + limits.name + " plan allows " + limits.totalMB + " MB total per batch"); continue; }
       valid.push(file);
       totalSize += file.size;
@@ -796,6 +798,7 @@ function App() {
     anchor.download = "clean-" + item.file.name.replace(/\.[^.]+$/, "") + (item.file.name.match(/\.[^.]+$/)?.[0] ?? "");
     document.body.appendChild(anchor); anchor.click(); anchor.remove();
     if (!item.cleanedUrl) window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+    setItems(previous => previous.map(entry => entry.id === item.id ? { ...entry, downloaded: true } : entry));
     setNotice("Download started: " + item.file.name.replace(/\.[^.]+$/, "") + ". Check your browser downloads.");
   };
   const cleanAll = async (targetItems: ImageRecord[] = items) => {
