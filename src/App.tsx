@@ -2,7 +2,7 @@ import { useCallback, useMemo, useRef, useState, useEffect, type ChangeEvent } f
 import exifr from "exifr";
 import JSZip from "jszip";
 import {
-  AlertCircle, ArrowRight, Aperture, Camera, Check, CheckCircle2, ChevronDown, Crown,
+  AlertCircle, ArrowRight, Camera, Check, CheckCircle2, ChevronDown,
   Download, Eye, FilePlus2, Fingerprint, Globe2, Image as ImageIcon,
   LockKeyhole, MapPin, Menu, Monitor, RefreshCw, ShieldCheck,
   Trash2, UploadCloud, X, Zap
