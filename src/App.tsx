@@ -444,6 +444,7 @@ function WatermarkPage() {
   const [settings, setSettings] = useState<RepeatWatermarkSettings>({ text: "@Mudassar", opacity: 28, size: 34, spacing: 190, rotation: -28, color: "white" });
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const active = files.find(file => file.id === activeId) ?? files[0] ?? null;
   const filesRef = useRef<WatermarkFile[]>([]);
@@ -462,7 +463,7 @@ function WatermarkPage() {
     if (!activeId && records[0]) setActiveId(records[0].id);
     setNotice(accepted.length === incoming.length ? records.length + " image(s) ready." : "Only JPEG, PNG and WebP images up to 25 MB each are supported.");
   };
-  const renderWatermark = async (item: WatermarkFile): Promise<Blob> => {
+  const renderWatermark = async (item: WatermarkFile, config: RepeatWatermarkSettings = settings): Promise<Blob> => {
     const bitmap = await createImageBitmap(item.file, { imageOrientation: "from-image" });
     try {
       const canvas = document.createElement("canvas");
@@ -471,21 +472,21 @@ function WatermarkPage() {
       if (!ctx) throw new Error("Your browser could not prepare this image.");
       if (item.file.type === "image/jpeg") { ctx.fillStyle = "#fff"; ctx.fillRect(0,0,canvas.width,canvas.height); }
       ctx.drawImage(bitmap,0,0);
-      const fontSize = Math.max(12, Math.round(Math.min(canvas.width,canvas.height) * settings.size / 1000));
-      const label = settings.text.trim().slice(0,80);
+      const fontSize = Math.max(12, Math.round(Math.min(canvas.width,canvas.height) * config.size / 1000));
+      const label = config.text.trim().slice(0,80);
       if (!label) throw new Error("Enter watermark text before exporting.");
       ctx.save();
-      ctx.globalAlpha = settings.opacity / 100;
-      ctx.fillStyle = settings.color === "white" ? "#ffffff" : "#20242b";
+      ctx.globalAlpha = config.opacity / 100;
+      ctx.fillStyle = config.color === "white" ? "#ffffff" : "#20242b";
       ctx.font = "700 " + fontSize + "px Arial, Helvetica, sans-serif";
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.shadowColor = settings.color === "white" ? "rgba(0,0,0,.48)" : "rgba(255,255,255,.5)";
+      ctx.shadowColor = config.color === "white" ? "rgba(0,0,0,.48)" : "rgba(255,255,255,.5)";
       ctx.shadowBlur = Math.max(1,fontSize * .12);
       const diagonal = Math.hypot(canvas.width,canvas.height);
-      const stepX = Math.max(fontSize * 2.5, fontSize * settings.spacing / 100);
+      const stepX = Math.max(fontSize * 2.5, fontSize * config.spacing / 100);
       const stepY = stepX * .82;
       ctx.translate(canvas.width/2,canvas.height/2);
-      ctx.rotate(settings.rotation * Math.PI / 180);
+      ctx.rotate(config.rotation * Math.PI / 180);
       for (let y = -diagonal; y <= diagonal; y += stepY) {
         const row = Math.round((y + diagonal) / stepY);
         for (let x = -diagonal; x <= diagonal; x += stepX) {
@@ -496,6 +497,23 @@ function WatermarkPage() {
       return await new Promise<Blob>((resolve,reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Image export failed.")),item.file.type,.94));
     } finally { bitmap.close(); }
   };
+  useEffect(() => {
+    let cancelled = false;
+    let nextUrl: string | null = null;
+    if (!active || !settings.text.trim()) {
+      setPreviewUrl(null);
+      return;
+    }
+    void renderWatermark(active, settings).then(blob => {
+      if (cancelled) return;
+      nextUrl = URL.createObjectURL(blob);
+      setPreviewUrl(nextUrl);
+    }).catch(() => setPreviewUrl(null));
+    return () => {
+      cancelled = true;
+      if (nextUrl) URL.revokeObjectURL(nextUrl);
+    };
+  }, [active?.id, active?.file, settings.text, settings.opacity, settings.size, settings.spacing, settings.rotation, settings.color]);
   const exportOne = async (item: WatermarkFile) => {
     if (!settings.text.trim()) { setNotice("Enter watermark text first."); return; }
     setBusy(true);
@@ -542,7 +560,7 @@ function WatermarkPage() {
         </section>
         <section className="wm-preview-panel">
           <div className="wm-panel-title"><b>Full-image preview</b><span>{active ? active.width+" × "+active.height : "UPLOAD AN IMAGE"}</span></div>
-          <div className="wm-canvas-preview">{active ? <><img src={active.url} alt="Selected image preview"/><div className={"wm-repeat-overlay " + (settings.color==="white"?"wm-white":"wm-charcoal")} style={{opacity:settings.opacity/100, fontSize:"clamp(12px, 2.2vw, 25px)", transform:"rotate("+settings.rotation+"deg)", gridTemplateColumns:"repeat(8, "+Math.max(115,settings.spacing)+"px)", gridAutoRows:Math.max(90,settings.spacing*.82)+"px"}}>{Array.from({length:80},(_,i)=><span key={i}>{settings.text || "@YourName"}</span>)}</div></> : <div className="wm-empty"><ImageIcon size={42}/><b>Your image preview will appear here</b><span>Choose one or more photos to start</span><button className="button button-primary" onClick={()=>inputRef.current?.click()}>Choose images</button></div>}</div>
+          <div className="wm-canvas-preview">{active ? <img src={previewUrl || active.url} alt="Live watermark preview"/> : <div className="wm-empty"><ImageIcon size={42}/><b>Your image preview will appear here</b><span>Choose one or more photos to start</span><button className="button button-primary" onClick={()=>inputRef.current?.click()}>Choose images</button></div>}</div>
           {files.length>0 && <div className="wm-file-list">{files.map(file=><button key={file.id} className={active?.id===file.id?"selected":""} onClick={()=>setActiveId(file.id)}><img src={file.url} alt=""/><span>{file.file.name}</span><small>{file.width} × {file.height}</small></button>)}</div>}
           {active && <div className="wm-export-actions"><span>{files.length} image{files.length===1?"":"s"} selected</span><button className="button button-outline" onClick={()=>void exportOne(active)} disabled={busy}><Download size={16}/> Download current</button><button className="button button-primary" onClick={()=>void exportAll()} disabled={busy}>{busy?"Applying watermark…": "Watermark all & download ZIP"} <ArrowRight size={15}/></button></div>}
         </section>
