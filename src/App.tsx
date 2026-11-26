@@ -651,6 +651,7 @@ function App() {
       valid.push(file);
       totalSize += file.size;
     }
+    setAddProgress({ done: 0, total: valid.length });
     const records: ImageRecord[] = await Promise.all(valid.map(async file => {
       const id = (typeof crypto !== "undefined" && "randomUUID" in crypto) ? crypto.randomUUID() : String(Date.now()) + Math.random();
       let preview = "";
@@ -724,7 +725,7 @@ function App() {
     anchor.download = "clean-" + item.file.name.replace(/\.[^.]+$/, "") + (item.file.name.match(/\.[^.]+$/)?.[0] ?? "");
     document.body.appendChild(anchor); anchor.click(); anchor.remove();
     if (!item.cleanedUrl) window.setTimeout(() => URL.revokeObjectURL(url), 30000);
-    setNotice("Download started: " + item.file.name.replace(/\\.[^.]+$/, "") + ". Check your browser downloads.");
+    setNotice("Download started: " + item.file.name.replace(/\.[^.]+$/, "") + ". Check your browser downloads.");
   };
   const cleanAll = async (targetItems: ImageRecord[] = items) => {
     if (!targetItems.length || busy) return;
