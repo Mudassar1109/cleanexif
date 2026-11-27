@@ -28,7 +28,6 @@ function Brand() {
 export function AccountMenu({ email }: { email: string | null }) {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<UserShape | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
   useEffect(() => {
     if (!cleanexifSupabase) return;
     cleanexifSupabase.auth.getUser().then(({ data }) => setUser(data.user as UserShape | null));
@@ -65,6 +64,7 @@ export function AccountMenu({ email }: { email: string | null }) {
 
 export default function AccountPage({ initialMode }: { initialMode?: AuthMode }) {
   const [user, setUser] = useState<UserShape | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [authMode, setAuthMode] = useState<AuthMode>(initialMode ?? "signup");
   const [view, setView] = useState<View>(() => {
     const tab = new URLSearchParams(window.location.search).get("tab");
