@@ -15,3 +15,5 @@
 .admin-plan-card>strong{color:#3083B9}
 .admin-login .button-primary,.admin-title-row .button-primary{background:linear-gradient(120deg,#035C96,#3083B9 55%,#53A6D8);box-shadow:0 8px 20px rgba(3,92,150,.2)}
 
+
+.admin-ad-actions{display:flex;gap:6px;flex-wrap:wrap}.admin-ad-delete{color:#b4233c!important}.sponsor-ad-form{padding:20px;border-bottom:1px solid #e4ebf4}.sponsor-admin .admin-table-head{gap:14px}.sponsor-admin .admin-table-head>div{display:grid;gap:4px}.sponsor-admin .admin-table-head .button{display:flex;align-items:center;gap:6px;white-space:nowrap}
