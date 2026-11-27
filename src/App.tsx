@@ -441,6 +441,7 @@ function DemoPage() {
       <div className="demo-disclaimer"><ShieldCheck size={17}/><span><b>Demonstration only.</b> Metadata and coordinates are synthetic examples. The walkthrough illustrates the workflow; it does not process or upload a real photo.</span></div>
       <div className="demo-bottom-link"><a href="/#tool">Ready to inspect your own image? Start cleaning <ArrowRight size={16}/></a></div>
     </main>
+    <SiteFooter />
   </div>;
 }
 
