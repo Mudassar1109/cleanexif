@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { cleanexifSupabase, usePlanAccess } from "./planAccess";
 import "./account.css";
+import { SiteHeader, SiteFooter } from "./SiteChrome";
 
 type View = "profile" | "subscription" | "settings" | "help";
 type AuthMode = "signin" | "signup";
@@ -20,10 +21,6 @@ const initials = (name: string, email: string) => {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0]?.slice(0, 2) || email.slice(0, 2))).toUpperCase();
 };
-
-function Brand() {
-  return <a className="brand" href="/" aria-label="CleanExif home"><img className="brand-logo-image" src="/cleanexif-logo-v2.svg" alt="CleanExif" /></a>;
-}
 
 export function AccountMenu({ email }: { email: string | null }) {
   const [open, setOpen] = useState(false);
@@ -170,10 +167,10 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
     window.location.href = "/";
   }
 
-  if (authLoading) return <div className="account-auth-page"><header className="account-topbar"><div className="container"><Brand/></div></header><div className="account-loading">Loading your secure account…</div></div>;
+  if (authLoading) return <div className="account-auth-page"><SiteHeader /><div className="account-loading">Loading your secure account…</div></div>;
 
   if (!user) return <div className="account-auth-page">
-    <header className="account-topbar"><div className="container"><Brand/><a href="/" className="account-back"><ArrowLeft size={16}/> Back to CleanExif</a></div></header>
+    <SiteHeader />
     <main className="account-auth-layout">
       <section className="account-auth-story">
         <span className="account-kicker"><ShieldCheck size={15}/> YOUR PRIVATE WORKSPACE</span>
