@@ -1,11 +1,12 @@
-import { useCallback, useMemo, useRef, useState, useEffect, type ChangeEvent } from "react";
-import exifr from "exifr";
+import { lazy, Suspense, useCallback, useMemo, useRef, useState, useEffect, type ChangeEvent } from "react";
 import SponsorAd from "./SponsorAd";
-import AdminPage from "./AdminPage";
-import PlansPage from "./PlansPage";
-import AccountPage, { AccountMenu } from "./AccountPage";
 import { usePlanAccess } from "./planAccess";
-import JSZip from "jszip";
+
+// Keep account, plan and admin screens out of the initial homepage bundle.
+const AdminPage = lazy(() => import("./AdminPage"));
+const PlansPage = lazy(() => import("./PlansPage"));
+const AccountPage = lazy(() => import("./AccountPage"));
+const AccountMenu = lazy(() => import("./AccountPage").then(module => ({ default: module.AccountMenu })));
 import {
   AlertCircle, ArrowRight, Camera, Check, CheckCircle2, ChevronDown,
   Download, Eye, FilePlus2, Fingerprint, Globe2, Image as ImageIcon,
@@ -69,6 +70,7 @@ async function readMetadata(blob: Blob): Promise<Meta | null> {
   try {
     // ICC color profiles describe color rendering, not personal EXIF/location data.
     // Exclude them from the privacy verification result to avoid false warnings.
+    const { default: exifr } = await import("exifr");
     const result = await exifr.parse(blob as File, { exif: true, gps: true, iptc: true, xmp: true, icc: false });
     return result && typeof result === "object" ? result as Meta : null;
   } catch { return null; }
@@ -77,6 +79,7 @@ async function verifyMetadata(blob: Blob): Promise<{ metadata: Meta | null; erro
   try {
     // Verify privacy-sensitive metadata only. ICC profile fields describe color
     // rendering and are not camera, location, date, or user-identifying metadata.
+    const { default: exifr } = await import("exifr");
     const result = await exifr.parse(blob as File, { exif: true, gps: true, iptc: true, xmp: true, icc: false });
     if (!result || typeof result !== "object") return { metadata: null, error: false };
     const nonPrivacyKeys = new Set([
@@ -601,7 +604,8 @@ function WatermarkPage() {
     setBusy(true);
     setExportProgress({ done: 0, total: files.length, stage: "Applying watermark" });
     try {
-      const zip = new JSZip();
+      const { default: JSZip } = await import("jszip");
+    const zip = new JSZip();
       let success = 0;
       let quotaReached = false;
       for (const item of files) {
@@ -636,7 +640,7 @@ function WatermarkPage() {
     finally { setBusy(false); setExportProgress({ done: 0, total: 0, stage: "" }); }
   };
   return <div className="wm-page">
-    <header className="site-header"><div className="container nav-inner"><Logo /><nav className="wm-nav"><a href="/">Image metadata inspector</a><a href="/plans">Plans</a><a className="button button-primary" href="/">Open CleanExif <ArrowRight size={15}/></a><AccountMenu email={email}/></nav></div></header>
+    <header className="site-header"><div className="container nav-inner"><Logo /><nav className="wm-nav"><a href="/">Image metadata inspector</a><a href="/plans">Plans</a><a className="button button-primary" href="/">Open CleanExif <ArrowRight size={15}/></a><Suspense fallback={null}><AccountMenu email={email}/></Suspense></nav></div></header>
     <main className="container wm-main">
       <div className="wm-heading"><span className="eyebrow">FREE ONLINE WATERMARK MAKER</span><h1>Protect your photos.<br/><span>Your name, across every image.</span></h1><p>Add a repeating, diagonal copyright watermark across the full image. Preview the pattern and export privately in your browser.</p></div>
       <div className="wm-toolbar" aria-label="Watermark image controls">
@@ -688,9 +692,9 @@ function WatermarkPage() {
 function App() {
   const { limits, email, loading: planLoading, dailyUsage, consumeImage, isLocked, resetCountdown } = usePlanAccess("metadata");
   const legalPath = window.location.pathname.replace(/^\/|\/$/g, "");
-  if (legalPath === "admin") return <AdminPage />;
-  if (legalPath === "plans") return <PlansPage />;
-  if (["account","login","signup"].includes(legalPath)) return <AccountPage initialMode={legalPath === "login" ? "signin" : legalPath === "signup" ? "signup" : undefined} />;
+  if (legalPath === "admin") return <Suspense fallback={<div className="container" role="status">Loading admin…</div>}><AdminPage /></Suspense>;
+  if (legalPath === "plans") return <Suspense fallback={<div className="container" role="status">Loading plans…</div>}><PlansPage /></Suspense>;
+  if (["account","login","signup"].includes(legalPath)) return <Suspense fallback={<div className="container" role="status">Loading account…</div>}><AccountPage initialMode={legalPath === "login" ? "signin" : legalPath === "signup" ? "signup" : undefined} /></Suspense>;
   if (legalPath === "demo") return <DemoPage />;
   if (legalPath === "watermark") return <WatermarkPage />;
   if (legalPath === "blog") return <BlogPage />;
@@ -821,6 +825,7 @@ function App() {
     setBusy(true); setCleaningStage("Preparing batch"); setNotice("Cleaning images locally in your browser…");
     setBatchProgress({ done: 0, total: targetItems.length });
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+    const { default: JSZip } = await import("jszip");
     const zip = new JSZip();
     const usedZipNames = new Set<string>();
     let success = 0;
