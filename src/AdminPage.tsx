@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
-import { ArrowLeft, LogOut, ShieldCheck, Users, CreditCard, Package, Plus, RefreshCw, Search, X, CheckCircle2, AlertCircle } from "lucide-react";
+import { LogOut, ShieldCheck, Users, CreditCard, Package, Plus, RefreshCw, Search, X, CheckCircle2, AlertCircle } from "lucide-react";
 
 
 type Plan = { id:string; code:string; name:string; description:string|null; price_monthly:number; watermark_images_per_batch:number; watermark_total_mb:number; max_file_mb:number; daily_images_limit:number; active:boolean; sort_order:number };
