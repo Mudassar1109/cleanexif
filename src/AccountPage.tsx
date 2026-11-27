@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import {
   ArrowLeft, Camera, ChevronRight, CreditCard, HelpCircle, Image,
   LockKeyhole, LogOut, Mail, Menu, Settings, ShieldCheck, UserRound, X,
-  Eye, EyeOff, Sparkles, Gauge
+  Eye, EyeOff, Gauge
 } from "lucide-react";
 import { cleanexifSupabase, usePlanAccess } from "./planAccess";
 import "./account.css";
@@ -11,6 +11,16 @@ import { SiteHeader } from "./SiteChrome";
 type View = "profile" | "subscription" | "settings" | "help";
 type AuthMode = "signin" | "signup";
 type UserShape = { id: string; email?: string; user_metadata?: Record<string, unknown> };
+const avatarOf = (user: UserShape | null) => {
+  const meta = user?.user_metadata ?? {};
+  const value = meta.avatar_url ?? meta.picture;
+  return typeof value === "string" ? value : "";
+};
+const initials = (name: string, email: string) => {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0]?.slice(0, 2) || email.slice(0, 2))).toUpperCase();
+};
+
 
 export default function AccountPage({ initialMode }: { initialMode?: AuthMode }) {
   const [user, setUser] = useState<UserShape | null>(null);
