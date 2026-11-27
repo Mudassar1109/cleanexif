@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://cleanexif.vercel.app/</loc><lastmod>2026-11-26</lastmod></url>
-  <url><loc>https://cleanexif.vercel.app/privacy-policy</loc><lastmod>2026-11-25</lastmod></url>
-  <url><loc>https://cleanexif.vercel.app/terms</loc><lastmod>2026-11-25</lastmod></url>
-  <url><loc>https://cleanexif.vercel.app/disclaimer</loc><lastmod>2026-11-25</lastmod></url>
-  <url><loc>https://cleanexif.vercel.app/cookie-policy</loc><lastmod>2026-11-25</lastmod></url>
-  <url><loc>https://cleanexif.vercel.app/blog</loc><lastmod>2026-11-26</lastmod></url>
-  <url><loc>https://cleanexif.vercel.app/blog/what-is-exif-data</loc><lastmod>2026-11-26</lastmod></url>
-  <url><loc>https://cleanexif.vercel.app/blog/how-to-remove-exif-data</loc><lastmod>2026-11-26</lastmod></url>
-  <url><loc>https://cleanexif.vercel.app/blog/remove-gps-location-from-photos</loc><lastmod>2026-11-26</lastmod></url>
-  <url><loc>https://cleanexif.vercel.app/blog/does-instagram-remove-exif-data</loc><lastmod>2026-11-26</lastmod></url>
-  <url><loc>https://cleanexif.vercel.app/blog/how-to-check-photo-metadata</loc><lastmod>2026-11-26</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/</loc><lastmod>2026-11-28</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/plans</loc><lastmod>2026-11-28</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/watermark</loc><lastmod>2026-11-28</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/privacy-policy</loc><lastmod>2026-11-28</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/terms</loc><lastmod>2026-11-28</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/disclaimer</loc><lastmod>2026-11-28</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/cookie-policy</loc><lastmod>2026-11-28</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/blog</loc><lastmod>2026-11-28</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/blog/inspect-photo-metadata-online</loc><lastmod>2026-11-28</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/blog/remove-exif-data-from-jpg-png-webp</loc><lastmod>2026-11-28</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/blog/remove-gps-location-from-photos</loc><lastmod>2026-11-28</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/blog/add-watermark-to-photos-online</loc><lastmod>2026-11-28</lastmod></url>
+  <url><loc>https://cleanexif.vercel.app/blog/cleanexif-image-privacy-workflow</loc><lastmod>2026-11-28</lastmod></url>
 </urlset>
