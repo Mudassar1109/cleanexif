@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState, useEffect, type ChangeEvent } from "react";
 import exifr from "exifr";
+import SponsorAd from "./SponsorAd";
 import AdminPage from "./AdminPage";
 import PlansPage from "./PlansPage";
 import AccountPage, { AccountMenu } from "./AccountPage";
@@ -371,8 +372,10 @@ function BlogPage({ slug }: { slug?: string }) {
           {paragraphs.map((paragraph: string) => <p key={paragraph}>{paragraph}</p>)}
           {bullets && <ul>{bullets.map((item: string) => <li key={item}>{item}</li>)}</ul>}
         </section>)}</div>
+        <SponsorAd placement="blog_inline" />
         <div className="blog-cta"><h2>Inspect and clean your photos</h2><p>Check readable metadata and create a fresh copy of supported images in your browser.</p><a className="button button-primary" href="/">Open the free tool →</a></div>
         <section className="blog-related"><h2>Related guides</h2><div className="blog-related-grid">{related.map(item => <a className="blog-related-card" href={"/blog/" + item.slug} key={item.slug}><b>{item.title}</b><span>Read guide →</span></a>)}</div></section>
+        <SponsorAd placement="blog_end" />
       </article> : slug ? <section className="blog-not-found"><h1>Article not found</h1><p>This page may have moved or the address may be incorrect.</p><a className="button button-primary" href="/blog">Browse all guides</a></section> : <>
         <section className="blog-hero">
           <div className="blog-hero-copy"><span className="eyebrow">CLEANEXIF KNOWLEDGE HUB</span><h1 className="blog-heading">Photo Privacy, Made Clear.</h1><p className="blog-lead">Practical guides for inspecting image metadata, creating clean copies and using CleanExif tools with confidence.</p><div className="blog-categories"><span>How To</span><span>Privacy</span><span>CleanExif Tools</span></div></div>
