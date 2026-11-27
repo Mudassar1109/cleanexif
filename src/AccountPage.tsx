@@ -163,7 +163,7 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
     { id: "settings", label: "Settings", icon: <Settings size={19}/> }
   ];
   return <div className="account-page">
-    <header className="account-topbar"><div className="container"><Brand/><div className="account-top-actions"><span><ShieldCheck size={15}/> Secure account</span><button type="button" onClick={()=>void signOut()}><LogOut size={16}/> Sign out</button></div></div></header>
+    <SiteHeader />
     <main className="account-dashboard">
       <aside className={"account-sidebar"+(mobileNav?" mobile-open":"")}>
         <div className="account-sidebar-user">{avatar?<img src={avatar} alt="Profile"/>:<span className="account-avatar-fallback">{initialsText}</span>}<div><b>{displayName||"CleanExif member"}</b><small>{userEmail}</small></div><button className="account-sidebar-close" onClick={()=>setMobileNav(false)} aria-label="Close menu"><X size={17}/></button></div>
