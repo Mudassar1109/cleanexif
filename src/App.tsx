@@ -199,7 +199,7 @@ function LegalPage({ type }: { type: string }) {
 }
 function Footer() {
   return <footer className="footer"><div className="container footer-inner"><div className="footer-brand"><Logo small /><span>A simple, privacy-first image metadata tool.</span></div>
-    <div className="footer-links"><span>© 2026 CleanExif</span><a href="/blog">Blog</a><a href="/privacy-policy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="/disclaimer">Disclaimer</a><a href="/cookie-policy">Cookie Policy</a></div></div></footer>;
+    <div className="footer-links"><span>© 2026 CleanExif</span><a href="/blog">Blog</a><a href="/gps-remover">GPS Remover</a><a href="/privacy-scanner">Privacy Scanner</a><a href="/metadata-editor">EXIF Editor</a><a href="/privacy-policy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="/disclaimer">Disclaimer</a><a href="/cookie-policy">Cookie Policy</a></div></div></footer>;
 }
 
 const blogArticles = [
@@ -903,7 +903,7 @@ function App() {
   return <div className="app-shell">
     <header className="site-header"><div className="container nav-inner"><Logo />
       <button className="mobile-toggle" aria-label="Toggle navigation" onClick={() => setMobileMenu(!mobileMenu)}><Menu size={22} /></button>
-      <nav className={mobileMenu ? "nav-links nav-open" : "nav-links"}><a href="/watermark">Watermark tool</a><a href="#how-it-works" onClick={() => setMobileMenu(false)}>How it works</a><a href="#privacy" onClick={() => setMobileMenu(false)}>Privacy</a><a href="#faq" onClick={() => setMobileMenu(false)}>FAQ</a><a href="/plans" onClick={() => setMobileMenu(false)}>Plans</a><a className="button button-primary nav-cta" href="#tool" onClick={() => setMobileMenu(false)}>Start cleaning <ArrowRight size={16} /></a><AccountMenu email={email} /></nav>
+      <nav className={mobileMenu ? "nav-links nav-open" : "nav-links"}><a href="/watermark">Watermark tool</a><a href="/gps-remover">GPS remover</a><a href="/privacy-scanner">Privacy scanner</a><a href="/metadata-editor">EXIF editor</a><a href="#how-it-works" onClick={() => setMobileMenu(false)}>How it works</a><a href="#privacy" onClick={() => setMobileMenu(false)}>Privacy</a><a href="#faq" onClick={() => setMobileMenu(false)}>FAQ</a><a href="/plans" onClick={() => setMobileMenu(false)}>Plans</a><a className="button button-primary nav-cta" href="#tool" onClick={() => setMobileMenu(false)}>Start cleaning <ArrowRight size={16} /></a><AccountMenu email={email} /></nav>
     </div></header>
     {notice && <div className={"toast-notice" + (noticeIsError ? " toast-error" : " toast-success")} role={noticeIsError ? "alert" : "status"} aria-live="assertive"><span className="toast-icon">{noticeIsError ? <AlertCircle size={19} /> : <CheckCircle2 size={19} />}</span><span className="toast-message">{notice}</span><button className="toast-close" type="button" aria-label="Dismiss notification" onClick={() => setNotice("")}><X size={17} /></button></div>}
 
