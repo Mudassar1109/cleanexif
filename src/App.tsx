@@ -10,8 +10,8 @@ const PlansPage = lazy(() => import("./PlansPage"));
 const AccountPage = lazy(() => import("./AccountPage"));
 import {
   AlertCircle, ArrowRight, Camera, Check, CheckCircle2, ChevronDown,
-  Download, Eye, FilePlus2, Fingerprint, Globe2, Image as ImageIcon,
-  LockKeyhole, MapPin, Menu, Monitor, RefreshCw, ShieldCheck,
+  Download, Eye, FilePlus2, Fingerprint, Globe2, Image as ImageIcon, ScanSearch,
+  LockKeyhole, MapPin, Monitor, RefreshCw, ShieldCheck,
   Trash2, UploadCloud, X, Zap
 } from "lucide-react";
 
@@ -120,11 +120,6 @@ async function cleanImage(file: File, onStage?: (stage: string) => void): Promis
     if (output.type !== file.type) throw new Error("This browser cannot export the original image format. Try a different browser.");
     return output;
   } finally { bitmap.close(); }
-}
-function Logo({ small = false }: { small?: boolean }) {
-  return <a className={"brand" + (small ? " brand-small" : "")} href="/" aria-label="CleanExif — Photo Privacy Tool">
-    <img className="brand-logo-image" src="/cleanexif-logo-v2.svg" alt="CleanExif — Photo Privacy Tool" />
-  </a>;
 }
 function LegalPage({ type }: { type: string }) {
   const titles: Record<string, string> = {
