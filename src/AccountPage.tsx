@@ -2,15 +2,15 @@ import { useEffect, useState, type FormEvent } from "react";
 import {
   ArrowLeft, Camera, ChevronRight, CreditCard, HelpCircle, Image,
   LockKeyhole, LogOut, Mail, Menu, Settings, ShieldCheck, UserRound, X,
-  Eye, EyeOff, Sparkles, Gauge
+  Eye, EyeOff, Gauge
 } from "lucide-react";
 import { cleanexifSupabase, usePlanAccess } from "./planAccess";
 import "./account.css";
+import { SiteHeader } from "./SiteChrome";
 
 type View = "profile" | "subscription" | "settings" | "help";
 type AuthMode = "signin" | "signup";
 type UserShape = { id: string; email?: string; user_metadata?: Record<string, unknown> };
-
 const avatarOf = (user: UserShape | null) => {
   const meta = user?.user_metadata ?? {};
   const value = meta.avatar_url ?? meta.picture;
@@ -21,46 +21,6 @@ const initials = (name: string, email: string) => {
   return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0]?.slice(0, 2) || email.slice(0, 2))).toUpperCase();
 };
 
-function Brand() {
-  return <a className="brand" href="/" aria-label="CleanExif home"><img className="brand-logo-image" src="/cleanexif-logo-v2.svg" alt="CleanExif" /></a>;
-}
-
-export function AccountMenu({ email }: { email: string | null }) {
-  const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<UserShape | null>(null);
-  useEffect(() => {
-    if (!cleanexifSupabase) return;
-    cleanexifSupabase.auth.getUser().then(({ data }) => setUser(data.user as UserShape | null));
-    const { data: { subscription } } = cleanexifSupabase.auth.onAuthStateChange((_event, session) => setUser(session?.user as UserShape ?? null));
-    return () => subscription.unsubscribe();
-  }, []);
-  useEffect(() => {
-    const close = (event: MouseEvent) => {
-      if (!(event.target as HTMLElement).closest(".account-menu-wrap")) setOpen(false);
-    };
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
-  }, []);
-  const name = String(user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? "");
-  const avatar = avatarOf(user);
-  return <div className="account-menu-wrap">
-    <button className="account-avatar-trigger" type="button" aria-label="Open account menu" aria-expanded={open} onClick={() => setOpen(v => !v)}>
-      {avatar ? <img src={avatar} alt="" /> : <span>{email ? initials(name, email) : <UserRound size={19}/>}</span>}
-    </button>
-    {open && <div className="account-popover">
-      {email ? <>
-        <div className="account-popover-user"><b>{name || "CleanExif member"}</b><span>{email}</span></div>
-        <a href="/account"><UserRound size={17}/> Profile</a>
-        <a href="/account?tab=subscription"><CreditCard size={17}/> Subscription</a>
-        <a href="/account?tab=settings"><Settings size={17}/> Settings</a>
-        <button type="button" onClick={() => void cleanexifSupabase?.auth.signOut().then(() => { window.location.href = "/"; })}><LogOut size={17}/> Sign out</button>
-      </> : <>
-        <a href="/login"><LockKeyhole size={17}/> Sign in</a>
-        <a href="/signup"><Sparkles size={17}/> Create account</a>
-      </>}
-    </div>}
-  </div>;
-}
 
 export default function AccountPage({ initialMode }: { initialMode?: AuthMode }) {
   const [user, setUser] = useState<UserShape | null>(null);
@@ -170,10 +130,10 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
     window.location.href = "/";
   }
 
-  if (authLoading) return <div className="account-auth-page"><header className="account-topbar"><div className="container"><Brand/></div></header><div className="account-loading">Loading your secure account…</div></div>;
+  if (authLoading) return <div className="account-auth-page"><SiteHeader /><div className="account-loading">Loading your secure account…</div></div>;
 
   if (!user) return <div className="account-auth-page">
-    <header className="account-topbar"><div className="container"><Brand/><a href="/" className="account-back"><ArrowLeft size={16}/> Back to CleanExif</a></div></header>
+    <SiteHeader />
     <main className="account-auth-layout">
       <section className="account-auth-story">
         <span className="account-kicker"><ShieldCheck size={15}/> YOUR PRIVATE WORKSPACE</span>
@@ -213,7 +173,7 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
     { id: "settings", label: "Settings", icon: <Settings size={19}/> }
   ];
   return <div className="account-page">
-    <header className="account-topbar"><div className="container"><Brand/><div className="account-top-actions"><span><ShieldCheck size={15}/> Secure account</span><button type="button" onClick={()=>void signOut()}><LogOut size={16}/> Sign out</button></div></div></header>
+    <SiteHeader />
     <main className="account-dashboard">
       <aside className={"account-sidebar"+(mobileNav?" mobile-open":"")}>
         <div className="account-sidebar-user">{avatar?<img src={avatar} alt="Profile"/>:<span className="account-avatar-fallback">{initialsText}</span>}<div><b>{displayName||"CleanExif member"}</b><small>{userEmail}</small></div><button className="account-sidebar-close" onClick={()=>setMobileNav(false)} aria-label="Close menu"><X size={17}/></button></div>

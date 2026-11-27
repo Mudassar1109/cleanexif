@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Download, Fingerprint, MapPin, ScanSearch, ShieldCheck, UploadCloud } from "lucide-react";
 import piexif from "piexifjs";
+import { SiteHeader, SiteFooter } from "./SiteChrome";
 
 type ToolMode = "gps" | "scanner" | "editor";
 type Meta = Record<string, unknown>;
@@ -63,12 +64,13 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
  const download=()=>{if(!output||!file)return;const url=URL.createObjectURL(output);const a=document.createElement("a");a.href=url;a.download=(mode==="gps"?"no-gps-":mode==="editor"?"edited-":"scanned-")+file.name;a.click();window.setTimeout(()=>URL.revokeObjectURL(url),30000);};
  const InfoIcon=modeInfo[mode].icon;
  return <div className="privacy-tools-page">
-  <header className="site-header"><div className="container nav-inner"><a className="brand" href="/"><img className="brand-logo-image" src="/cleanexif-logo-v2.svg" alt="CleanExif"/></a><nav className="privacy-tools-nav"><a href="/gps-remover">GPS Remover</a><a href="/privacy-scanner">Privacy Scanner</a><a href="/metadata-editor">EXIF Editor</a><a className="button button-primary" href="/">Main Cleaner</a></nav></div></header>
+  <SiteHeader />
   <main className="container privacy-tools-main">
    <a className="privacy-tools-back" href="/">← Back to CleanExif</a>
    <div className="privacy-tools-hero"><span className="eyebrow"><ShieldCheck size={15}/> PRIVATE, IN-BROWSER IMAGE TOOLS</span><h1><InfoIcon size={34}/> {modeInfo[mode].title}</h1><p>{modeInfo[mode].description}</p><small>JPEG, PNG and WebP · Up to 50 MB · Files stay in this browser</small></div>
    <section className="privacy-tool-card">
     <label className="privacy-tool-upload"><UploadCloud size={28}/><b>{file?file.name:"Choose an image to get started"}</b><span>{file?bytes(file.size)+" · "+file.type:"Select a JPEG, PNG or WebP image"}</span><input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>{const f=e.target.files?.[0];if(f)void pick(f);e.currentTarget.value="";}}/></label>
+    <div className={"privacy-tool-status"+(busy?" is-processing":output?" is-ready":meta?" is-reviewed":"")} role="status" aria-live="polite"><b>{busy?"Processing image":output?"New image ready":meta?(mode==="scanner"?"Privacy scan complete":"Image inspected — no changes saved yet"):file?"Image selected — scan in progress":"No image selected"}</b><span>{busy?"Keep this tab open while CleanExif processes the image locally.":output?"A separate output file has been created. Use the Download button below to save it.":meta?(mode==="scanner"?"The scanner only reports readable metadata; it does not remove or change anything.":mode==="gps"?"The original file is unchanged. Select Remove GPS / metadata to create a cleaned copy.":"Edit the fields and select Save edited JPEG to create a separate copy."):"Select a file to begin. Your original image will not be overwritten."}</span></div>
     {busy&&<p className="privacy-tool-notice" role="status">Processing locally in your browser…</p>}
     {notice&&!busy&&<p className="privacy-tool-notice" role="status">{notice}</p>}
     {meta&&<div className="privacy-tool-results">
@@ -89,5 +91,6 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
    <section className="privacy-tool-disclaimer"><ShieldCheck size={18}/><p>Processing runs in your browser. The scanner reports metadata readable by the parser; the GPS remover re-encodes pixels and may remove other metadata too. The EXIF editor supports common JPEG fields only. Always independently verify files intended for sensitive use.</p></section>
    <section className="privacy-tool-switch"><h2>More CleanExif privacy tools</h2><div><a href="/gps-remover"><MapPin/> GPS Location Remover</a><a href="/privacy-scanner"><ScanSearch/> Image Privacy Scanner</a><a href="/metadata-editor"><Fingerprint/> EXIF Metadata Editor</a></div></section>
   </main>
+  <SiteFooter />
  </div>;
 }
