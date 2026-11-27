@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState, useEffect, type ChangeEvent } f
 import exifr from "exifr";
 import AdminPage from "./AdminPage";
 import PlansPage from "./PlansPage";
+import AccountPage, { AccountMenu } from "./AccountPage";
 import { usePlanAccess } from "./planAccess";
 import JSZip from "jszip";
 import {
@@ -623,7 +624,7 @@ function WatermarkPage() {
     finally { setBusy(false); setExportProgress({ done: 0, total: 0, stage: "" }); }
   };
   return <div className="wm-page">
-    <header className="site-header"><div className="container nav-inner"><Logo /><nav className="wm-nav"><a href="/">Image metadata inspector</a><a href="/plans">Plans</a><a className="button button-primary" href="/">Open CleanExif <ArrowRight size={15}/></a></nav></div></header>
+    <header className="site-header"><div className="container nav-inner"><Logo /><nav className="wm-nav"><a href="/">Image metadata inspector</a><a href="/plans">Plans</a><a className="button button-primary" href="/">Open CleanExif <ArrowRight size={15}/></a><AccountMenu email={email}/></nav></div></header>
     <main className="container wm-main">
       <div className="wm-heading"><span className="eyebrow">FREE ONLINE WATERMARK MAKER</span><h1>Protect your photos.<br/><span>Your name, across every image.</span></h1><p>Add a repeating, diagonal copyright watermark across the full image. Preview the pattern and export privately in your browser.</p></div>
       <div className="wm-toolbar" aria-label="Watermark image controls">
@@ -677,7 +678,7 @@ function App() {
   const legalPath = window.location.pathname.replace(/^\/|\/$/g, "");
   if (legalPath === "admin") return <AdminPage />;
   if (legalPath === "plans") return <PlansPage />;
-  if (["account","login","signup"].includes(legalPath)) return <PlansPage accountOnly />;
+  if (["account","login","signup"].includes(legalPath)) return <AccountPage initialMode={legalPath === "login" ? "signin" : legalPath === "signup" ? "signup" : undefined} />;
   if (legalPath === "demo") return <DemoPage />;
   if (legalPath === "watermark") return <WatermarkPage />;
   if (legalPath === "blog") return <BlogPage />;
@@ -876,7 +877,7 @@ function App() {
   return <div className="app-shell">
     <header className="site-header"><div className="container nav-inner"><Logo />
       <button className="mobile-toggle" aria-label="Toggle navigation" onClick={() => setMobileMenu(!mobileMenu)}><Menu size={22} /></button>
-      <nav className={mobileMenu ? "nav-links nav-open" : "nav-links"}><a href="/watermark">Watermark tool</a><a href="#how-it-works" onClick={() => setMobileMenu(false)}>How it works</a><a href="#privacy" onClick={() => setMobileMenu(false)}>Privacy</a><a href="#faq" onClick={() => setMobileMenu(false)}>FAQ</a><a href="/plans" onClick={() => setMobileMenu(false)}>Plans</a><a href="/account" onClick={() => setMobileMenu(false)}>Account</a><a className="button button-primary nav-cta" href="#tool" onClick={() => setMobileMenu(false)}>Start cleaning <ArrowRight size={16} /></a></nav>
+      <nav className={mobileMenu ? "nav-links nav-open" : "nav-links"}><a href="/watermark">Watermark tool</a><a href="#how-it-works" onClick={() => setMobileMenu(false)}>How it works</a><a href="#privacy" onClick={() => setMobileMenu(false)}>Privacy</a><a href="#faq" onClick={() => setMobileMenu(false)}>FAQ</a><a href="/plans" onClick={() => setMobileMenu(false)}>Plans</a><a className="button button-primary nav-cta" href="#tool" onClick={() => setMobileMenu(false)}>Start cleaning <ArrowRight size={16} /></a><AccountMenu email={email} /></nav>
     </div></header>
     {notice && <div className={"toast-notice" + (noticeIsError ? " toast-error" : " toast-success")} role={noticeIsError ? "alert" : "status"} aria-live="assertive"><span className="toast-icon">{noticeIsError ? <AlertCircle size={19} /> : <CheckCircle2 size={19} />}</span><span className="toast-message">{notice}</span><button className="toast-close" type="button" aria-label="Dismiss notification" onClick={() => setNotice("")}><X size={17} /></button></div>}
 
