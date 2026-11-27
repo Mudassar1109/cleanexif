@@ -919,6 +919,16 @@ function App() {
           <div className="feature-item"><span className="feature-icon"><Download /></span><div><b>Download clean</b><small>Save a fresh copy without embedded metadata.</small></div></div>
           <div className="feature-item"><span className="feature-icon"><ShieldCheck /></span><div><b>Privacy first</b><small>Processing happens locally in your browser.</small></div></div>
         </div>
+        <div className="container trust-review-strip" aria-label="CleanExif trust and feedback">
+          <div className="trust-review-left">
+            <span className="trust-review-label">MADE FOR</span>
+            <div className="trust-review-tags"><span>CREATORS</span><span>PHOTOGRAPHERS</span><span>ONLINE STORES</span><span>PUBLISHERS</span></div>
+          </div>
+          <div className="trust-review-right">
+            <span className="trust-review-label">YOUR FEEDBACK</span>
+            <div className="trust-review-message"><span className="trust-review-stars" aria-hidden="true">★★★★★</span><span>Helps us make CleanExif better</span></div>
+          </div>
+        </div>
       </section>
 
       {items.length > 0 && <section className="tool-workspace" aria-live="polite"><div className="container">
