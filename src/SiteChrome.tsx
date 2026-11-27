@@ -1,11 +1,12 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { ArrowRight, Menu, X } from "lucide-react";
-import { usePlanAccess } from "./planAccess";
+import { cleanexifSupabase } from "./planAccess";
 const AccountMenu = lazy(() => import("./AccountPage").then(module => ({ default: module.AccountMenu })));
 
 export function SiteHeader(){
  const [open,setOpen]=useState(false);
- const {email}=usePlanAccess();
+ const [email,setEmail]=useState<string|null>(null);
+ useEffect(()=>{if(!cleanexifSupabase)return;cleanexifSupabase.auth.getSession().then(({data})=>setEmail(data.session?.user.email??null));const {data:{subscription}}=cleanexifSupabase.auth.onAuthStateChange((_event,session)=>setEmail(session?.user.email??null));return()=>subscription.unsubscribe();},[]);
  const links=[
   {label:"Cleaner",href:"/#tool"},
   {label:"Watermark",href:"/watermark"},
