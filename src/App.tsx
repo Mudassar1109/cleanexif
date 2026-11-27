@@ -605,7 +605,7 @@ function WatermarkPage() {
     setExportProgress({ done: 0, total: files.length, stage: "Applying watermark" });
     try {
       const { default: JSZip } = await import("jszip");
-    const zip = new JSZip();
+      const zip = new JSZip();
       let success = 0;
       let quotaReached = false;
       for (const item of files) {
