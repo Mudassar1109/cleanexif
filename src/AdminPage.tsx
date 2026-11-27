@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createClient, type Session, type SupabaseClient } from "@supabase/supabase-js";
+import { SiteHeader } from "./SiteChrome";
 import { LogOut, ShieldCheck, Users, CreditCard, Package, Plus, RefreshCw, Search, X, CheckCircle2, AlertCircle } from "lucide-react";
 
 
