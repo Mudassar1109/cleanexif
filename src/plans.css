@@ -94,3 +94,22 @@
 }
 
 .pricing-card .whatsapp-brand-icon{width:17px;height:17px;flex:none;display:block;color:currentColor}
+
+
+/* Blue Combo palette — pricing and plans */
+.plans-page{background:#f3f9fd}
+.plans-intro{background:linear-gradient(128deg,#035C96 0%,#3083B9 52%,#53A6D8 100%);box-shadow:0 20px 48px rgba(3,92,150,.18)}
+.plans-intro:before,.plans-intro:after{border-color:rgba(192,233,255,.2)}
+.plans-intro h1 span{color:#C0E9FF!important}
+.plans-intro .eyebrow,.plans-trust-row svg{color:#C0E9FF}
+.plans-trust-row span{border-color:rgba(192,233,255,.35)}
+.current-plan{border-color:#d5eaf7}
+.current-plan svg,.plans-intro h1 span,.pricing-tag,.pricing-current{color:#035C96}
+.pricing-featured{border-color:#53A6D8;box-shadow:0 22px 52px rgba(3,92,150,.14)}
+.pricing-tag,.pricing-current{background:#e8f6ff}
+.pricing-card .button-primary{background:linear-gradient(110deg,#035C96 0%,#3083B9 55%,#53A6D8 100%);box-shadow:0 9px 20px rgba(3,92,150,.2)}
+.plans-auth-toggle button.active{color:#035C96}
+.plans-account:before{background:linear-gradient(180deg,#035C96,#89CCF7)}
+.activation-steps b{background:#e8f6ff;color:#035C96}
+.google-auth-button:hover{background:#f3faff;border-color:#89CCF7}
+

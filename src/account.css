@@ -34,3 +34,25 @@
 .account-help-note span{font-size:11px;line-height:1.7;color:#657b98}
 .account-help-note b{color:#2e4d75}
 @media(max-width:700px){.account-subscription-stack{padding-bottom:24px}.account-subscription-foot{margin-bottom:0}.account-help-card{padding:18px}.account-help-intro{padding:18px}.account-help-card-head h2{font-size:15px}}
+
+
+/* Blue Combo palette — customer account */
+.account-avatar-trigger{background:linear-gradient(135deg,#035C96,#53A6D8);box-shadow:0 2px 8px rgba(3,92,150,.18)}
+.account-avatar-trigger img,.account-avatar-trigger span,.account-avatar-fallback,.account-profile-photo>span{background:#C0E9FF;color:#035C96}
+.account-popover a:hover,.account-popover button:hover{background:#edf8ff;color:#035C96}
+.account-auth-page,.account-page{background:#f3f9fd}
+.account-kicker,.account-sidebar nav button.active,.account-sidebar nav button:hover,.account-sidebar-bottom button.active,.account-sidebar-bottom button.active:hover{color:#035C96}
+.account-auth-story h1 span,.account-content-heading .account-kicker{color:#3083B9}
+.account-story-points>div>svg,.account-auth-icon{background:#C0E9FF;color:#035C96}
+.account-auth-switch button.active,.account-forgot{color:#035C96}
+.account-auth-card input:focus,.account-panel input:focus,.plans-account input:focus{border-color:#89CCF7;box-shadow:0 0 0 3px #e8f6ff}
+.account-submit{background:linear-gradient(120deg,#035C96,#3083B9 55%,#53A6D8);box-shadow:0 8px 20px rgba(3,92,150,.2)}
+.account-sidebar nav button.active,.account-sidebar nav button:hover,.account-sidebar-bottom button.active{background:#e8f6ff}
+.account-plan-badge.paid{background:#e8f6ff;color:#035C96}
+.account-expiry,.account-usage-grid article>div:first-child{color:#3083B9}
+.account-usage-track span{background:linear-gradient(90deg,#035C96,#53A6D8)}
+.account-subscription-foot a,.account-help-item.open>button{color:#035C96}
+.account-help-card-head>span{background:#e8f6ff;color:#3083B9}
+.account-help-item.open>button svg,.account-help-note{color:#3083B9}
+.account-help-note{border-color:#d4ebfa;background:#f0f9ff}
+
