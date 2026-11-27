@@ -84,7 +84,7 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
   const watermark = usePlanAccess("watermark");
 
   useEffect(() => {
-    if (!cleanexifSupabase) return;
+    if (!cleanexifSupabase) { setAuthLoading(false); return; }
     cleanexifSupabase.auth.getUser().then(({ data }) => {
       const next = data.user as UserShape | null;
       setUser(next);
