@@ -901,7 +901,7 @@ function App() {
         <div className="container hero-grid">
           <div className="hero-copy"><span className="eyebrow"><span className="eyebrow-icon"><ShieldCheck size={15} /></span> FREE ONLINE EXIF REMOVER</span>
             <h1>Your photos.<br />Your <span>privacy.</span></h1>
-            <p className="hero-description">View and remove hidden metadata from your images directly in your browser. Remove GPS location, camera information and other EXIF data — no image uploads, no account.</p>
+            <p className="hero-description">View and remove hidden metadata from your images directly in your browser. Remove GPS location, camera information and other EXIF data — no image uploads; an account is used for daily cleaning credits.</p>
             <div className="trust-pills"><span><LockKeyhole size={15} /> No uploads</span><span><Zap size={16} /> Free to use</span><span><Monitor size={16} /> Browser-based</span></div>
             <div className="hero-footnote"><ShieldCheck size={15} /> Your images stay on your device.</div>
           </div>
@@ -1061,7 +1061,7 @@ function App() {
       <section className="how-section section-pad" id="how-it-works"><div className="container how-grid"><div className="how-left"><span className="eyebrow">SIMPLE BY DESIGN</span><h2>How <span>CleanExif</span> works</h2><p>Clean your photos and remove supported metadata locally in your browser.</p>
         <div className="steps-grid"><div className="step-card"><span className="step-number">01</span><UploadCloud /><b>Select images</b><small>Choose photos from your device.</small></div><ArrowRight className="step-arrow" /><div className="step-card"><span className="step-number">02</span><Eye /><b>Inspect & clean</b><small>View metadata and remove it locally.</small></div><ArrowRight className="step-arrow" /><div className="step-card"><span className="step-number">03</span><Download /><b>Download</b><small>Save your cleaned images.</small></div></div>
       </div><div className="privacy-card" id="privacy"><div className="privacy-heading"><span className="privacy-large-icon"><ShieldCheck size={30} /></span><div><h2>Your privacy comes first</h2><p>CleanExif is designed to keep image processing on your device.</p></div></div>
-        <div className="privacy-points"><span><Check /> No image uploads</span><span><Check /> No account required</span><span><Check /> No image storage</span><span><Check /> No ad or analytics trackers</span><span><Check /> Works on desktop & mobile</span><span><Check /> No processing API</span></div>
+        <div className="privacy-points"><span><Check /> No image uploads</span><span><Check /> Account-based daily limits</span><span><Check /> No image storage</span><span><Check /> No ad or analytics trackers</span><span><Check /> Works on desktop & mobile</span><span><Check /> No processing API</span></div>
         <div className="privacy-foot"><LockKeyhole size={15} /> Your selected image files never leave your browser for processing.</div>
       </div></div></section>
 
