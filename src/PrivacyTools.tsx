@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowLeft, Download, FileImage, Fingerprint, MapPin, ScanSearch, ShieldCheck, Sparkles, UploadCloud } from "lucide-react";
+import { Download, Fingerprint, MapPin, ScanSearch, ShieldCheck, UploadCloud } from "lucide-react";
 import { default as exifr } from "exifr";
 import piexif from "piexifjs";
 
