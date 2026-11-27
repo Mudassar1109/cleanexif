@@ -415,9 +415,9 @@ function DemoPage() {
   const goNext = () => { if (step >= steps.length - 1) { setFinished(true); setPlaying(false); } else setStep(value => value + 1); };
   const current = steps[step];
   return <div className="demo-page">
-    <header className="demo-header"><a href="/" className="demo-back"><ArrowRight size={17} /> Back to CleanExif</a><Logo /><span className="demo-label"><span className="demo-live-dot" /> INTERACTIVE WALKTHROUGH</span></header>
+    <SiteHeader />
     <main className="demo-main">
-      <div className="demo-intro"><span className="eyebrow">SEE HOW IT WORKS</span><h1>CleanExif, <span>in action.</span></h1><p>A guided, animated walkthrough using a synthetic sample photo. No upload, account or real personal data required.</p></div>
+      <div className="demo-intro"><span className="demo-label"><span className="demo-live-dot" /> INTERACTIVE WALKTHROUGH</span><br/><span className="eyebrow">SEE HOW IT WORKS</span><h1>CleanExif, <span>in action.</span></h1><p>A guided, animated walkthrough using a synthetic sample photo. No upload, account or real personal data required.</p></div>
       <section className="demo-stage" aria-label="Animated CleanExif walkthrough">
         <div className="demo-stage-top"><span><span className="demo-live-dot" /> LIVE PRODUCT WALKTHROUGH</span><span>STEP 0{step + 1} / 0{steps.length}</span></div>
         <div className="demo-stage-body">
