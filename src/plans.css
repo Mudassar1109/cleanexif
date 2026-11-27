@@ -52,3 +52,45 @@
  .plans-grid{gap:14px;padding:0 2px}
  .pricing-card{min-height:0;padding:23px 20px 20px}
 }
+
+
+/* Pricing cards — second reference layout refinement */
+.plans-intro h1 span{color:#fff!important;text-shadow:0 1px 1px rgba(0,35,100,.12)}
+.plans-intro{max-width:1080px;min-height:315px;padding-bottom:118px}
+.current-plan{max-width:900px;margin:-56px auto 18px}
+.plans-grid{max-width:1080px;gap:20px;align-items:stretch}
+.pricing-card{
+  min-height:420px;padding:30px 27px 26px;border-radius:20px;
+  border:1px solid #dce7f5;background:#fff;
+  box-shadow:0 16px 42px rgba(21,58,108,.10);
+}
+.pricing-card:not(.pricing-featured){transform:translateY(12px)}
+.pricing-card:not(.pricing-featured):hover{transform:translateY(6px)}
+.pricing-featured{
+  transform:translateY(-3px);border:1.5px solid #6aa8f3;
+  box-shadow:0 22px 52px rgba(12,91,190,.18);
+}
+.pricing-featured:hover{transform:translateY(-9px)}
+.pricing-topline{min-height:28px}
+.pricing-name{font-size:14px;color:#263f60}
+.pricing-card h2{font-size:42px;letter-spacing:-1.5px;margin:20px 0 10px}
+.pricing-card>p{min-height:42px;font-size:12px}
+.pricing-fit{padding:12px 13px;border:1px solid #edf2f9;background:#f3f7fd;color:#385675;font-size:11px}
+.pricing-card ul{gap:15px;margin:23px 0 27px}
+.pricing-card li{font-size:12px;gap:10px}
+.pricing-card li svg{color:#08a477;width:17px;height:17px}
+.pricing-card .button{min-height:48px;border-radius:11px;font-weight:750}
+.pricing-card .button-primary{background:linear-gradient(110deg,#0756c9 0%,#167df1 100%);box-shadow:0 9px 20px rgba(10,101,216,.22)}
+.pricing-card .button-primary:hover{filter:brightness(1.05);transform:translateY(-1px)}
+.pricing-tag{top:17px;right:17px;padding:6px 10px}
+.pricing-current{font-size:8px;padding:6px 9px}
+.plans-note{max-width:850px;margin:34px auto 0}
+@media(max-width:760px){
+ .plans-intro{min-height:0;padding:32px 18px 78px}
+ .pricing-card,.pricing-featured,.pricing-card:not(.pricing-featured){min-height:0;transform:none}
+ .pricing-card:hover,.pricing-featured:hover,.pricing-card:not(.pricing-featured):hover{transform:translateY(-2px)}
+ .pricing-card{padding:24px 21px 21px}
+ .plans-note{margin-top:24px;padding:0 14px}
+}
+
+.pricing-card .whatsapp-brand-icon{width:17px;height:17px;flex:none;display:block;color:currentColor}
