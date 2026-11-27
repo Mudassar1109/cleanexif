@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
-  ArrowLeft, Camera, Check, ChevronRight, CreditCard, HelpCircle, Image,
+  ArrowLeft, Camera, ChevronRight, CreditCard, HelpCircle, Image,
   LockKeyhole, LogOut, Mail, Menu, Settings, ShieldCheck, UserRound, X,
   Eye, EyeOff, Sparkles, Gauge
 } from "lucide-react";
@@ -212,7 +212,7 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
       <aside className={"account-sidebar"+(mobileNav?" mobile-open":"")}>
         <div className="account-sidebar-user">{avatar?<img src={avatar} alt="Profile"/>:<span className="account-avatar-fallback">{initialsText}</span>}<div><b>{displayName||"CleanExif member"}</b><small>{userEmail}</small></div><button className="account-sidebar-close" onClick={()=>setMobileNav(false)} aria-label="Close menu"><X size={17}/></button></div>
         <nav>{menuItems.map(item=><button key={item.id} className={view===item.id?"active":""} onClick={()=>{setView(item.id);setMobileNav(false);window.history.replaceState({}, "", "/account"+(item.id==="profile"?"":"?tab="+item.id));}}>{item.icon}{item.label}</button>)}</nav>
-        <div className="account-sidebar-bottom"><a href="mailto:contact@cleanexif.com"><HelpCircle size={18}/> Help center</a><button onClick={()=>void signOut()}><LogOut size={18}/> Sign out</button></div>
+        <div className="account-sidebar-bottom"><a href="/#faq"><HelpCircle size={18}/> Help center</a><button onClick={()=>void signOut()}><LogOut size={18}/> Sign out</button></div>
       </aside>
       <section className="account-content">
         <button className="account-mobile-menu" onClick={()=>setMobileNav(true)}><Menu size={18}/> Account menu</button>
