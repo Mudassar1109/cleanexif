@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { Download, Fingerprint, MapPin, ScanSearch, ShieldCheck, UploadCloud } from "lucide-react";
-import { default as exifr } from "exifr";
 import piexif from "piexifjs";
 
 type ToolMode = "gps" | "scanner" | "editor";
@@ -8,7 +7,7 @@ type Meta = Record<string, unknown>;
 const ACCEPT = ["image/jpeg", "image/png", "image/webp"];
 const bytes = (n:number) => n < 1048576 ? (n/1024).toFixed(0)+" KB" : (n/1048576).toFixed(2)+" MB";
 const asBlob = (url:string, type:string) => { const binary=atob(url.split(",")[1]); const data=new Uint8Array(binary.length); for(let i=0;i<binary.length;i++)data[i]=binary.charCodeAt(i); return new Blob([data],{type}); };
-const read = async (file:File):Promise<Meta> => { const value=await exifr.parse(file,{exif:true,gps:true,iptc:true,xmp:true,icc:false}); return value && typeof value==="object" ? value as Meta : {}; };
+const read = async (file:File):Promise<Meta> => { const { default: exifr } = await import("exifr"); const value=await exifr.parse(file,{exif:true,gps:true,iptc:true,xmp:true,icc:false}); return value && typeof value==="object" ? value as Meta : {}; };
 const gpsKeys = /^(GPS|latitude|longitude|altitude|position)/i;
 const sensitiveKeys = /gps|latitude|longitude|altitude|serial|owner|artist|author|creator|copyright|date|time|software|comment|description|usercomment/i;
 const modeInfo:Record<ToolMode,{title:string;description:string;icon:any}> = {
