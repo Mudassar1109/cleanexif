@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { ArrowRight, Menu, X } from "lucide-react";
 import { cleanexifSupabase } from "./planAccess";
-const AccountMenu = lazy(() => import("./AccountMenu"));
+const AccountMenu = lazy(() => import("./AccountMenu").then(module => ({ default: module.AccountMenu })));
 
 export function SiteHeader(){
  const [open,setOpen]=useState(false);
