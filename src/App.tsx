@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useMemo, useRef, useState, useEffect, type ChangeEvent } from "react";
 import SponsorAd from "./SponsorAd";
+import { SiteHeader, SiteFooter } from "./SiteChrome";
 import { usePlanAccess } from "./planAccess";
 const PrivacyTools = lazy(() => import("./PrivacyTools"));
 
@@ -7,7 +8,6 @@ const PrivacyTools = lazy(() => import("./PrivacyTools"));
 const AdminPage = lazy(() => import("./AdminPage"));
 const PlansPage = lazy(() => import("./PlansPage"));
 const AccountPage = lazy(() => import("./AccountPage"));
-const AccountMenu = lazy(() => import("./AccountPage").then(module => ({ default: module.AccountMenu })));
 import {
   AlertCircle, ArrowRight, Camera, Check, CheckCircle2, ChevronDown,
   Download, Eye, FilePlus2, Fingerprint, Globe2, Image as ImageIcon,
@@ -191,16 +191,13 @@ function LegalPage({ type }: { type: string }) {
       "Third-party font resources may be requested from Google Fonts. Browser or hosting infrastructure may also use technically necessary mechanisms to deliver the website."
     ]
   };
-  return <div className="legal-page"><header className="site-header"><div className="container nav-inner"><Logo /><a className="nav-link" href="/">Back to home</a></div></header>
+  return <div className="legal-page"><SiteHeader />
     <main className="container legal-content"><span className="eyebrow"><ShieldCheck size={15} /> CLEANEXIF POLICIES</span><h1>{title}</h1>
       <p className="legal-date">Last updated: November 25, 2026</p>
       {(content[type] ?? []).map((p, i) => <p key={i}>{p}</p>)}
     </main><Footer /></div>;
 }
-function Footer() {
-  return <footer className="footer"><div className="container footer-inner"><div className="footer-brand"><Logo small /><span>A simple, privacy-first image metadata tool.</span></div>
-    <div className="footer-links"><span>© 2026 CleanExif</span><a href="/blog">Blog</a><a href="/gps-remover">GPS Remover</a><a href="/privacy-scanner">Privacy Scanner</a><a href="/metadata-editor">EXIF Editor</a><a href="/privacy-policy">Privacy Policy</a><a href="/terms">Terms of Service</a><a href="/disclaimer">Disclaimer</a><a href="/cookie-policy">Cookie Policy</a></div></div></footer>;
-}
+function Footer() { return <SiteFooter />; }
 
 const blogArticles = [
   {
@@ -362,7 +359,7 @@ function BlogPage({ slug }: { slug?: string }) {
   }, [title, description, article, isArticle, slug]);
   const related = article ? blogArticles.filter(item => item.slug !== article.slug).slice(0, 3) : [];
   return <div className="blog-page">
-    <header className="site-header"><div className="container nav-inner"><Logo /><div className="blog-nav"><a className="nav-link" href="/blog">Blog</a><a className="button button-primary" href="/">Open CleanExif</a></div></div></header>
+    <SiteHeader />
     <main className="container blog-content">
       <a className="blog-back" href="/blog">← All articles</a>
       {article ? <article className="blog-article">
@@ -641,7 +638,7 @@ function WatermarkPage() {
     finally { setBusy(false); setExportProgress({ done: 0, total: 0, stage: "" }); }
   };
   return <div className="wm-page">
-    <header className="site-header"><div className="container nav-inner"><Logo /><nav className="wm-nav"><a href="/">Image metadata inspector</a><a href="/plans">Plans</a><a className="button button-primary" href="/">Open CleanExif <ArrowRight size={15}/></a><Suspense fallback={null}><AccountMenu email={email}/></Suspense></nav></div></header>
+    <SiteHeader />
     <main className="container wm-main">
       <div className="wm-heading"><span className="eyebrow">FREE ONLINE WATERMARK MAKER</span><h1>Protect your photos.<br/><span>Your name, across every image.</span></h1><p>Add a repeating, diagonal copyright watermark across the full image. Preview the pattern and export privately in your browser.</p></div>
       <div className="wm-toolbar" aria-label="Watermark image controls">
@@ -714,7 +711,6 @@ function App() {
   const [cleaningStage, setCleaningStage] = useState("");
   const [batchProgress, setBatchProgress] = useState({ done: 0, total: 0 });
   const [notice, setNotice] = useState("");
-  const [mobileMenu, setMobileMenu] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const active = items.find(item => item.id === activeId) ?? items[0] ?? null;
   const metadataCategories = useMemo(() => getMetaCategories(active?.metadata ?? null), [active]);
@@ -901,10 +897,7 @@ function App() {
     ["Can metadata be added again after cleaning?", "Yes. Editing or exporting an image in another application may add new metadata. If privacy matters, inspect the final copy immediately before sharing it."],
   ];
   return <div className="app-shell">
-    <header className="site-header"><div className="container nav-inner"><Logo />
-      <button className="mobile-toggle" aria-label="Toggle navigation" onClick={() => setMobileMenu(!mobileMenu)}><Menu size={22} /></button>
-      <nav className={mobileMenu ? "nav-links nav-open" : "nav-links"}><a href="/watermark">Watermark tool</a><a href="/gps-remover">GPS remover</a><a href="/privacy-scanner">Privacy scanner</a><a href="/metadata-editor">EXIF editor</a><a href="#how-it-works" onClick={() => setMobileMenu(false)}>How it works</a><a href="#privacy" onClick={() => setMobileMenu(false)}>Privacy</a><a href="#faq" onClick={() => setMobileMenu(false)}>FAQ</a><a href="/plans" onClick={() => setMobileMenu(false)}>Plans</a><a className="button button-primary nav-cta" href="#tool" onClick={() => setMobileMenu(false)}>Start cleaning <ArrowRight size={16} /></a><AccountMenu email={email} /></nav>
-    </div></header>
+    <SiteHeader />
     {notice && <div className={"toast-notice" + (noticeIsError ? " toast-error" : " toast-success")} role={noticeIsError ? "alert" : "status"} aria-live="assertive"><span className="toast-icon">{noticeIsError ? <AlertCircle size={19} /> : <CheckCircle2 size={19} />}</span><span className="toast-message">{notice}</span><button className="toast-close" type="button" aria-label="Dismiss notification" onClick={() => setNotice("")}><X size={17} /></button></div>}
 
     <main>
@@ -1060,6 +1053,14 @@ function App() {
           </div>
         </div>
       </section>
+
+      <section className="tool-directory-section section-pad" id="all-tools"><div className="container"><div className="tool-directory-heading"><span className="eyebrow">ONE PRIVACY WORKSPACE</span><h2>All CleanExif <span>tools</span></h2><p>Choose the exact tool you need. Each tool has its own page, clear processing status and separate download action.</p></div><div className="tool-directory-grid">
+<a className="tool-directory-card" href="/#tool"><span className="tool-directory-icon"><Eye/></span><b>Image Metadata Cleaner</b><small>Inspect and remove common embedded metadata from supported images.</small><span className="tool-directory-link">Open cleaner <ArrowRight size={15}/></span></a>
+<a className="tool-directory-card" href="/watermark"><span className="tool-directory-icon"><ImageIcon/></span><b>Watermark Maker</b><small>Add a repeating visible text watermark and export your image.</small><span className="tool-directory-link">Open watermark <ArrowRight size={15}/></span></a>
+<a className="tool-directory-card" href="/gps-remover"><span className="tool-directory-icon"><MapPin/></span><b>GPS Location Remover</b><small>Review location tags and export a re-encoded copy without common metadata.</small><span className="tool-directory-link">Open GPS remover <ArrowRight size={15}/></span></a>
+<a className="tool-directory-card" href="/privacy-scanner"><span className="tool-directory-icon"><ScanSearch/></span><b>Image Privacy Scanner</b><small>Review readable location, device, identity and capture metadata.</small><span className="tool-directory-link">Scan an image <ArrowRight size={15}/></span></a>
+<a className="tool-directory-card" href="/metadata-editor"><span className="tool-directory-icon"><Fingerprint/></span><b>EXIF Metadata Editor</b><small>Edit common description, author, copyright and date fields in JPEG files.</small><span className="tool-directory-link">Open EXIF editor <ArrowRight size={15}/></span></a>
+</div></div></section>
 
       <section className="how-section section-pad" id="how-it-works"><div className="container how-grid"><div className="how-left"><span className="eyebrow">SIMPLE BY DESIGN</span><h2>How <span>CleanExif</span> works</h2><p>Clean your photos and remove supported metadata locally in your browser.</p>
         <div className="steps-grid"><div className="step-card"><span className="step-number">01</span><UploadCloud /><b>Select images</b><small>Choose photos from your device.</small></div><ArrowRight className="step-arrow" /><div className="step-card"><span className="step-number">02</span><Eye /><b>Inspect & clean</b><small>View metadata and remove it locally.</small></div><ArrowRight className="step-arrow" /><div className="step-card"><span className="step-number">03</span><Download /><b>Download</b><small>Save your cleaned images.</small></div></div>
