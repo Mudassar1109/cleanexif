@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { CreditCard, LockKeyhole, LogOut, Settings, Sparkles, UserRound } from "lucide-react";
 import { cleanexifSupabase } from "./planAccess";
+type UserShape = { id: string; email?: string; user_metadata?: Record<string, unknown> };
+
 const avatarOf = (user: UserShape | null) => {
   const meta = user?.user_metadata ?? {};
   const value = meta.avatar_url ?? meta.picture;
