@@ -873,6 +873,11 @@ function App() {
     ["Which image formats are supported?", "CleanExif supports JPEG, PNG and WebP. Your " + limits.name + " plan allows " + limits.maxFileMB + " MB per image, " + limits.maxImages + " images and " + limits.totalMB + " MB total per batch. HEIC, animated GIF and SVG are not supported."],
     ["Does removing EXIF data affect image quality?", "PNG is re-encoded losslessly. JPEG and WebP are exported at a high quality setting, but re-encoding can cause a small quality or file-size difference."],
     ["Can I clean multiple images at once?", "Yes. Add up to " + limits.maxImages + " supported images under your " + limits.name + " plan and use Clean all to download the cleaned files together in a ZIP archive."],
+    ["What types of information can image metadata contain?", "Depending on the file and the device or app that created it, metadata may include capture date, camera make and model, lens and exposure settings, orientation, software details, author fields and GPS coordinates."],
+    ["Will metadata removal change the visible photo?", "CleanExif creates a newly exported image from its pixels. PNG export is lossless; JPEG and WebP are re-encoded at a high quality setting, so a small change in file size or visual quality is possible."],
+    ["Are screenshots free of metadata?", "Not necessarily. Screenshots often contain fewer camera-related fields than camera photos, but they can still include file properties or other embedded information. Inspect the exact file you plan to share."],
+    ["Does CleanExif remove metadata from PDFs or videos?", "No. The current CleanExif image workflow supports JPEG, PNG and WebP only. PDF documents, videos, HEIC files, animated GIFs and SVG files are not supported."],
+    ["Can metadata be added again after cleaning?", "Yes. Editing or exporting an image in another application may add new metadata. If privacy matters, inspect the final copy immediately before sharing it."],
   ];
   return <div className="app-shell">
     <header className="site-header"><div className="container nav-inner"><Logo />
@@ -939,6 +944,87 @@ function App() {
           </div></div>}
         </div>
       </div></section>}
+
+      <section className="metadata-education section-pad" aria-labelledby="metadata-guide-title">
+        <div className="container">
+          <div className="education-heading">
+            <span className="eyebrow">UNDERSTAND YOUR IMAGE FILES</span>
+            <h2 id="metadata-guide-title">A closer look at the information <span>inside your photos</span></h2>
+            <p>An image can carry details beyond its visible pixels. Knowing what those details mean helps you make a more informed choice before sharing.</p>
+          </div>
+          <div className="education-feature-grid">
+            <article className="education-card education-card-main">
+              <span className="education-icon"><Fingerprint size={22} /></span>
+              <h3>What is image metadata?</h3>
+              <p>Metadata is information saved alongside an image. Some details are created by a camera or phone when a photo is captured; others can be added by editing software, an export process or a content workflow.</p>
+              <p>It does not usually change what you see in the picture, but it can provide context about the device, time, settings or software involved in creating the file.</p>
+            </article>
+            <article className="education-card">
+              <span className="education-icon"><MapPin size={22} /></span>
+              <h3>Location information</h3>
+              <p>When location tagging is enabled, GPS fields may record coordinates associated with a photo. Those coordinates can reveal more than the scene itself, so review them before publishing a personal image.</p>
+            </article>
+            <article className="education-card">
+              <span className="education-icon"><Camera size={22} /></span>
+              <h3>Camera and capture details</h3>
+              <p>Files may include a camera or phone model, lens information, exposure values, orientation and capture date. These fields can be useful for photographers and cataloguing.</p>
+            </article>
+            <article className="education-card">
+              <span className="education-icon"><Globe2 size={22} /></span>
+              <h3>Editing and author details</h3>
+              <p>Some workflows add software names, author information, captions, copyright notes or other descriptive fields. The exact fields depend on the application and export settings.</p>
+            </article>
+          </div>
+          <div className="education-split">
+            <div className="education-copy">
+              <span className="eyebrow">WHY REVIEW METADATA?</span>
+              <h3>Choose what your image shares</h3>
+              <p>Metadata can make photo libraries easier to organize and help preserve creative or technical details. But when a file is shared publicly, some of that context may be unnecessary.</p>
+              <p>Reviewing a photo before sharing lets you decide whether to keep its capture information or create a cleaner copy. CleanExif gives you a way to inspect readable fields and re-export supported images locally in your browser.</p>
+            </div>
+            <div className="education-callout">
+              <ShieldCheck size={25} />
+              <h3>Privacy-conscious by design</h3>
+              <p>Your selected image is decoded and re-encoded in your browser. CleanExif does not upload image files to its image-processing servers.</p>
+            </div>
+          </div>
+          <div className="format-guide">
+            <div className="format-guide-heading">
+              <span className="eyebrow">CURRENT FORMAT SUPPORT</span>
+              <h3>Which image files can you clean?</h3>
+              <p>CleanExif currently accepts these three image formats in its metadata workflow.</p>
+            </div>
+            <div className="format-guide-grid">
+              <article><b>JPEG / JPG</b><p>Common camera and phone photos. Re-exported at a high quality setting; file size or visual quality may change slightly.</p><span>Supported</span></article>
+              <article><b>PNG</b><p>Often used for screenshots, graphics and transparent images. Exported using lossless PNG encoding.</p><span>Supported</span></article>
+              <article><b>WebP</b><p>A modern web image format. Re-exported at a high quality setting, which may affect file size or image quality slightly.</p><span>Supported</span></article>
+            </div>
+            <p className="format-limit-note">HEIC, animated GIF, SVG, PDF and video files are not supported by this image-cleaning workflow.</p>
+          </div>
+          <div className="education-split education-process">
+            <div className="education-copy">
+              <span className="eyebrow">A SIMPLE WORKFLOW</span>
+              <h3>How to prepare an image before sharing</h3>
+              <ol className="education-steps">
+                <li><b>Select the exact image</b><span>Choose the original file you intend to share.</span></li>
+                <li><b>Inspect its details</b><span>Review readable GPS, camera, date and other metadata fields.</span></li>
+                <li><b>Create a clean copy</b><span>Use the metadata removal action to export a new image in your browser.</span></li>
+                <li><b>Check before publishing</b><span>Review the downloaded copy and share that version if it meets your needs.</span></li>
+              </ol>
+            </div>
+            <div className="education-callout education-caution">
+              <AlertCircle size={24} />
+              <h3>Know the limits</h3>
+              <p>Re-encoding is designed to omit common embedded image metadata, but it is not a forensic sanitization guarantee. Keep your original file and independently inspect outputs when handling highly sensitive images.</p>
+            </div>
+          </div>
+          <div className="usecase-strip">
+            <div><b>Personal photo sharing</b><span>Review location and capture details before posting family or everyday photos.</span></div>
+            <div><b>Creator workflows</b><span>Prepare exported images for portfolios, blogs and social content.</span></div>
+            <div><b>Business publishing</b><span>Check product and campaign images before adding them to public pages.</span></div>
+          </div>
+        </div>
+      </section>
 
       <section className="how-section section-pad" id="how-it-works"><div className="container how-grid"><div className="how-left"><span className="eyebrow">SIMPLE BY DESIGN</span><h2>How <span>CleanExif</span> works</h2><p>Clean your photos and remove supported metadata locally in your browser.</p>
         <div className="steps-grid"><div className="step-card"><span className="step-number">01</span><UploadCloud /><b>Select images</b><small>Choose photos from your device.</small></div><ArrowRight className="step-arrow" /><div className="step-card"><span className="step-number">02</span><Eye /><b>Inspect & clean</b><small>View metadata and remove it locally.</small></div><ArrowRight className="step-arrow" /><div className="step-card"><span className="step-number">03</span><Download /><b>Download</b><small>Save your cleaned images.</small></div></div>
