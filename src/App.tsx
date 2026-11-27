@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useMemo, useRef, useState, useEffect, type ChangeEvent } from "react";
 import SponsorAd from "./SponsorAd";
 import { usePlanAccess } from "./planAccess";
-import PrivacyTools from "./PrivacyTools";
+const PrivacyTools = lazy(() => import("./PrivacyTools"));
 
 // Keep account, plan and admin screens out of the initial homepage bundle.
 const AdminPage = lazy(() => import("./AdminPage"));
@@ -698,9 +698,9 @@ function App() {
   if (["account","login","signup"].includes(legalPath)) return <Suspense fallback={<div className="container" role="status">Loading account…</div>}><AccountPage initialMode={legalPath === "login" ? "signin" : legalPath === "signup" ? "signup" : undefined} /></Suspense>;
   if (legalPath === "demo") return <DemoPage />;
   if (legalPath === "watermark") return <WatermarkPage />;
-  if (legalPath === "gps-remover") return <PrivacyTools mode="gps" />;
-  if (legalPath === "privacy-scanner") return <PrivacyTools mode="scanner" />;
-  if (legalPath === "metadata-editor") return <PrivacyTools mode="editor" />;
+  if (legalPath === "gps-remover") return <Suspense fallback={<div className="container" role="status">Loading GPS remover…</div>}><PrivacyTools mode="gps" /></Suspense>;
+  if (legalPath === "privacy-scanner") return <Suspense fallback={<div className="container" role="status">Loading privacy scanner…</div>}><PrivacyTools mode="scanner" /></Suspense>;
+  if (legalPath === "metadata-editor") return <Suspense fallback={<div className="container" role="status">Loading EXIF editor…</div>}><PrivacyTools mode="editor" /></Suspense>;
   if (legalPath === "blog") return <BlogPage />;
   if (legalPath.startsWith("blog/")) return <BlogPage slug={legalPath.slice(5)} />;
   if (["privacy-policy", "terms", "disclaimer", "cookie-policy"].includes(legalPath)) return <LegalPage type={legalPath} />;
