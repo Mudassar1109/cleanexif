@@ -7,7 +7,7 @@ import {
 import { cleanexifSupabase, usePlanAccess } from "./planAccess";
 import "./account.css";
 
-type View = "profile" | "subscription" | "settings";
+type View = "profile" | "subscription" | "settings" | "help";
 type AuthMode = "signin" | "signup";
 type UserShape = { id: string; email?: string; user_metadata?: Record<string, unknown> };
 
@@ -80,6 +80,7 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [mobileNav, setMobileNav] = useState(false);
+  const [openHelp, setOpenHelp] = useState<number | null>(0);
   const metadata = usePlanAccess("metadata");
   const watermark = usePlanAccess("watermark");
 
@@ -104,7 +105,7 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
   const displayName = String(user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? "");
   const avatar = avatarOf(user);
   const initialsText = initials(displayName, userEmail);
-  const tabLabel = view === "profile" ? "Profile" : view === "subscription" ? "Subscription" : "Settings";
+  const tabLabel = view === "profile" ? "Profile" : view === "subscription" ? "Subscription" : view === "settings" ? "Settings" : "Help center";
 
   async function signInOrUp(event: FormEvent) {
     event.preventDefault();
@@ -217,7 +218,7 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
       <aside className={"account-sidebar"+(mobileNav?" mobile-open":"")}>
         <div className="account-sidebar-user">{avatar?<img src={avatar} alt="Profile"/>:<span className="account-avatar-fallback">{initialsText}</span>}<div><b>{displayName||"CleanExif member"}</b><small>{userEmail}</small></div><button className="account-sidebar-close" onClick={()=>setMobileNav(false)} aria-label="Close menu"><X size={17}/></button></div>
         <nav>{menuItems.map(item=><button key={item.id} className={view===item.id?"active":""} onClick={()=>{setView(item.id);setMobileNav(false);window.history.replaceState({}, "", "/account"+(item.id==="profile"?"":"?tab="+item.id));}}>{item.icon}{item.label}</button>)}</nav>
-        <div className="account-sidebar-bottom"><a href="/#faq"><HelpCircle size={18}/> Help center</a><button onClick={()=>void signOut()}><LogOut size={18}/> Sign out</button></div>
+        <div className="account-sidebar-bottom"><button className={view==="help"?"active":""} onClick={()=>{setView("help");setMobileNav(false);window.history.replaceState({}, "", "/account?tab=help");}}><HelpCircle size={18}/> Help center</button><button onClick={()=>void signOut()}><LogOut size={18}/> Sign out</button></div>
       </aside>
       <section className="account-content">
         <button className="account-mobile-menu" onClick={()=>setMobileNav(true)}><Menu size={18}/> Account menu</button>
@@ -237,6 +238,22 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
           {metadata.limits.expiresAt&&<div className="account-expiry"><CreditCard size={18}/><span><b>Plan expiry</b><small>{new Date(metadata.limits.expiresAt).toLocaleString(undefined,{dateStyle:"medium",timeStyle:"short"})}</small></span></div>}
           <div className="account-usage-grid">{usage.map(item=><article key={item.label}><div>{item.icon}<span>{item.label}</span></div><strong>{item.value?item.value.remaining+" / "+item.value.limit:"—"}</strong><small>Images remaining today</small><div className="account-usage-track"><span style={{width:item.value?Math.max(0,Math.min(100,(item.value.remaining/item.value.limit)*100))+"%":"0%"}}/></div></article>)}</div>
           <div className="account-subscription-foot"><p>Need a higher daily allowance? Compare the available plans or contact us for activation.</p><a href="/plans">View plans <ChevronRight size={16}/></a></div>
+        </div>}
+        {view==="help"&&<div className="account-help-layout">
+          <div className="account-help-intro"><span className="account-kicker">CLEANEXIF SUPPORT</span><h2>How can we help?</h2><p>Find answers about your account, subscription, image privacy and CleanExif tools.</p></div>
+          <div className="account-help-card"><div className="account-help-card-head"><div><h2>Frequently asked questions</h2><p>Quick answers to common questions.</p></div><span><HelpCircle size={20}/></span></div>
+            <div className="account-help-list">{[
+              ["What is EXIF data?","EXIF is information stored inside many image files. It can include camera details, capture date, lens settings and, when enabled, GPS coordinates."],
+              ["Does CleanExif upload my photos?","No. Image processing happens locally in your browser. Your selected image files are not sent to CleanExif image-processing servers."],
+              ["Can I remove GPS location from an image?","Re-encoding a supported image removes embedded metadata commonly used for GPS and camera details. Always inspect the exported file if location privacy is critical."],
+              ["Which image formats are supported?","CleanExif supports JPEG, PNG and WebP. HEIC, animated GIF and SVG are not supported."],
+              ["Does removing EXIF data affect image quality?","PNG is re-encoded losslessly. JPEG and WebP are exported at a high quality setting, but re-encoding can cause a small quality or file-size difference."],
+              ["How do daily image limits work?","Your plan has separate daily allowances for Metadata Inspector and Watermark Maker. Usage is counted when you process images and resets daily."],
+              ["How can I change my subscription?","Open the Subscription tab to review your current plan and daily usage. Paid plan activation and changes are managed by CleanExif support."],
+              ["I need more help. What should I do?","Use the WhatsApp support button on CleanExif to contact the team. Include the email address associated with your account and a short description of the issue."]
+            ].map(([question,answer],index)=><section className={"account-help-item"+(openHelp===index?" open":"")} key={question}><button type="button" onClick={()=>setOpenHelp(openHelp===index?null:index)} aria-expanded={openHelp===index}><span>{question}</span><ChevronRight size={17}/></button>{openHelp===index&&<p>{answer}</p>}</section>)}</div>
+          </div>
+          <div className="account-help-note"><ShieldCheck size={17}/><span><b>Your privacy matters.</b> Image processing stays in your browser; support does not need your image files to troubleshoot account or plan issues.</span></div>
         </div>}
         {view==="settings"&&<div className="account-panel">
           <form onSubmit={updatePassword}>

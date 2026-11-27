@@ -6,3 +6,31 @@
 @media(max-width:440px){.account-auth-layout{width:calc(100% - 30px)}.account-auth-card{padding:20px}.account-topbar>.container{width:calc(100% - 30px)}.account-top-actions button{padding:9px}.account-dashboard{width:calc(100% - 30px)}.account-plan-summary{padding:18px}.account-profile-photo>img,.account-profile-photo>span{width:56px;height:56px}}
 
 .account-loading{width:min(1120px,calc(100% - 48px));margin:80px auto;text-align:center;color:#718198;font-size:13px}
+
+/* Account dashboard refinements */
+.account-sidebar-bottom button.active{background:#edf4ff;color:#0756c9}
+.account-sidebar-bottom button.active:hover{background:#e6f0ff}
+.account-subscription-stack{padding-bottom:34px;gap:16px}
+.account-subscription-foot{margin-bottom:4px;padding:19px 21px;min-height:68px;box-shadow:0 7px 22px #17365b08}
+.account-plan-summary,.account-expiry,.account-usage-grid article{box-shadow:0 5px 18px #17365b06;transition:transform .18s ease,box-shadow .18s ease}
+.account-usage-grid article:hover{transform:translateY(-2px);box-shadow:0 12px 28px #17365b0d}
+.account-help-layout{display:grid;gap:16px;padding-bottom:34px}
+.account-help-intro{padding:22px 24px;border:1px solid #e1eaf5;border-radius:17px;background:linear-gradient(135deg,#fff 0%,#f5f9ff 100%)}
+.account-help-intro h2{font:800 23px Manrope,sans-serif;letter-spacing:-.6px;margin:8px 0 5px;color:#172b48}
+.account-help-intro p{margin:0;color:#7c8ba0;font-size:12px;line-height:1.7}
+.account-help-card{padding:23px 24px;background:#fff;border:1px solid #e2eaf4;border-radius:17px;box-shadow:0 5px 18px #17365b06}
+.account-help-card-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+.account-help-card-head h2{font:800 17px Manrope,sans-serif;margin:0 0 5px;color:#172b48}
+.account-help-card-head p{font-size:11px;color:#8190a4;margin:0}
+.account-help-card-head>span{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;background:#edf4ff;color:#176bd7}
+.account-help-item{border-top:1px solid #edf1f6}
+.account-help-item>button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 2px;border:0;background:transparent;color:#344963;text-align:left;font-size:12px;font-weight:750;cursor:pointer}
+.account-help-item>button svg{flex:none;color:#8293aa;transition:transform .18s ease}
+.account-help-item.open>button{color:#0756c9}
+.account-help-item.open>button svg{transform:rotate(90deg);color:#176bd7}
+.account-help-item>p{margin:-3px 28px 16px 2px;color:#73839a;font-size:11px;line-height:1.8}
+.account-help-note{display:flex;align-items:flex-start;gap:10px;padding:14px 16px;border:1px solid #dceafb;border-radius:13px;background:#f0f6ff;color:#176bd7}
+.account-help-note svg{flex:none;margin-top:1px}
+.account-help-note span{font-size:11px;line-height:1.7;color:#657b98}
+.account-help-note b{color:#2e4d75}
+@media(max-width:700px){.account-subscription-stack{padding-bottom:24px}.account-subscription-foot{margin-bottom:0}.account-help-card{padding:18px}.account-help-intro{padding:18px}.account-help-card-head h2{font-size:15px}}
