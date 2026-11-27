@@ -28,6 +28,7 @@ function Brand() {
 export function AccountMenu({ email }: { email: string | null }) {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<UserShape | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   useEffect(() => {
     if (!cleanexifSupabase) return;
     cleanexifSupabase.auth.getUser().then(({ data }) => setUser(data.user as UserShape | null));
@@ -87,11 +88,13 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
     cleanexifSupabase.auth.getUser().then(({ data }) => {
       const next = data.user as UserShape | null;
       setUser(next);
+      setAuthLoading(false);
       if (next) setFullName(String(next.user_metadata?.full_name ?? next.user_metadata?.name ?? ""));
     });
     const { data: { subscription } } = cleanexifSupabase.auth.onAuthStateChange((_event, session) => {
       const next = session?.user as UserShape ?? null;
       setUser(next);
+      setAuthLoading(false);
       if (next) setFullName(String(next.user_metadata?.full_name ?? next.user_metadata?.name ?? ""));
     });
     return () => subscription.unsubscribe();
@@ -165,6 +168,8 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
     setUser(null);
     window.location.href = "/";
   }
+
+  if (authLoading) return <div className="account-auth-page"><header className="account-topbar"><div className="container"><Brand/></div></header><div className="account-loading">Loading your secure account…</div></div>;
 
   if (!user) return <div className="account-auth-page">
     <header className="account-topbar"><div className="container"><Brand/><a href="/" className="account-back"><ArrowLeft size={16}/> Back to CleanExif</a></div></header>
