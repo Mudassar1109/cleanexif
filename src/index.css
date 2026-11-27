@@ -434,3 +434,25 @@
 .trust-review-stars{color:#3083b9;font-size:17px;letter-spacing:3px;line-height:1}
 .trust-review-message>span:last-child{color:#6b8298;font-size:11px;white-space:nowrap}
 @media(max-width:760px){.trust-review-strip{align-items:flex-start;flex-direction:column;gap:18px;padding:20px;border-radius:19px}.trust-review-left,.trust-review-right{width:100%;align-items:flex-start;flex-direction:column;gap:10px}.trust-review-right{padding:15px 0 0;border-left:0;border-top:1px solid #d7e9f5}.trust-review-tags{gap:10px 18px}.trust-review-tags span{font-size:11px}}
+
+
+/* Official trust logos and rating — Blue Combo adaptation */
+.trust-review-strip{min-height:104px;padding:20px 30px;gap:24px}
+.trust-review-left{flex:1;gap:25px}
+.trust-review-logos{display:flex;align-items:center;gap:clamp(20px,3vw,38px);min-width:0}
+.trust-review-logos a{display:flex;align-items:center;justify-content:center;text-decoration:none;opacity:.82;transition:opacity .2s ease,transform .2s ease}
+.trust-review-logos a:hover{opacity:1;transform:translateY(-2px)}
+.trust-review-logos img{display:block;width:auto;max-width:clamp(100px,12vw,160px);height:34px;object-fit:contain}
+.trust-review-right{flex:none;gap:18px;padding-left:30px}
+.trust-review-rating{display:flex;align-items:center;gap:9px;white-space:nowrap;color:#637b92;font-size:13px}
+.trust-review-rating .trust-review-stars{color:#3083b9;font-size:19px;letter-spacing:2px}
+.trust-review-rating strong{margin-left:9px;color:#035c96;font-size:15px;font-weight:800}
+.trust-review-rating>span:last-child{font-size:12px}
+@media(max-width:760px){
+ .trust-review-strip{gap:17px}
+ .trust-review-left,.trust-review-right{gap:10px}
+ .trust-review-logos{width:100%;gap:18px;flex-wrap:wrap}
+ .trust-review-logos img{max-width:clamp(82px,24vw,130px);height:28px}
+ .trust-review-right{padding:15px 0 0;border-top:1px solid #d7e9f5}
+ .trust-review-rating{flex-wrap:wrap;gap:7px}
+}
