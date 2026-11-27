@@ -6,7 +6,7 @@ import { SiteHeader, SiteFooter } from "./SiteChrome";
 
 const WA="https://wa.me/923197013743";
 const prices:Record<string,string>={free:"$0",pro:"$4.99",business:"$12.99"};
-const bullets:Record<string,string[]>={free:["10 metadata-cleaning images per day","10 images per batch","100 MB total batch size","25 MB maximum per file","Core cleaner and watermark workflow","GPS remover, privacy scanner and EXIF editor"],pro:["50 metadata-cleaning images per day","100 images per batch","500 MB total batch size","50 MB maximum per file","Batch ZIP export","All five image tools"],business:["200 metadata-cleaning images per day","200 images per batch","1 GB total batch size","100 MB maximum per file","High-volume batch workflows","All five image tools"]};
+const bullets:Record<string,string[]>={free:["10 metadata-cleaning images per day","10 images per batch","100 MB total batch size","25 MB maximum per file","Core cleaner and watermark workflow","GPS remover, privacy scanner and EXIF editor"],pro:["50 metadata-cleaning images per day","100 images per batch","500 MB total batch size","50 MB maximum per file","Higher daily and batch limits","All five image tools"],business:["200 metadata-cleaning images per day","200 images per batch","1 GB total batch size","100 MB maximum per file","High-volume batch workflows","All five image tools"]};
 export default function PlansPage({accountOnly=false}:{accountOnly?:boolean}){
  const {limits,email,loading,expiryCountdown,isPlanExpired}=usePlanAccess();const [plans,setPlans]=useState<any[]>([]),[authEmail,setAuthEmail]=useState(""),[password,setPassword]=useState("");
  const [mode,setMode]=useState<"signin"|"signup">("signup"),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[error,setError]=useState("");
