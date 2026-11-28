@@ -725,49 +725,42 @@
 }
 
 
-/* CleanExif global typography system: Poppins for UI and headings, Merriweather for editorial reading. */
+/* One consistent Poppins family across CleanExif.
+   The homepage hero retains its existing Poppins display treatment above. */
 :root {
   --ce-font-ui: "Poppins", sans-serif;
-  --ce-font-display: "Lilita One", sans-serif;
-  --ce-font-reading: "Merriweather", Georgia, serif;
+  --ce-font-display: "Poppins", sans-serif;
+  --ce-font-reading: "Poppins", sans-serif;
   font-family: var(--ce-font-ui);
 }
 body,
 button,
 input,
 select,
-textarea {
-  font-family: var(--ce-font-ui);
-}
+textarea,
 h1, h2, h3, h4, h5, h6,
 strong, b,
 [class*="font-bold"],
 [class*="font-extrabold"],
-[class*="font-semibold"] {
-  font-family: var(--ce-font-display) !important;
-  font-weight: 400 !important;
-}
+[class*="font-semibold"],
 .legal-content > p,
 .blog-article .blog-lead,
 .blog-article section p,
 .blog-article section li,
 .education-card p,
-.education-copy p {
-  font-family: var(--ce-font-reading);
-}
-.legal-content > p {
-  font-size: 14px;
-  line-height: 1.95;
-  color: #52647b;
-}
+.education-copy p,
 .legal-content h1,
 .legal-content h2,
 .legal-content h3,
 .blog-article h1,
 .blog-article h2,
 .blog-article h3 {
-  font-family: var(--ce-font-display);
-  font-weight: 800;
+  font-family: var(--ce-font-ui) !important;
+}
+.legal-content > p {
+  font-size: 14px;
+  line-height: 1.95;
+  color: #52647b;
 }
 @media (max-width: 760px) {
   .legal-content > p {
