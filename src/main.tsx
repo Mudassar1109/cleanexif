@@ -4,6 +4,7 @@ import App from "./App";
 import WhatsAppFloat from "./WhatsAppFloat";
 import "./index.css";
 import "./admin.css";
+import "./responsive.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode><App /><WhatsAppFloat /></React.StrictMode>

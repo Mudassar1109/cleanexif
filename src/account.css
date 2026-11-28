@@ -56,3 +56,196 @@
 .account-help-item.open>button svg,.account-help-note{color:#3083B9}
 .account-help-note{border-color:#d4ebfa;background:#f0f9ff}
 
+
+
+/* Responsive account surfaces: tablet navigation, auth form and dashboard. */
+@media (max-width: 960px) {
+  .account-auth-layout {
+    width: min(900px, calc(100% - 40px));
+    grid-template-columns: minmax(0, 1fr) minmax(330px, 420px);
+    gap: 26px;
+    padding: 48px 0;
+  }
+  .account-auth-story h1 {
+    font-size: clamp(38px, 5vw, 52px);
+    letter-spacing: -2px;
+  }
+  .account-dashboard {
+    width: calc(100% - 40px);
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 18px;
+  }
+  .account-panel {
+    padding: 21px;
+  }
+}
+
+@media (max-width: 780px) {
+  .account-auth-layout {
+    width: min(620px, calc(100% - 32px));
+    min-height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    padding: 35px 0 48px;
+  }
+  .account-auth-story {
+    max-width: none;
+  }
+  .account-auth-story h1 {
+    max-width: 560px;
+    font-size: clamp(36px, 8vw, 46px);
+    margin: 13px 0;
+  }
+  .account-story-points {
+    display: none;
+  }
+  .account-auth-card {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: clamp(20px, 4vw, 28px);
+  }
+  .account-topbar {
+    height: 66px;
+  }
+  .account-topbar > .container {
+    width: calc(100% - 30px);
+  }
+  .account-dashboard {
+    display: block;
+    width: calc(100% - 30px);
+    margin: 18px auto 42px;
+  }
+  .account-sidebar {
+    display: none;
+    position: fixed;
+    z-index: 150;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(320px, 88vw);
+    max-height: 100dvh;
+    overflow-y: auto;
+    border-radius: 0 18px 18px 0;
+    box-shadow: 15px 0 50px rgba(16, 39, 68, .2);
+  }
+  .account-sidebar.mobile-open {
+    display: block;
+  }
+  .account-sidebar-close {
+    display: grid;
+    place-items: center;
+  }
+  .account-mobile-menu {
+    display: inline-flex;
+    align-items: center;
+    min-height: 42px;
+    margin-bottom: 16px;
+  }
+  .account-content-heading {
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 17px;
+  }
+  .account-content-heading h1 {
+    font-size: clamp(26px, 6vw, 32px);
+  }
+  .account-return {
+    display: none;
+  }
+  .account-plan-summary {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .account-subscription-foot {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .account-auth-page,
+  .account-page {
+    min-height: 100dvh;
+  }
+  .account-auth-layout {
+    width: calc(100% - 24px);
+    padding: 25px 0 34px;
+  }
+  .account-auth-story h1 {
+    font-size: 36px;
+    letter-spacing: -1.8px;
+  }
+  .account-auth-story > p {
+    font-size: 12px;
+    line-height: 1.65;
+  }
+  .account-auth-card {
+    padding: 18px;
+    border-radius: 18px;
+  }
+  .account-auth-card-head h2 {
+    font-size: 24px;
+  }
+  .account-auth-card input,
+  .account-panel input {
+    min-height: 44px;
+  }
+  .account-dashboard {
+    width: calc(100% - 24px);
+    margin-top: 14px;
+  }
+  .account-content-heading {
+    flex-direction: column;
+  }
+  .account-content-heading h1 {
+    font-size: 27px;
+  }
+  .account-panel {
+    padding: 15px;
+    border-radius: 14px;
+  }
+  .account-panel form {
+    gap: 14px;
+  }
+  .account-form-actions {
+    justify-content: stretch;
+  }
+  .account-form-actions .account-submit {
+    width: 100%;
+  }
+  .account-plan-summary {
+    padding: 17px;
+  }
+  .account-plan-summary h2 {
+    font-size: 24px;
+  }
+  .account-usage-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .account-help-intro,
+  .account-help-card {
+    padding: 16px;
+  }
+  .account-help-card-head {
+    align-items: flex-start;
+  }
+  .account-top-actions {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .account-auth-card {
+    padding: 15px;
+  }
+  .account-auth-story h1 {
+    font-size: 33px;
+  }
+  .account-topbar > .container {
+    width: calc(100% - 22px);
+  }
+  .account-top-actions button {
+    padding: 8px;
+  }
+}
