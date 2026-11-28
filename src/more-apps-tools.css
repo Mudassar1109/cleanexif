@@ -570,3 +570,108 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Clear initial action state before a tool has an image selected. */
+.privacy-tool-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  opacity: 0;
+}
+
+.privacy-tool-start-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px 18px;
+  margin-top: 17px;
+  padding: 17px 18px;
+  border: 1px solid #dce8f6;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #f7fbff, #fff);
+}
+
+.privacy-tool-start-copy {
+  min-width: 0;
+}
+
+.privacy-tool-start-copy b {
+  color: #1d3857;
+  font: 800 14px/1.4 Manrope, sans-serif;
+}
+
+.privacy-tool-start-copy p {
+  margin: 5px 0 0;
+  color: #74869d;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.privacy-tool-start-button {
+  min-height: 42px;
+  padding: 11px 14px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.privacy-tool-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-column: 1 / -1;
+  gap: 9px;
+  padding-top: 11px;
+  border-top: 1px solid #e8eff7;
+}
+
+.privacy-tool-steps span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: #637d98;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.privacy-tool-steps i {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 7px;
+  background: #e6f1ff;
+  color: #0756c9;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.privacy-tool-upload:focus-within,
+.privacy-tool-file-input:focus-visible + .privacy-tool-start-card {
+  outline: 3px solid rgba(48, 131, 185, .35);
+  outline-offset: 3px;
+}
+
+@media (max-width: 620px) {
+  .privacy-tool-start-card {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px;
+  }
+
+  .privacy-tool-start-button {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .privacy-tool-steps {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+}
