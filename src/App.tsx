@@ -729,7 +729,7 @@ function App() {
     for (const file of incoming) {
       if (!ACCEPTED.includes(file.type)) { errors.push(file.name + ": unsupported format"); continue; }
       if (file.size > limits.maxFileMB * 1024 * 1024) { errors.push(file.name + ": larger than your " + limits.maxFileMB + " MB per-file limit"); continue; }
-      const metadataSelectionLimit = Math.min(limits.dailyImages, limits.maxImages);
+      const metadataSelectionLimit = limits.maxImages;
       if (items.length + valid.length >= metadataSelectionLimit) { errors.push("The Metadata Inspector allows up to " + metadataSelectionLimit + " images per batch on your current plan."); break; }
       if (totalSize + file.size > limits.totalMB * 1024 * 1024) { errors.push(file.name + ": your " + limits.name + " plan allows " + limits.totalMB + " MB total per batch"); continue; }
       valid.push(file);

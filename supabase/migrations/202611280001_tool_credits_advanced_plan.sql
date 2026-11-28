@@ -320,9 +320,9 @@ begin
       and (a.expires_at is null or a.expires_at>now())
     order by a.created_at desc
     limit 1
-  ) access on true
+  ) active_access on true
   join public.cleanexif_plans p
-    on p.id=coalesce(access.plan_id,(select fp.id from public.cleanexif_plans fp where fp.code='free' and fp.active=true limit 1))
+    on p.id=coalesce(active_access.plan_id,(select fp.id from public.cleanexif_plans fp where fp.code='free' and fp.active=true limit 1))
   cross join tools t
   left join public.cleanexif_tool_daily_usage d
     on d.user_id=u.id and d.usage_date=p_usage_date and d.tool_key=t.tool_key
