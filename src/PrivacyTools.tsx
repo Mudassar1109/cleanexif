@@ -269,7 +269,7 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
        <div className="privacy-tool-preview-head"><span><FileImage size={16}/> {output?"Export preview":"Selected image"}</span><button type="button" onClick={clearFile} disabled={busy} aria-label="Remove selected image"><X size={16}/></button></div>
        <div className="privacy-tool-preview-media"><img src={displayImage} alt={output?"Processed image preview":"Selected image preview"}/></div>
        <div className="privacy-tool-preview-meta"><b>{file.name}</b><span>{bytes(file.size)} · {file.type||mimeFor(file)}</span><small>{output?"The exported copy is shown above. Your original file remains unchanged.":"Original file — no changes have been made."}</small></div>
-       {output&&<button className="button button-primary privacy-tool-download" type="button" onClick={download}><Download size={16}/> Download {mode==="editor"?"edited JPEG":"clean image"} · {bytes(output.size)}</button>}
+       {output&&<button className="button button-primary privacy-tool-download" type="button" onClick={()=>download()}><Download size={16}/> Download {mode==="editor"?"edited JPEG":"clean image"} · {bytes(output.size)}</button>}
       </aside>
       <div className="privacy-tool-work-panel">
        <div className={"privacy-tool-status"+(busy?" is-processing":output?" is-ready":hasResult?" is-reviewed":"")} role="status" aria-live="polite">
