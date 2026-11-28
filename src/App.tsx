@@ -929,20 +929,19 @@ function App() {
           <div className="feature-item"><span className="feature-icon"><Download /></span><div><b>Download clean</b><small>Save a fresh copy without embedded metadata.</small></div></div>
           <div className="feature-item"><span className="feature-icon"><ShieldCheck /></span><div><b>Privacy first</b><small>Processing happens locally in your browser.</small></div></div>
         </div>
-        <div className="container trust-review-strip" aria-label="Trusted by and tool rating">
-          <div className="trust-review-left">
-            <span className="trust-review-label">TRUSTED BY</span>
-            <div className="trust-review-logos">
-              <a href="https://www.berkeley.edu/" target="_blank" rel="noreferrer" aria-label="UC Berkeley"><img src="https://www.metadata2go.com/dist/img/trust_logos/berkeley_logo_gray_dark.svg" alt="UC Berkeley" /></a>
-              <a href="https://www.booking.com/" target="_blank" rel="noreferrer" aria-label="Booking.com"><img src="https://www.metadata2go.com/dist/img/trust_logos/booking_com_logo_gray_dark.svg" alt="Booking.com" /></a>
-              <a href="https://www.uber.com/" target="_blank" rel="noreferrer" aria-label="Uber"><img src="https://www.metadata2go.com/dist/img/trust_logos/uber_logo_gray_dark.svg" alt="Uber" /></a>
-            </div>
+        <section className="container ce-trust-strip" aria-label="CleanExif privacy and processing commitments">
+          <div className="ce-trust-intro">
+            <span className="eyebrow">BUILT FOR PHOTO PRIVACY</span>
+            <h2>Your files stay in your workflow.</h2>
+            <p>Clear, practical privacy information before you clean or share an image.</p>
           </div>
-          <div className="trust-review-right">
-            <span className="trust-review-label">RATE THIS TOOL</span>
-            <div className="trust-review-rating"><span className="trust-review-stars" aria-label="5 out of 5 stars">★★★★★</span><strong>4.8</strong><span>/5 · 1,993 votes</span></div>
+          <div className="ce-trust-grid">
+            <article className="ce-trust-item"><span><ShieldCheck size={18}/></span><div><b>Browser-based processing</b><small>Image work runs locally in your browser.</small></div></article>
+            <article className="ce-trust-item"><span><UploadCloud size={18}/></span><div><b>No image upload required</b><small>Your selected image is processed on your device.</small></div></article>
+            <article className="ce-trust-item"><span><ScanSearch size={18}/></span><div><b>Review before export</b><small>Inspect readable metadata before downloading.</small></div></article>
+            <article className="ce-trust-item"><span><Download size={18}/></span><div><b>Separate clean copy</b><small>Your original file is not overwritten.</small></div></article>
           </div>
-        </div>
+        </section>
       </section>
 
       {items.length > 0 && <section className="tool-workspace" aria-live="polite"><div className="container">

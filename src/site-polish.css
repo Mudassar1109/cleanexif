@@ -1,0 +1,185 @@
+/* Homepage balance and shared navigation polish. */
+@media (min-width: 1081px) {
+  .education-feature-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .tool-directory-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .tool-directory-card {
+    grid-column: span 2;
+  }
+
+  .tool-directory-card:nth-child(4) {
+    grid-column: 2 / span 2;
+  }
+
+  .tool-directory-card:nth-child(5) {
+    grid-column: 4 / span 2;
+  }
+}
+
+/* Avoid a lonely final card at mid-sized laptop widths. */
+@media (min-width: 781px) and (max-width: 1080px) {
+  .education-feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tool-directory-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* The mobile nav is its own scroll area, with the account control at its end. */
+@media (max-width: 1080px) {
+  .ce-nav-links {
+    max-height: min(78dvh, 640px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .ce-nav-links .account-menu-wrap {
+    position: relative;
+    top: auto;
+    right: auto;
+    align-self: flex-end;
+    margin: 8px 0 2px;
+  }
+
+  .ce-nav-links .account-popover {
+    right: 0;
+    max-width: min(255px, calc(100vw - 64px));
+  }
+}
+
+/* Keep long account emails inside the popover at every viewport size. */
+.account-popover {
+  width: min(255px, calc(100vw - 28px));
+}
+
+.account-popover-user {
+  min-width: 0;
+}
+
+.account-popover-user b,
+.account-popover-user span {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Replace borrowed social-proof marks with verifiable product behaviour. */
+.ce-trust-strip {
+  display: grid;
+  grid-template-columns: minmax(190px, .78fr) minmax(0, 2fr);
+  align-items: center;
+  gap: 24px;
+  margin: 28px auto 0;
+  padding: 22px 26px;
+  border: 1px solid #d7e9f5;
+  border-radius: 22px;
+  background: linear-gradient(110deg, #f5fbff 0%, #fff 48%, #eef8ff 100%);
+  box-shadow: 0 12px 32px rgba(3, 92, 150, .06);
+}
+
+.ce-trust-intro .eyebrow {
+  font-size: 9px;
+}
+
+.ce-trust-intro h2 {
+  margin: 7px 0 5px;
+  color: #163655;
+  font: 800 17px/1.25 Manrope, sans-serif;
+  letter-spacing: -.35px;
+}
+
+.ce-trust-intro p {
+  margin: 0;
+  color: #71869a;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.ce-trust-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px 18px;
+}
+
+.ce-trust-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ce-trust-item > span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 11px;
+  background: #e5f4ff;
+  color: #035c96;
+}
+
+.ce-trust-item > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.ce-trust-item b {
+  color: #294762;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.ce-trust-item small {
+  color: #71869a;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+@media (max-width: 900px) {
+  .ce-trust-strip {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .ce-trust-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .ce-trust-strip {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 17px;
+  }
+
+  .ce-trust-intro h2 {
+    font-size: 16px;
+  }
+
+  .ce-trust-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .ce-trust-item b {
+    font-size: 12px;
+  }
+
+  .ce-trust-item small {
+    font-size: 11px;
+  }
+}
