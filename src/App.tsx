@@ -899,11 +899,11 @@ function App() {
     <main>
       <section className="hero-section"><div className="hero-glow hero-glow-one" /><div className="hero-glow hero-glow-two" />
         <div className="container hero-grid">
-          <div className="hero-copy"><span className="eyebrow"><span className="eyebrow-icon"><ShieldCheck size={15} /></span> FREE ONLINE EXIF REMOVER</span>
-            <h1>Your photos.<br />Your <span>privacy.</span></h1>
-            <p className="hero-description">View and remove hidden metadata from your images directly in your browser. Remove GPS location, camera information and other EXIF data — no image uploads; an account is used for daily cleaning credits.</p>
-            <div className="trust-pills"><span><LockKeyhole size={15} /> No uploads</span><span><Zap size={16} /> Free to use</span><span><Monitor size={16} /> Browser-based</span></div>
-            <div className="hero-footnote"><ShieldCheck size={15} /> Your images stay on your device.</div>
+          <div className="hero-copy"><span className="eyebrow"><span className="eyebrow-icon"><ShieldCheck size={15} /></span> PHOTO PRIVACY, MADE SIMPLE</span>
+            <h1>Share the photo.<br />Not the <span>metadata.</span></h1>
+            <p className="hero-description">Photos can reveal more than you intend. Check for GPS location, camera details and hidden EXIF data, then download a cleaner copy. Everything is processed in your browser. No image uploads. Sign in only to use your daily cleaning credits.</p>
+            <div className="trust-pills"><span><LockKeyhole size={15} /> No image uploads</span><span><ScanSearch size={16} /> Review before export</span><span><Monitor size={16} /> Processed locally</span></div>
+            <div className="hero-footnote"><ShieldCheck size={15} /> Your original photo is never overwritten.</div>
           </div>
           <div className="hero-visual" id="tool">
             <div className="upload-card">
