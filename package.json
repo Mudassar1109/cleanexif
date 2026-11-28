@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "build": "tsc -b && vite build && node scripts/prerender-routes.mjs",
+    "preview": "vite preview",
+    "test": "node --test"
   },
   "dependencies": {
     "exifr": "^7.1.3",

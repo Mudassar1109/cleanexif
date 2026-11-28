@@ -6,11 +6,12 @@ import {
 import type { LucideIcon } from "lucide-react";
 import piexif from "piexifjs";
 import { SiteHeader, SiteFooter } from "./SiteChrome";
+import { usePlanAccess } from "./planAccess";
 
 type ToolMode = "gps" | "scanner" | "editor";
 type Meta = Record<string, unknown>;
 const ACCEPTED = new Set(["image/jpeg", "image/png", "image/webp"]);
-const MAX_FILE_BYTES = 50 * 1024 * 1024;
+const MAX_IMAGE_PIXELS = 40_000_000;
 const bytes = (n:number) => n < 1048576 ? (n/1024).toFixed(0)+" KB" : (n/1048576).toFixed(2)+" MB";
 const mimeFor = (file:File) => {
   if (ACCEPTED.has(file.type)) return file.type;
@@ -66,6 +67,9 @@ const downloadBlob = (blob:Blob,name:string) => {
 };
 
 export default function PrivacyTools({mode}:{mode:ToolMode}){
+ const {limits,loading:planLoading}=usePlanAccess("metadata",{trackUsage:false});
+ const maxFileBytes=limits.maxFileMB*1024*1024;
+ const helperText=modeInfo[mode].helper.replaceAll("50 MB",limits.maxFileMB+" MB");
  const [file,setFile]=useState<File|null>(null);
  const [meta,setMeta]=useState<Meta|null>(null);
  const [busy,setBusy]=useState(false);
@@ -114,7 +118,7 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
   setMeta(null);setOutput(null);setShowAllMetadata(false);
   const mime=mimeFor(next);
   if(!ACCEPTED.has(mime)){setFile(null);setMessage("Unsupported format. Choose a JPEG, PNG or WebP image.", "error");return;}
-  if(next.size>MAX_FILE_BYTES){setFile(null);setMessage("This file is larger than the 50 MB limit.", "error");return;}
+  if(next.size>maxFileBytes){setFile(null);setMessage("This file is larger than your "+limits.maxFileMB+" MB plan limit.", "error");return;}
   if(mode==="editor"&&mime!=="image/jpeg"){setFile(null);setMessage("EXIF editing currently supports JPEG files only. Choose a .jpg or .jpeg image.", "error");return;}
   setFile(next);
   await inspect(next);
@@ -138,15 +142,21 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
   if(!file)return;
   setBusy(true);setMessage("Removing embedded image metadata and verifying the exported copy…");
   try{
-   const bitmap=await createImageBitmap(file);
-   const canvas=document.createElement("canvas");
-   canvas.width=bitmap.width;canvas.height=bitmap.height;
    const mime=mimeFor(file);
-   const ctx=canvas.getContext("2d",{alpha:mime!=="image/jpeg"});
-   if(!ctx)throw new Error("Canvas is unavailable in this browser.");
-   if(mime==="image/jpeg"){ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);}
-   ctx.drawImage(bitmap,0,0);bitmap.close();
-   const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(result=>result?resolve(result):reject(new Error("Image export failed.")),mime,mime==="image/png"?undefined:.94));
+   const bitmap=await createImageBitmap(file);
+   let blob:Blob;
+   try{
+    if(bitmap.width*bitmap.height>MAX_IMAGE_PIXELS)throw new Error("This image exceeds the 40-megapixel browser processing limit.");
+    const canvas=document.createElement("canvas");
+    canvas.width=bitmap.width;canvas.height=bitmap.height;
+    const ctx=canvas.getContext("2d",{alpha:mime!=="image/jpeg"});
+    if(!ctx)throw new Error("Canvas is unavailable in this browser.");
+    if(mime==="image/jpeg"){ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);}
+    ctx.drawImage(bitmap,0,0);
+    blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(result=>result?resolve(result):reject(new Error("Image export failed.")),mime,mime==="image/png"?undefined:.94));
+   }finally{
+    bitmap.close();
+   }
    const verified=await read(new File([blob],file.name,{type:blob.type||mime}));
    const remaining=Object.keys(verified).filter(key=>sensitiveKeys.test(key));
    setOutput(blob);
@@ -206,7 +216,7 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
     <span className="eyebrow"><ShieldCheck size={15}/> PRIVATE, IN-BROWSER IMAGE TOOLS</span>
     <h1><InfoIcon size={34}/> {modeInfo[mode].title}</h1>
     <p>{modeInfo[mode].description}</p>
-    <small>{modeInfo[mode].helper}</small>
+    <small>{helperText}</small>
    </div>
    <section className="privacy-tool-card">
     <label className={"privacy-tool-upload"+(dragging?" is-dragging":"")+(busy?" is-disabled":"")} htmlFor="privacy-tool-file-input"
@@ -215,12 +225,12 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
       onDrop={onDrop}>
       <UploadCloud size={30}/>
       <b>{file?file.name:"Drop your image here or choose a file"}</b>
-      <span>{file?bytes(file.size)+" · "+(mimeFor(file)||"Unknown image type"):(mode==="editor"?"JPEG files only · Up to 50 MB":"Select a JPEG, PNG or WebP image · Up to 50 MB")}</span>
+      <span>{file?bytes(file.size)+" · "+(mimeFor(file)||"Unknown image type"):(mode==="editor"?"JPEG files only · Up to "+limits.maxFileMB+" MB":"Select a JPEG, PNG or WebP image · Up to "+limits.maxFileMB+" MB")}</span>
     </label>
-    <input ref={fileInputRef} key={inputKey} id="privacy-tool-file-input" className="privacy-tool-file-input" type="file" accept={mode==="editor"?"image/jpeg,.jpg,.jpeg":"image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"} onChange={onFileChange} disabled={busy}/>
+    <input ref={fileInputRef} key={inputKey} id="privacy-tool-file-input" className="privacy-tool-file-input" type="file" accept={mode==="editor"?"image/jpeg,.jpg,.jpeg":"image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"} onChange={onFileChange} disabled={busy||planLoading}/>
     {!file&&<div className="privacy-tool-start-card">
       <div className="privacy-tool-start-copy"><b>{mode==="gps"?"Remove location before you share":mode==="scanner"?"See what your image reveals":"Edit the details stored in your JPEG"}</b><p>{mode==="gps"?"CleanExif re-encodes the image and creates a separate copy without common embedded metadata.":mode==="scanner"?"Review readable GPS, camera, author and date fields. The scan does not change your original image.":"Update common description, author, copyright and date fields, then export a separate JPEG."}</p></div>
-      <button className="button button-primary privacy-tool-start-button" type="button" onClick={()=>fileInputRef.current?.click()} disabled={busy}><UploadCloud size={16}/>{modeInfo[mode].action}</button>
+      <button className="button button-primary privacy-tool-start-button" type="button" onClick={()=>fileInputRef.current?.click()} disabled={busy||planLoading}><UploadCloud size={16}/>{modeInfo[mode].action}</button>
       <div className="privacy-tool-steps">{modeInfo[mode].steps.map((step,index)=><span key={step}><i>{String(index+1).padStart(2,"0")}</i>{step}</span>)}</div>
     </div>}
     {hasResult&&file&&<div className="privacy-tool-workflow">

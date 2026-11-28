@@ -1,7 +1,20 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1263200630707723" crossorigin="anonymous"></script>
+    <script>
+      (function () {
+        var path = window.location.pathname;
+        while (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
+        var eligible = path === "/" || path === "/blog" || path.indexOf("/blog/") === 0;
+        if (!eligible || document.querySelector("script[data-cleanexif-ads]")) return;
+        var ads = document.createElement("script");
+        ads.async = true;
+        ads.crossOrigin = "anonymous";
+        ads.dataset.cleanexifAds = "true";
+        ads.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1263200630707723";
+        document.head.appendChild(ads);
+      })();
+    </script>
     <meta name="google-adsense-account" content="ca-pub-1263200630707723" />
     <meta name="google-site-verification" content="bpTi4vUgW5NiO_WeEkhd5I7DFdB1u36VMs5OPQa6pUE" />
     <meta charset="UTF-8" />
