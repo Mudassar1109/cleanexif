@@ -1,14 +1,14 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
-  ArrowRight, ChevronDown, Eye, Fingerprint, Grid2X2, Image, MapPin,
-  Menu, ScanSearch, ShieldCheck, X
+  ArrowRight, ChevronDown, Eye, Fingerprint, Grid2X2, Image as ImageIcon, MapPin,
+  Menu, ScanSearch, X
 } from "lucide-react";
 import { cleanexifSupabase } from "./planAccess";
 const AccountMenu = lazy(() => import("./AccountMenu").then(module => ({ default: module.AccountMenu })));
 
 const appLinks = [
   { label: "Image Metadata Cleaner", description: "Inspect and remove common image metadata", href: "/#tool", icon: Eye },
-  { label: "Watermark Maker", description: "Add a visible watermark to your image", href: "/watermark", icon: Image },
+  { label: "Watermark Maker", description: "Add a visible watermark to your image", href: "/watermark", icon: ImageIcon },
   { label: "GPS Location Remover", description: "Remove embedded location and metadata", href: "/gps-remover", icon: MapPin },
   { label: "Image Privacy Scanner", description: "Find location, device and identity details", href: "/privacy-scanner", icon: ScanSearch },
   { label: "EXIF Metadata Editor", description: "Edit common EXIF fields in JPEG images", href: "/metadata-editor", icon: Fingerprint }

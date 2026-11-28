@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type DragEvent, type ChangeEvent } from "react";
 import {
-  AlertCircle, CheckCircle2, Download, FileImage, Fingerprint, MapPin,
+  CheckCircle2, Download, FileImage, Fingerprint, MapPin, Image as ImageIcon,
   RotateCcw, ScanSearch, ShieldCheck, UploadCloud, X
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -271,7 +271,7 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
    </section>
    <section className="privacy-tool-disclaimer"><ShieldCheck size={18}/><p>Processing runs in your browser. The scanner reports metadata readable by the parser; the GPS remover re-encodes pixels and may remove other metadata too. The EXIF editor supports common JPEG fields only. Always independently verify files intended for sensitive use.</p></section>
    <section className="privacy-tool-switch"><h2>More CleanExif tools</h2><div>
-    <a href="/#tool"><FileImage/> Image Metadata Cleaner</a><a href="/watermark"><Image/> Watermark Maker</a><a href="/gps-remover"><MapPin/> GPS Location Remover</a><a href="/privacy-scanner"><ScanSearch/> Image Privacy Scanner</a><a href="/metadata-editor"><Fingerprint/> EXIF Metadata Editor</a>
+    <a href="/#tool"><FileImage/> Image Metadata Cleaner</a><a href="/watermark"><ImageIcon/> Watermark Maker</a><a href="/gps-remover"><MapPin/> GPS Location Remover</a><a href="/privacy-scanner"><ScanSearch/> Image Privacy Scanner</a><a href="/metadata-editor"><Fingerprint/> EXIF Metadata Editor</a>
    </div></section>
   </main>
   <SiteFooter />
