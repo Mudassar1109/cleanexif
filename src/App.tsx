@@ -3,6 +3,7 @@ import SponsorAd from "./SponsorAd";
 import { SiteHeader, SiteFooter } from "./SiteChrome";
 import { usePlanAccess } from "./planAccess";
 const PrivacyTools = lazy(() => import("./PrivacyTools"));
+const AdvertisePage = lazy(() => import("./AdvertisePage"));
 
 // Keep account, plan and admin screens out of the initial homepage bundle.
 const AdminPage = lazy(() => import("./AdminPage"));
@@ -688,6 +689,7 @@ function App() {
   const legalPath = window.location.pathname.replace(/^\/|\/$/g, "");
   if (legalPath === "admin") return <Suspense fallback={<div className="container" role="status">Loading admin…</div>}><AdminPage /></Suspense>;
   if (legalPath === "plans") return <Suspense fallback={<div className="container" role="status">Loading plans…</div>}><PlansPage /></Suspense>;
+  if (legalPath === "advertise") return <Suspense fallback={<div className="container" role="status">Loading sponsorship information…</div>}><AdvertisePage /></Suspense>;
   if (["account","login","signup"].includes(legalPath)) return <Suspense fallback={<div className="container" role="status">Loading account…</div>}><AccountPage initialMode={legalPath === "login" ? "signin" : legalPath === "signup" ? "signup" : undefined} /></Suspense>;
   if (legalPath === "demo") return <DemoPage />;
   if (legalPath === "watermark") return <WatermarkPage />;
