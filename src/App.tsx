@@ -901,7 +901,7 @@ function App() {
         <div className="container hero-grid">
           <div className="hero-copy"><span className="eyebrow"><span className="eyebrow-icon"><ShieldCheck size={15} /></span> PHOTO PRIVACY, MADE SIMPLE</span>
             <h1>Share the photo.<br />Not the <span>metadata.</span></h1>
-            <p className="hero-description">Photos can reveal more than you intend. Inspect readable GPS, camera and capture details, then export a cleaner copy—all in your browser, without uploading your images. Sign in only when you need daily cleaning credits.</p>
+            <p className="hero-description">Photos can reveal more than you intend. Check for GPS location, camera details and hidden EXIF data, then download a cleaner copy. Everything is processed in your browser. No image uploads. Sign in only to use your daily cleaning credits.</p>
             <div className="trust-pills"><span><LockKeyhole size={15} /> No image uploads</span><span><ScanSearch size={16} /> Review before export</span><span><Monitor size={16} /> Processed locally</span></div>
             <div className="hero-footnote"><ShieldCheck size={15} /> Your original photo is never overwritten.</div>
           </div>
