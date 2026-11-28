@@ -413,7 +413,7 @@
   border-radius: 9px;
   background: #fff;
   color: #172945;
-  font: 500 12px "Poppins", sans-serif;
+  font: 500 12px "Inter", sans-serif;
 }
 
 .privacy-tool-action {
@@ -603,7 +603,7 @@
 
 .privacy-tool-start-copy b {
   color: #1d3857;
-  font: 800 14px/1.4 Poppins, sans-serif;
+  font: 800 14px/1.4 Inter, sans-serif;
 }
 
 .privacy-tool-start-copy p {
