@@ -41,7 +41,13 @@ export function renderRouteHtml(template, route, siteUrl = SITE_URL) {
   const robots = route.noindex ? "noindex, nofollow" : "index, follow, max-image-preview:large";
   let html = template;
   const titleTag = "<title>" + escapeHtml(route.title) + "</title>";
-  if (html.includes("<title>")) html = html.replace(/<title>[^<]*<\\/title>/i, titleTag);
+  const titleStart = html.indexOf("<title>");
+  const titleEnd = html.indexOf("</title>", titleStart);
+  if (titleStart >= 0 && titleEnd >= 0) {
+    html = html.slice(0, titleStart) + titleTag + html.slice(titleEnd + 8);
+  } else {
+    html = html.replace("</head>", "  " + titleTag + "\n</head>");
+  }
   else html = html.replace("</head>", "  " + titleTag + "\n</head>");
   html = upsertMeta(html, "name", "description", route.description);
   html = upsertMeta(html, "name", "robots", robots);
@@ -53,7 +59,13 @@ export function renderRouteHtml(template, route, siteUrl = SITE_URL) {
   html = upsertMeta(html, "name", "twitter:title", route.title);
   html = upsertMeta(html, "name", "twitter:description", route.description);
   const canonicalTag = '<link rel="canonical" href="' + escapeHtml(canonical) + '" />';
-  if (html.includes('rel="canonical"')) html = html.replace(/<link\\s+rel="canonical"[^>]*>/i, canonicalTag);
+  const canonicalStart = html.indexOf('<link rel="canonical"');
+  const canonicalEnd = canonicalStart >= 0 ? html.indexOf(">", canonicalStart) : -1;
+  if (canonicalStart >= 0 && canonicalEnd >= 0) {
+    html = html.slice(0, canonicalStart) + canonicalTag + html.slice(canonicalEnd + 1);
+  } else {
+    html = html.replace("</head>", "  " + canonicalTag + "\n</head>");
+  }
   else html = html.replace("</head>", "  " + canonicalTag + "\n</head>");
   return html;
 }
