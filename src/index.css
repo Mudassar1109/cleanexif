@@ -601,11 +601,11 @@
   max-width: 590px;
   margin: 25px 0 20px;
   color: #102a46;
-  font-family: "Syne", "DM Sans", sans-serif;
-  font-size: clamp(52px, 5.35vw, 74px);
-  font-weight: 800;
-  line-height: 1.025;
-  letter-spacing: -.065em;
+  font-family: "Nunito", "DM Sans", sans-serif;
+  font-size: clamp(46px, 4.75vw, 62px);
+  font-weight: 900;
+  line-height: 1.055;
+  letter-spacing: -.045em;
   text-wrap: balance;
 }
 .hero-copy h1 span {
@@ -671,7 +671,7 @@
 }
 @media (max-width: 1000px) and (min-width: 761px) {
   .hero-copy h1 {
-    font-size: clamp(48px, 5.2vw, 62px);
+    font-size: clamp(44px, 4.7vw, 56px);
   }
   .hero-copy .trust-pills span {
     padding: 9px 11px;
