@@ -1,0 +1,572 @@
+
+/* More Apps dropdown — one grouped entry for the full tool directory. */
+.ce-more-apps-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+.ce-more-apps-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 39px;
+  padding: 9px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #354762;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ce-more-apps-trigger:hover,
+.ce-more-apps-wrap.is-open .ce-more-apps-trigger {
+  color: #0756c9;
+  border-color: #dbe8f8;
+  background: #fff;
+}
+
+.ce-more-apps-chevron {
+  transition: transform .18s ease;
+}
+
+.ce-more-apps-wrap.is-open .ce-more-apps-chevron {
+  transform: rotate(180deg);
+}
+
+.ce-more-apps-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  z-index: 180;
+  width: min(340px, calc(100vw - 28px));
+  padding: 10px;
+  border: 1px solid #e0e8f3;
+  border-radius: 17px;
+  background: #fff;
+  box-shadow: 0 20px 48px rgba(17, 47, 83, .16);
+  display: grid;
+  gap: 3px;
+}
+
+.ce-more-apps-heading {
+  padding: 8px 10px 9px;
+  color: #8594a9;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 1.15px;
+}
+
+.ce-more-apps-menu > a {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 15px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  color: #263b58;
+  transition: background .16s, border-color .16s;
+}
+
+.ce-more-apps-menu > a:hover,
+.ce-more-apps-menu > a.is-active {
+  background: #f4f8ff;
+  border-color: #e4eefc;
+}
+
+.ce-more-apps-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #eaf3ff;
+  color: #0756c9;
+}
+
+.ce-more-apps-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ce-more-apps-copy b {
+  color: #1e3656;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.ce-more-apps-copy small {
+  color: #7a8aa0;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.ce-more-apps-arrow {
+  color: #8ba0bb;
+}
+
+@media (max-width: 1080px) {
+  .ce-more-apps-wrap {
+    display: block;
+    width: 100%;
+  }
+
+  .ce-more-apps-trigger {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 12px;
+    border: 0;
+    border-radius: 9px;
+    font-size: 13px;
+  }
+
+  .ce-more-apps-trigger:hover,
+  .ce-more-apps-wrap.is-open .ce-more-apps-trigger {
+    border: 0;
+    background: #f4f8ff;
+  }
+
+  .ce-more-apps-menu {
+    position: static;
+    width: 100%;
+    max-height: none;
+    padding: 7px;
+    margin: 2px 0 6px;
+    border-radius: 12px;
+    box-shadow: none;
+    background: #f9fbff;
+  }
+
+  .ce-more-apps-menu > a {
+    grid-template-columns: 32px minmax(0, 1fr) 14px;
+    padding: 9px;
+  }
+
+  .ce-more-apps-icon {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Dedicated workflow layout for GPS, scanner and EXIF editor. */
+.privacy-tool-upload {
+  position: relative;
+  overflow: hidden;
+  transition: border-color .18s, background .18s, box-shadow .18s;
+}
+
+.privacy-tool-upload.is-dragging {
+  border-color: #0756c9;
+  background: #e9f3ff;
+  box-shadow: inset 0 0 0 2px #b4d2fb;
+}
+
+.privacy-tool-upload.is-disabled {
+  opacity: .65;
+  pointer-events: none;
+}
+
+.privacy-tool-upload input {
+  cursor: pointer;
+}
+
+.privacy-tool-first-use {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  padding: 20px 5px 2px;
+  color: #6d809a;
+}
+
+.privacy-tool-first-use span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+}
+
+.privacy-tool-first-use svg {
+  color: #1478c8;
+}
+
+.privacy-tool-workflow {
+  display: grid;
+  grid-template-columns: minmax(220px, .72fr) minmax(0, 1.5fr);
+  gap: 22px;
+  margin-top: 23px;
+  align-items: start;
+}
+
+.privacy-tool-preview-card {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid #e3ebf5;
+  border-radius: 15px;
+  background: #fbfdff;
+}
+
+.privacy-tool-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: #365573;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.privacy-tool-preview-head span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.privacy-tool-preview-head svg {
+  color: #0756c9;
+}
+
+.privacy-tool-preview-head button {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e4ebf4;
+  border-radius: 8px;
+  background: #fff;
+  color: #77889f;
+}
+
+.privacy-tool-preview-media {
+  display: grid;
+  place-items: center;
+  min-height: 190px;
+  max-height: 320px;
+  overflow: hidden;
+  border-radius: 11px;
+  background: linear-gradient(145deg, #eef4fa, #f9fbfd);
+}
+
+.privacy-tool-preview-media img {
+  display: block;
+  max-width: 100%;
+  max-height: 320px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.privacy-tool-preview-meta {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  margin-top: 11px;
+}
+
+.privacy-tool-preview-meta b {
+  color: #294461;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.privacy-tool-preview-meta span,
+.privacy-tool-preview-meta small {
+  color: #7c8da3;
+  font-size: 10px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.privacy-tool-preview-meta small {
+  color: #68829a;
+}
+
+.privacy-tool-download {
+  width: 100%;
+  justify-content: center;
+  margin: 12px 0 0;
+  white-space: normal;
+}
+
+.privacy-tool-work-panel {
+  min-width: 0;
+}
+
+.privacy-tool-status.is-reviewed {
+  border-color: #dce8f6;
+  background: #f7faff;
+}
+
+.privacy-tool-notice.is-info {
+  background: #edf4ff;
+  color: #234b80;
+}
+
+.privacy-tool-notice.is-success {
+  background: #effaf4;
+  color: #176b49;
+}
+
+.privacy-tool-notice.is-error {
+  background: #fff0f0;
+  color: #a42d36;
+}
+
+.privacy-tool-result-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.privacy-tool-result-heading .button {
+  min-height: 36px;
+  padding: 8px 11px;
+  font-size: 11px;
+}
+
+.privacy-tool-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 17px;
+  border: 1px solid #d9eee3;
+  border-radius: 12px;
+  background: #f3fbf6;
+  color: #19774e;
+}
+
+.privacy-tool-empty b {
+  color: #23644b;
+  font-size: 12px;
+}
+
+.privacy-tool-empty span {
+  color: #718c7d;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.privacy-tool-disclosure {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px 13px;
+  border: 1px solid #e4ebf5;
+  border-radius: 10px;
+  background: #fbfdff;
+  color: #35516e;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: left;
+}
+
+.privacy-tool-disclosure span {
+  color: #0756c9;
+  font-size: 17px;
+}
+
+.privacy-tool-all-meta {
+  max-height: 360px;
+  overflow: auto;
+  margin-top: 7px;
+  padding: 0 12px;
+  border: 1px solid #e6edf6;
+  border-radius: 10px;
+}
+
+.privacy-tool-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.privacy-tool-editor-grid label {
+  display: block;
+  min-width: 0;
+  color: #44546d;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.privacy-tool-editor-grid input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border: 1px solid #dce5f1;
+  border-radius: 9px;
+  background: #fff;
+  color: #172945;
+  font: 500 12px "DM Sans", sans-serif;
+}
+
+.privacy-tool-action {
+  margin-top: 12px;
+}
+
+.privacy-tool-bottom-actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 17px;
+  padding-top: 14px;
+  border-top: 1px solid #ebf0f6;
+}
+
+.privacy-tool-bottom-actions .button {
+  min-height: 38px;
+  padding: 9px 12px;
+  font-size: 11px;
+}
+
+.privacy-tool-busy {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 15px 0 0;
+  color: #1766b4;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.privacy-tool-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #d5e7fb;
+  border-top-color: #1478f5;
+  border-radius: 50%;
+  animation: privacy-tool-spin .8s linear infinite;
+}
+
+@keyframes privacy-tool-spin {
+  to { transform: rotate(360deg); }
+}
+
+.privacy-tool-disclaimer {
+  padding: 13px 14px;
+  border: 1px solid #e5edf6;
+  border-radius: 12px;
+  background: #fbfdff;
+}
+
+.privacy-tool-switch > div {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 780px) {
+  .privacy-tool-workflow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 15px;
+  }
+
+  .privacy-tool-preview-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .privacy-tool-preview-media {
+    min-height: 160px;
+    max-height: 250px;
+  }
+
+  .privacy-tool-preview-media img {
+    max-height: 250px;
+  }
+
+  .privacy-tool-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .privacy-tool-summary > div:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .privacy-tool-switch > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .privacy-tools-main {
+    width: calc(100% - 28px);
+  }
+
+  .privacy-tools-hero h1 {
+    gap: 8px;
+    font-size: clamp(26px, 8vw, 32px);
+    line-height: 1.18;
+    letter-spacing: -1px;
+  }
+
+  .privacy-tools-hero h1 svg {
+    width: 25px;
+    height: 25px;
+    flex: none;
+  }
+
+  .privacy-tool-card {
+    padding: 13px;
+    border-radius: 17px;
+  }
+
+  .privacy-tool-upload {
+    min-height: 150px;
+    padding: 17px 10px;
+  }
+
+  .privacy-tool-editor-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .privacy-tool-result-heading {
+    align-items: flex-start;
+  }
+
+  .privacy-tool-result-heading .button {
+    width: 100%;
+  }
+
+  .privacy-tool-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .privacy-tool-row > b {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    text-align: left;
+  }
+
+  .privacy-tool-row > em {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .privacy-tool-bottom-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .privacy-tool-bottom-actions .button {
+    width: 100%;
+  }
+
+  .privacy-tool-switch > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

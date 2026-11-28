@@ -7,6 +7,7 @@ import "./account.css";
 import "./admin.css";
 import "./responsive.css";
 import "./site-polish.css";
+import "./privacy-tools.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode><App /><WhatsAppFloat /></React.StrictMode>
