@@ -144,7 +144,7 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
   document.title=seo.title;
   const setMeta=(selector:string,attribute:string,value:string)=>{
    let node=document.head.querySelector(selector) as HTMLMetaElement|null;
-   if(!node){node=document.createElement("meta");const match=selector.match(/\\[(name|property)="([^"]+)"\\]/);if(match)node.setAttribute(match[1],match[2]);document.head.appendChild(node);}
+   if(!node){node=document.createElement("meta");const match=selector.match(/\[(name|property)="([^"]+)"\]/);if(match)node.setAttribute(match[1],match[2]);document.head.appendChild(node);}
    node.setAttribute(attribute,value);
   };
   setMeta('meta[name="description"]',"content",seo.description);
