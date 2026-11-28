@@ -9,7 +9,7 @@ import "./responsive.css";
 import "./site-polish.css";
 import "./more-apps-tools.css";
 
-const isAdminRoute = window.location.pathname.replace(/^\\/|\\/$/g, "") === "admin";
+const isAdminRoute = window.location.pathname === "/admin" || window.location.pathname === "/admin/";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode><App />{!isAdminRoute && <WhatsAppFloat />}</React.StrictMode>
