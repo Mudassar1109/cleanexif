@@ -92,3 +92,197 @@
     margin-top: 35px;
   }
 }
+
+
+/* Admin plan settings reuse the public pricing-card design. */
+.admin-pricing-grid {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: stretch;
+}
+.admin-pricing-grid .pricing-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 420px;
+  padding: 30px 27px 26px;
+  border: 1px solid #dce7f5;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 16px 42px rgba(21,58,108,.10);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.admin-pricing-grid .pricing-card:not(.pricing-featured) {
+  transform: translateY(12px);
+}
+.admin-pricing-grid .pricing-featured {
+  transform: translateY(-3px);
+  border: 1.5px solid #6aa8f3;
+  box-shadow: 0 22px 52px rgba(12,91,190,.18);
+}
+.admin-pricing-grid .pricing-card:not(.pricing-featured):hover {
+  transform: translateY(6px);
+  box-shadow: 0 20px 42px rgba(23,58,105,.12);
+}
+.admin-pricing-grid .pricing-featured:hover {
+  transform: translateY(-9px);
+}
+.admin-pricing-controls {
+  min-height: 28px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.admin-pricing-controls .admin-status {
+  flex: none;
+}
+.admin-pricing-controls .admin-edit {
+  flex: none;
+  margin-top: -4px;
+  padding: 7px 11px;
+  font-size: 10px;
+}
+.admin-pricing-grid .pricing-topline {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.admin-pricing-grid .pricing-name {
+  color: #263f60;
+  font-size: 14px;
+  font-weight: 800;
+}
+.admin-pricing-grid .pricing-tag {
+  position: absolute;
+  top: 65px;
+  right: 17px;
+  z-index: 2;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #e8f6ff;
+  color: #035c96;
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: .09em;
+}
+.admin-pricing-grid .pricing-current {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: #e8f6ff;
+  color: #035c96;
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: .08em;
+}
+.admin-pricing-grid .pricing-featured .pricing-current {
+  position: absolute;
+  top: 94px;
+  right: 17px;
+  z-index: 2;
+}
+.admin-pricing-grid .pricing-card h2 {
+  margin: 20px 0 10px;
+  color: #132b4c;
+  font: 800 42px Manrope, sans-serif;
+  letter-spacing: -1.5px;
+}
+.admin-pricing-grid .pricing-card h2 small {
+  color: #8291a5;
+  font: 600 12px "DM Sans", sans-serif;
+  letter-spacing: 0;
+}
+.admin-pricing-grid .pricing-card > p {
+  min-height: 42px;
+  color: #73839a;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.admin-pricing-grid .pricing-fit {
+  margin-top: 4px;
+  padding: 12px 13px;
+  border: 1px solid #edf2f9;
+  border-radius: 9px;
+  background: #f3f7fd;
+  color: #385675;
+  font-size: 11px;
+  font-weight: 650;
+}
+.admin-pricing-grid .pricing-card ul {
+  display: grid;
+  flex: 1;
+  gap: 15px;
+  margin: 23px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-pricing-grid .pricing-card li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #425875;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.admin-pricing-grid .pricing-card li svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  color: #08a477;
+}
+@media (max-width: 960px) and (min-width: 761px) {
+  .admin-pricing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .admin-pricing-grid .pricing-card:nth-child(3) {
+    grid-column: 1 / -1;
+    width: min(100%, 520px);
+    justify-self: center;
+  }
+  .admin-pricing-grid .pricing-card,
+  .admin-pricing-grid .pricing-featured {
+    min-height: 0;
+    transform: none;
+    padding: 24px 20px;
+  }
+}
+@media (max-width: 760px) {
+  .admin-pricing-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .admin-pricing-grid .pricing-card,
+  .admin-pricing-grid .pricing-card:not(.pricing-featured),
+  .admin-pricing-grid .pricing-featured {
+    min-height: 0;
+    transform: none;
+    padding: 23px 20px 20px;
+  }
+  .admin-pricing-grid .pricing-tag {
+    top: 58px;
+    right: 16px;
+  }
+  .admin-pricing-grid .pricing-featured .pricing-current {
+    top: 87px;
+    right: 16px;
+  }
+  .admin-pricing-grid .pricing-card h2 {
+    font-size: 36px;
+  }
+  .admin-pricing-grid .pricing-card > p {
+    min-height: 0;
+  }
+  .admin-pricing-grid .pricing-card ul {
+    gap: 11px;
+    margin: 18px 0 0;
+  }
+}
