@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CreditCard, LockKeyhole, LogOut, Settings, Sparkles, UserRound } from "lucide-react";
 import { cleanexifSupabase } from "./planAccess";
 type UserShape = { id: string; email?: string; user_metadata?: Record<string, unknown> };
@@ -16,6 +16,7 @@ const initials = (name: string, email: string) => {
 export function AccountMenu({ email }: { email: string | null }) {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<UserShape | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!cleanexifSupabase) return;
     cleanexifSupabase.auth.getUser().then(({ data }) => setUser(data.user as UserShape | null));
@@ -23,19 +24,30 @@ export function AccountMenu({ email }: { email: string | null }) {
     return () => subscription.unsubscribe();
   }, []);
   useEffect(() => {
-    const close = (event: MouseEvent) => {
-      if (!(event.target as HTMLElement).closest(".account-menu-wrap")) setOpen(false);
+    const close = (event: PointerEvent) => {
+      const target = event.target;
+      if (target instanceof Element && !target.closest(".account-menu-wrap")) setOpen(false);
     };
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, []);
   const name = String(user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? "");
   const avatar = avatarOf(user);
   return <div className="account-menu-wrap">
-    <button className="account-avatar-trigger" type="button" aria-label="Open account menu" aria-expanded={open} onClick={() => setOpen(v => !v)}>
+    <button ref={triggerRef} className="account-avatar-trigger" type="button" aria-label={open ? "Close account menu" : "Open account menu"} aria-haspopup="true" aria-controls="cleanexif-account-popover" aria-expanded={open} onClick={() => setOpen(v => !v)}>
       {avatar ? <img src={avatar} alt="" /> : <span>{email ? initials(name, email) : <UserRound size={19}/>}</span>}
     </button>
-    {open && <div className="account-popover">
+    {open && <div id="cleanexif-account-popover" className="account-popover">
       {email ? <>
         <div className="account-popover-user"><b>{name || "CleanExif member"}</b><span>{email}</span></div>
         <a href="/account"><UserRound size={17}/> Profile</a>

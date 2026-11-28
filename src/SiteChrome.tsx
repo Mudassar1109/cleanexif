@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { ArrowRight, Menu, X } from "lucide-react";
 import { cleanexifSupabase } from "./planAccess";
 const AccountMenu = lazy(() => import("./AccountMenu").then(module => ({ default: module.AccountMenu })));
@@ -6,7 +6,22 @@ const AccountMenu = lazy(() => import("./AccountMenu").then(module => ({ default
 export function SiteHeader(){
  const [open,setOpen]=useState(false);
  const [email,setEmail]=useState<string|null>(null);
+ const navRef=useRef<HTMLElement|null>(null);
+ const toggleRef=useRef<HTMLButtonElement|null>(null);
  useEffect(()=>{if(!cleanexifSupabase)return;cleanexifSupabase.auth.getSession().then(({data})=>setEmail(data.session?.user.email??null));const {data:{subscription}}=cleanexifSupabase.auth.onAuthStateChange((_event,session)=>setEmail(session?.user.email??null));return()=>subscription.unsubscribe();},[]);
+ useEffect(()=>{
+  if(!open)return;
+  const onPointerDown=(event:PointerEvent)=>{
+   const target=event.target;
+   if(target instanceof Node&&!navRef.current?.contains(target)&&!toggleRef.current?.contains(target))setOpen(false);
+  };
+  const onKeyDown=(event:KeyboardEvent)=>{
+   if(event.key==="Escape"){setOpen(false);toggleRef.current?.focus();}
+  };
+  document.addEventListener("pointerdown",onPointerDown);
+  document.addEventListener("keydown",onKeyDown);
+  return()=>{document.removeEventListener("pointerdown",onPointerDown);document.removeEventListener("keydown",onKeyDown);};
+ },[open]);
  const links=[
   {label:"Cleaner",href:"/#tool"},
   {label:"Watermark",href:"/watermark"},
@@ -20,8 +35,8 @@ export function SiteHeader(){
  ];
  return <header className="site-header ce-site-header"><div className="container nav-inner ce-nav-inner">
   <a className="brand" href="/" aria-label="CleanExif home"><img className="brand-logo-image" src="/cleanexif-logo-v2.svg" alt="CleanExif"/></a>
-  <button className="ce-mobile-toggle" type="button" aria-label={open?"Close navigation":"Open navigation"} aria-expanded={open} onClick={()=>setOpen(v=>!v)}>{open?<X size={21}/>:<Menu size={21}/>}</button>
-  <nav className={"ce-nav-links"+(open?" ce-nav-open":"")} aria-label="Main navigation">
+  <button ref={toggleRef} className="ce-mobile-toggle" type="button" aria-label={open?"Close navigation":"Open navigation"} aria-controls="cleanexif-main-navigation" aria-expanded={open} onClick={()=>setOpen(v=>!v)}>{open?<X size={21}/>:<Menu size={21}/>}</button>
+  <nav ref={navRef} id="cleanexif-main-navigation" className={"ce-nav-links"+(open?" ce-nav-open":"")} aria-label="Main navigation">
    {links.map(link=><a key={link.href+link.label} href={link.href} onClick={()=>setOpen(false)}>{link.label}</a>)}
    <a className="button button-primary ce-nav-cta" href="/#tool" onClick={()=>setOpen(false)}>Start cleaning <ArrowRight size={15}/></a>
    <Suspense fallback={<span className="ce-account-placeholder"/>}><AccountMenu email={email}/></Suspense>
