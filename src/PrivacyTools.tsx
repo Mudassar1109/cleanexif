@@ -10,6 +10,56 @@ import { SiteHeader, SiteFooter } from "./SiteChrome";
 
 type ToolMode = "gps" | "scanner" | "editor";
 type Meta = Record<string, unknown>;
+type ToolSeo={
+ title:string;
+ description:string;
+ intro:string;
+ steps:[string,string,string];
+ benefits:string[];
+ limits:string[];
+ faqs:{q:string;a:string}[];
+};
+const TOOL_SEO:Record<ToolMode,ToolSeo>={
+ gps:{
+  title:"Remove GPS Location Metadata from Photos | CleanExif",
+  description:"Inspect GPS coordinates in JPEG, PNG and WebP images, then create a separate re-encoded copy without common embedded metadata in your browser.",
+  intro:"Photos can contain location coordinates that are not visible in the picture itself. CleanExif reads the location fields it can recognize, then creates a separate browser-side image copy so you can review it before sharing.",
+  steps:["Select a JPEG, PNG or WebP image and inspect readable location fields.","Choose Remove GPS / metadata & export to re-encode the image locally.","Review the verification message and download the separate copy."],
+  benefits:["Shows readable GPS latitude, longitude, altitude and reference fields when present.","Keeps the original file unchanged and creates a separate download.","Re-reads the exported image to check for common metadata fields."],
+  limits:["Re-encoding can change image compression and may remove other metadata, not only GPS.","A parser re-check is not a forensic guarantee; verify sensitive files independently.","Supported inputs are JPEG, PNG and WebP, subject to your plan's file-size limit."],
+  faqs:[
+   {q:"Does the GPS remover change my original photo?",a:"No. It creates a new re-encoded copy for download and leaves the selected original file unchanged in your browser."},
+   {q:"Can it remove location data from PNG and WebP files?",a:"It re-encodes supported JPEG, PNG and WebP images. The new file is checked for common readable metadata, but this is not a forensic certification."},
+   {q:"Will removing GPS reduce image quality?",a:"The tool re-encodes image pixels. JPEG output can be recompressed, so compare the downloaded copy before using it where image fidelity matters."}
+  ]
+ },
+ scanner:{
+  title:"Scan Photo Metadata and Privacy Details | CleanExif",
+  description:"Scan readable image metadata for GPS location, camera, author and capture-time details. Export a TXT, CSV or JSON privacy report in your browser.",
+  intro:"Image metadata can reveal more than the visible photo. The CleanExif scanner reads common EXIF, GPS, IPTC and XMP fields supported by its metadata parser and organizes privacy-relevant results for review.",
+  steps:["Choose a JPEG, PNG or WebP image to inspect its readable metadata.","Review location and other privacy-sensitive fields in the findings list.","Export a TXT, CSV or JSON report for your own review."],
+  benefits:["Separates GPS/location fields from other metadata that may identify a device or creator.","Shows readable field counts and individual values where available.","Exports a structured report without modifying the selected image."],
+  limits:["The scanner is read-only; it does not remove or edit any metadata.","Some image formats and applications store data in structures that parsers may not expose.","No finding does not prove that a file contains no hidden or recoverable information."],
+  faqs:[
+   {q:"Does scanning upload my photo?",a:"The scanner reads the selected image in your browser. It does not send the image to CleanExif for server-side processing."},
+   {q:"What information can the scanner find?",a:"It can report common readable GPS, camera, device, author, copyright, software and capture-time fields supported by the parser."},
+   {q:"Can the scanner prove a photo is safe to share?",a:"No. It reports metadata the parser can read, not every possible hidden data structure. Treat it as a practical privacy check rather than a forensic guarantee."}
+  ]
+ },
+ editor:{
+  title:"Edit JPEG EXIF Metadata Online | CleanExif",
+  description:"Edit common JPEG EXIF fields including description, author, copyright, camera make and model, software and capture time. Export a separate edited JPEG.",
+  intro:"The EXIF editor lets you update common metadata fields embedded in a JPEG file. Review the fields first, make the changes you need, and export a separate copy without overwriting the original.",
+  steps:["Choose a JPEG image and inspect its current metadata.","Edit description, author, copyright, camera and date fields; optionally remove GPS tags.","Save the edited JPEG and review the metadata re-read before downloading."],
+  benefits:["Edits common ImageDescription, Artist, Copyright, Make, Model, Software and date fields.","Can optionally clear GPS tags during export.","Keeps the original JPEG unchanged and re-reads the edited output."],
+  limits:["This editor currently supports JPEG files only; PNG and WebP are not editable here.","Only the listed/common fields are exposed; proprietary MakerNotes and other specialized tags may remain.","Date values must use YYYY:MM:DD HH:MM:SS. Verify the exported file in another metadata viewer for critical workflows."],
+  faqs:[
+   {q:"Which fields can I edit?",a:"The editor exposes description, artist/author, copyright, camera make, camera model, software, DateTime and DateTimeOriginal, with optional GPS clearing."},
+   {q:"Can I edit PNG or WebP metadata?",a:"Not with this editor at present. The EXIF editor accepts JPEG files; use the scanner to inspect supported JPEG, PNG and WebP files."},
+   {q:"Does saving overwrite my original image?",a:"No. CleanExif creates a separate edited JPEG download. Your original selected file remains unchanged."}
+  ]
+ }
+};
 const ACCEPTED = new Set(["image/jpeg", "image/png", "image/webp"]);
 const bytes = (n:number) => n < 1048576 ? (n/1024).toFixed(0)+" KB" : (n/1048576).toFixed(2)+" MB";
 const mimeFor = (file:File) => {
@@ -89,6 +139,44 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
 
  const previewUrl=useMemo(()=>file?URL.createObjectURL(file):"",[file]);
  const outputUrl=useMemo(()=>output?URL.createObjectURL(output):"",[output]);
+ useEffect(()=>{
+  const seo=TOOL_SEO[mode];
+  document.title=seo.title;
+  const setMeta=(selector:string,attribute:string,value:string)=>{
+   let node=document.head.querySelector(selector) as HTMLMetaElement|null;
+   if(!node){node=document.createElement("meta");const match=selector.match(/\\[(name|property)="([^"]+)"\\]/);if(match)node.setAttribute(match[1],match[2]);document.head.appendChild(node);}
+   node.setAttribute(attribute,value);
+  };
+  setMeta('meta[name="description"]',"content",seo.description);
+  setMeta('meta[name="robots"]',"content","index,follow,max-image-preview:large");
+  setMeta('meta[property="og:type"]',"content","website");
+  setMeta('meta[property="og:title"]',"content",seo.title);
+  setMeta('meta[property="og:description"]',"content",seo.description);
+  setMeta('meta[property="og:url"]',"content",window.location.origin+window.location.pathname);
+  setMeta('meta[name="twitter:card"]',"content","summary_large_image");
+  setMeta('meta[name="twitter:title"]',"content",seo.title);
+  setMeta('meta[name="twitter:description"]',"content",seo.description);
+  let canonical=document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement|null;
+  if(!canonical){canonical=document.createElement("link");canonical.rel="canonical";document.head.appendChild(canonical);}
+  canonical.href=window.location.origin+window.location.pathname;
+  let schema=document.getElementById("cleanexif-tool-jsonld");
+  if(!schema){schema=document.createElement("script");schema.id="cleanexif-tool-jsonld";schema.setAttribute("type","application/ld+json");document.head.appendChild(schema);}
+  schema.textContent=JSON.stringify({
+   "@context":"https://schema.org",
+   "@type":"SoftwareApplication",
+   name:modeInfo[mode].title,
+   applicationCategory:"UtilitiesApplication",
+   operatingSystem:"Web",
+   description:seo.description,
+   url:window.location.origin+window.location.pathname,
+   author:{"@type":"Organization",name:"CleanExif",url:window.location.origin},
+   isAccessibleForFree:true
+  });
+  return()=>{
+   const currentCanonical=document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement|null;
+   if(currentCanonical)currentCanonical.href=window.location.origin+"/";
+  };
+ },[mode]);
  useEffect(()=>()=>{if(previewUrl)URL.revokeObjectURL(previewUrl);},[previewUrl]);
  useEffect(()=>()=>{if(outputUrl)URL.revokeObjectURL(outputUrl);},[outputUrl]);
 
@@ -120,9 +208,9 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
    setModel(String(data.Model??""));
    setSoftware(String(data.Software??""));
    setMessage(Object.keys(data).length?"Inspection complete. Review the findings below.":"No readable metadata fields were found. This does not guarantee the file contains no hidden data.","success");
-  }catch{
-   setMeta({});
-   setMessage("The image was selected, but its metadata could not be read. You can still create a re-encoded copy with the GPS remover.","error");
+  }catch(error){
+   setMeta(null);
+   setMessage(error instanceof Error?error.message:"The image's metadata could not be read. Please try another supported image.","error");
   }finally{setBusy(false);}
  };
  const pick=async(next:File)=>{
@@ -321,6 +409,17 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
     {file&&<div className="privacy-tool-bottom-actions"><button className="button button-outline" type="button" onClick={clearFile} disabled={busy}><RotateCcw size={15}/> Start over</button><button className="button button-outline" type="button" onClick={()=>void inspect(file)} disabled={busy}><ScanSearch size={15}/> Re-scan image</button></div>}
    </section>
    <section className="privacy-tool-disclaimer"><ShieldCheck size={18}/><p>Processing runs in your browser. The scanner reports metadata readable by the parser; the GPS remover re-encodes pixels and may remove other metadata too. The EXIF editor supports common JPEG fields only. Always independently verify files intended for sensitive use.</p></section>
+   <section className="privacy-tool-seo">
+    <span className="eyebrow">CLEANEXIF TOOL GUIDE</span>
+    <h2>{modeInfo[mode].title}: what it does and how to use it</h2>
+    <p className="privacy-tool-seo-intro">{TOOL_SEO[mode].intro}</p>
+    <div className="privacy-tool-seo-grid">
+     <article><h3>How to use this tool</h3><ol>{TOOL_SEO[mode].steps.map((step,index)=><li key={step}><b>{String(index+1).padStart(2,"0")}</b><span>{step}</span></li>)}</ol></article>
+     <article><h3>What to expect</h3><ul>{TOOL_SEO[mode].benefits.map(item=><li key={item}>{item}</li>)}</ul></article>
+    </div>
+    <div className="privacy-tool-seo-limits"><h3>Important limitations</h3><ul>{TOOL_SEO[mode].limits.map(item=><li key={item}>{item}</li>)}</ul></div>
+    <div className="privacy-tool-seo-faq"><h3>Frequently asked questions</h3>{TOOL_SEO[mode].faqs.map(item=><details key={item.q}><summary>{item.q}</summary><p>{item.a}</p></details>)}</div>
+   </section>
    <section className="privacy-tool-switch"><h2>More CleanExif tools</h2><div>
     <a href="/#tool"><FileImage/> Image Metadata Cleaner</a><a href="/watermark"><ImageIcon/> Watermark Maker</a><a href="/gps-remover"><MapPin/> GPS Location Remover</a><a href="/privacy-scanner"><ScanSearch/> Image Privacy Scanner</a><a href="/metadata-editor"><Fingerprint/> EXIF Metadata Editor</a>
    </div></section>
