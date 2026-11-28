@@ -48,7 +48,6 @@ export function renderRouteHtml(template, route, siteUrl = SITE_URL) {
   } else {
     html = html.replace("</head>", "  " + titleTag + "\n</head>");
   }
-  else html = html.replace("</head>", "  " + titleTag + "\n</head>");
   html = upsertMeta(html, "name", "description", route.description);
   html = upsertMeta(html, "name", "robots", robots);
   html = upsertMeta(html, "property", "og:type", route.path.startsWith("blog/") ? "article" : "website");
@@ -66,7 +65,6 @@ export function renderRouteHtml(template, route, siteUrl = SITE_URL) {
   } else {
     html = html.replace("</head>", "  " + canonicalTag + "\n</head>");
   }
-  else html = html.replace("</head>", "  " + canonicalTag + "\n</head>");
   return html;
 }
 export async function prerenderRoutes(outDir = path.resolve("dist")) {
