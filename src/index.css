@@ -548,7 +548,7 @@
 .admin-toolbar{display:flex;justify-content:flex-end;align-items:center;gap:14px;max-width:1200px;margin:12px auto 0;padding:0 24px}.admin-toolbar .admin-secure{display:inline-flex;align-items:center;gap:6px;color:#58708f;font-size:11px;font-weight:700}.admin-toolbar .admin-logout{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border:1px solid #dfe8f4;border-radius:9px;background:#fff;color:#415774;font-size:11px;font-weight:750;cursor:pointer}
 
 
-/* Homepage hero refresh — Space Grotesk typography and sharper privacy messaging. */
+/* Homepage hero refresh: Syne typography and sharper privacy messaging. */
 .hero-section {
   background:
     radial-gradient(ellipse at 76% 15%, rgba(192,233,255,.48) 0%, transparent 34%),
@@ -601,11 +601,11 @@
   max-width: 590px;
   margin: 25px 0 20px;
   color: #102a46;
-  font-family: "Space Grotesk", "DM Sans", sans-serif;
+  font-family: "Syne", "DM Sans", sans-serif;
   font-size: clamp(52px, 5.35vw, 74px);
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1.025;
-  letter-spacing: -.068em;
+  letter-spacing: -.065em;
   text-wrap: balance;
 }
 .hero-copy h1 span {
