@@ -79,7 +79,8 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
  const [dateTime,setDateTime]=useState("");
  const [removeGps,setRemoveGps]=useState(true);
  const [showAllMetadata,setShowAllMetadata]=useState(false);
- const [inputKey,setInputKey]=useState(0);\n const fileInputRef=useRef<HTMLInputElement>(null);
+ const [inputKey,setInputKey]=useState(0);
+ const fileInputRef=useRef<HTMLInputElement>(null);
 
  const previewUrl=useMemo(()=>file?URL.createObjectURL(file):"",[file]);
  const outputUrl=useMemo(()=>output?URL.createObjectURL(output):"",[output]);
@@ -208,15 +209,20 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
     <small>{modeInfo[mode].helper}</small>
    </div>
    <section className="privacy-tool-card">
-    <label className={"privacy-tool-upload"+(dragging?" is-dragging":"")+(busy?" is-disabled":"")}
+    <label className={"privacy-tool-upload"+(dragging?" is-dragging":"")+(busy?" is-disabled":"")} htmlFor="privacy-tool-file-input"
       onDragOver={event=>{event.preventDefault();if(!busy)setDragging(true);}}
       onDragLeave={event=>{if(!event.currentTarget.contains(event.relatedTarget as Node|null))setDragging(false);}}
       onDrop={onDrop}>
       <UploadCloud size={30}/>
       <b>{file?file.name:"Drop your image here or choose a file"}</b>
-      <span>{file?bytes(file.size)+" · "+(mimeFor(file)||"Unknown image type"):"Select a JPEG, PNG or WebP image · Up to 50 MB"}</span>
-      <input key={inputKey} type="file" accept={mode==="editor"?"image/jpeg,.jpg,.jpeg":"image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"} onChange={onFileChange} disabled={busy}/>
+      <span>{file?bytes(file.size)+" · "+(mimeFor(file)||"Unknown image type"):(mode==="editor"?"JPEG files only · Up to 50 MB":"Select a JPEG, PNG or WebP image · Up to 50 MB")}</span>
     </label>
+    <input ref={fileInputRef} key={inputKey} id="privacy-tool-file-input" className="privacy-tool-file-input" type="file" accept={mode==="editor"?"image/jpeg,.jpg,.jpeg":"image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"} onChange={onFileChange} disabled={busy}/>
+    {!file&&<div className="privacy-tool-start-card">
+      <div className="privacy-tool-start-copy"><b>{mode==="gps"?"Remove location before you share":mode==="scanner"?"See what your image reveals":"Edit the details stored in your JPEG"}</b><p>{mode==="gps"?"CleanExif re-encodes the image and creates a separate copy without common embedded metadata.":mode==="scanner"?"Review readable GPS, camera, author and date fields. The scan does not change your original image.":"Update common description, author, copyright and date fields, then export a separate JPEG."}</p></div>
+      <button className="button button-primary privacy-tool-start-button" type="button" onClick={()=>fileInputRef.current?.click()} disabled={busy}><UploadCloud size={16}/>{modeInfo[mode].action}</button>
+      <div className="privacy-tool-steps">{modeInfo[mode].steps.map((step,index)=><span key={step}><i>{String(index+1).padStart(2,"0")}</i>{step}</span>)}</div>
+    </div>}
     {hasResult&&file&&<div className="privacy-tool-workflow">
       <aside className="privacy-tool-preview-card">
        <div className="privacy-tool-preview-head"><span><FileImage size={16}/> {output?"Export preview":"Selected image"}</span><button type="button" onClick={clearFile} disabled={busy} aria-label="Remove selected image"><X size={16}/></button></div>
@@ -265,7 +271,7 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
        </div>}
       </div>
     </div>}
-    {!file&&<div className="privacy-tool-first-use"><span><ShieldCheck size={18}/> Private by design</span><span><ScanSearch size={18}/> Inspect before acting</span><span><Download size={18}/> Download a separate copy</span></div>}
+
     {busy&&<p className="privacy-tool-busy" role="status"><span className="privacy-tool-spinner"/> Working locally in your browser…</p>}
     {file&&<div className="privacy-tool-bottom-actions"><button className="button button-outline" type="button" onClick={clearFile} disabled={busy}><RotateCcw size={15}/> Start over</button><button className="button button-outline" type="button" onClick={()=>void inspect(file)} disabled={busy}><ScanSearch size={15}/> Re-scan image</button></div>}
    </section>
