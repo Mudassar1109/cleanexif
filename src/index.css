@@ -548,7 +548,7 @@
 .admin-toolbar{display:flex;justify-content:flex-end;align-items:center;gap:14px;max-width:1200px;margin:12px auto 0;padding:0 24px}.admin-toolbar .admin-secure{display:inline-flex;align-items:center;gap:6px;color:#58708f;font-size:11px;font-weight:700}.admin-toolbar .admin-logout{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border:1px solid #dfe8f4;border-radius:9px;background:#fff;color:#415774;font-size:11px;font-weight:750;cursor:pointer}
 
 
-/* Homepage hero refresh: Syne typography and sharper privacy messaging. */
+/* Homepage hero refresh: refined display typography and privacy messaging. */
 .hero-section {
   background:
     radial-gradient(ellipse at 76% 15%, rgba(192,233,255,.48) 0%, transparent 34%),
@@ -728,7 +728,7 @@
 /* CleanExif global typography system: Poppins for UI and headings, Merriweather for editorial reading. */
 :root {
   --ce-font-ui: "Poppins", sans-serif;
-  --ce-font-display: "Poppins", sans-serif;
+  --ce-font-display: "Lilita One", sans-serif;
   --ce-font-reading: "Merriweather", Georgia, serif;
   font-family: var(--ce-font-ui);
 }
@@ -742,8 +742,10 @@ textarea {
 h1, h2, h3, h4, h5, h6,
 strong, b,
 [class*="font-bold"],
-[class*="font-extrabold"] {
-  font-family: var(--ce-font-display);
+[class*="font-extrabold"],
+[class*="font-semibold"] {
+  font-family: var(--ce-font-display) !important;
+  font-weight: 400 !important;
 }
 .legal-content > p,
 .blog-article .blog-lead,
