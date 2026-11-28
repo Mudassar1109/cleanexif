@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import {
   ArrowLeft, Camera, ChevronRight, CreditCard, HelpCircle, Image,
   LockKeyhole, LogOut, Mail, Menu, Settings, ShieldCheck, UserRound, X,
-  Eye, EyeOff, Gauge
+  Eye, EyeOff, Gauge, MapPin, ScanEye, FileText
 } from "lucide-react";
 import { cleanexifSupabase, usePlanAccess } from "./planAccess";
 import { SiteHeader } from "./SiteChrome";
@@ -42,6 +42,9 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
   const [openHelp, setOpenHelp] = useState<number | null>(0);
   const metadata = usePlanAccess("metadata");
   const watermark = usePlanAccess("watermark");
+  const gps = usePlanAccess("gps");
+  const scanner = usePlanAccess("scanner");
+  const editor = usePlanAccess("editor");
 
   useEffect(() => {
     if (!cleanexifSupabase) { setAuthLoading(false); return; }
@@ -163,8 +166,11 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
   </div>;
 
   const usage = [
-    { label: "Metadata Inspector", value: metadata.dailyUsage, icon: <Image size={18}/> },
-    { label: "Watermark Maker", value: watermark.dailyUsage, icon: <Camera size={18}/> }
+    { label: "Metadata Inspector", value: metadata.dailyUsage, icon: <Image size={18}/>, loading: metadata.loading, email: metadata.email },
+    { label: "Watermark Maker", value: watermark.dailyUsage, icon: <Camera size={18}/>, loading: watermark.loading, email: watermark.email },
+    { label: "GPS Location Remover", value: gps.dailyUsage, icon: <MapPin size={18}/>, loading: gps.loading, email: gps.email },
+    { label: "Privacy Scanner", value: scanner.dailyUsage, icon: <ScanEye size={18}/>, loading: scanner.loading, email: scanner.email },
+    { label: "EXIF Metadata Editor", value: editor.dailyUsage, icon: <FileText size={18}/>, loading: editor.loading, email: editor.email }
   ];
   const menuItems: { id: View; label: string; icon: JSX.Element }[] = [
     { id: "profile", label: "Profile", icon: <UserRound size={19}/> },
@@ -195,7 +201,7 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
         {view==="subscription"&&<div className="account-subscription-stack">
           <div className="account-plan-summary"><div><span className="account-kicker">CURRENT PLAN</span><h2>{metadata.limits.name}</h2><p>{metadata.limits.code==="free"?"You are currently using the free CleanExif plan.":"Your paid access is managed by CleanExif support."}</p></div><span className={"account-plan-badge "+(metadata.limits.code==="free"?"free":"paid")}>{metadata.limits.code.toUpperCase()}</span></div>
           {metadata.limits.expiresAt&&<div className="account-expiry"><CreditCard size={18}/><span><b>Plan expiry</b><small>{new Date(metadata.limits.expiresAt).toLocaleString(undefined,{dateStyle:"medium",timeStyle:"short"})}</small></span></div>}
-          <div className="account-usage-grid">{usage.map(item=><article key={item.label}><div>{item.icon}<span>{item.label}</span></div><strong>{item.value?item.value.remaining+" / "+item.value.limit:"—"}</strong><small>Images remaining today</small><div className="account-usage-track"><span style={{width:item.value?Math.max(0,Math.min(100,(item.value.remaining/item.value.limit)*100))+"%":"0%"}}/></div></article>)}</div>
+          <div className="account-usage-grid">{usage.map(item=><article key={item.label}><div>{item.icon}<span>{item.label}</span></div><strong>{item.loading?"Checking credits…":!item.email?"Sign in required":item.value?item.value.remaining+" / "+item.value.limit:"Allowance unavailable"}</strong><small>{item.value?"Images remaining today":"Independent daily credits · No rollover"}</small><div className="account-usage-track"><span style={{width:item.value&&item.value.limit>0?Math.max(0,Math.min(100,(item.value.remaining/item.value.limit)*100))+"%":"0%"}}/></div></article>)}</div>
           <div className="account-subscription-foot"><p>Need a higher daily allowance? Compare the available plans or contact us for activation.</p><a href="/plans">View plans <ChevronRight size={16}/></a></div>
         </div>}
         {view==="help"&&<div className="account-help-layout">
@@ -207,7 +213,7 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
               ["Can I remove GPS location from an image?","Re-encoding a supported image removes embedded metadata commonly used for GPS and camera details. Always inspect the exported file if location privacy is critical."],
               ["Which image formats are supported?","CleanExif supports JPEG, PNG and WebP. HEIC, animated GIF and SVG are not supported."],
               ["Does removing EXIF data affect image quality?","PNG is re-encoded losslessly. JPEG and WebP are exported at a high quality setting, but re-encoding can cause a small quality or file-size difference."],
-              ["How do daily image limits work?","Your plan has separate daily allowances for Metadata Inspector and Watermark Maker. Usage is counted when you process images and resets daily."],
+              ["How do daily image limits work?","Your plan has independent daily credits for Metadata Inspector, Watermark Maker, GPS Location Remover, Privacy Scanner and EXIF Metadata Editor. Usage is counted when a tool completes a successful operation and resets daily at midnight Pakistan time."],
               ["How can I change my subscription?","Open the Subscription tab to review your current plan and daily usage. Paid plan activation and changes are managed by CleanExif support."],
               ["I need more help. What should I do?","Use the WhatsApp support button on CleanExif to contact the team. Include the email address associated with your account and a short description of the issue."]
             ].map(([question,answer],index)=><section className={"account-help-item"+(openHelp===index?" open":"")} key={question}><button type="button" onClick={()=>setOpenHelp(openHelp===index?null:index)} aria-expanded={openHelp===index}><span>{question}</span><ChevronRight size={17}/></button>{openHelp===index&&<p>{answer}</p>}</section>)}</div>
