@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type DragEvent, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type DragEvent, type ChangeEvent } from "react";
 import {
   CheckCircle2, Download, FileImage, Fingerprint, MapPin, Image as ImageIcon,
   RotateCcw, ScanSearch, ShieldCheck, UploadCloud, X
@@ -31,10 +31,10 @@ const read = async (file:File):Promise<Meta> => {
 const gpsKeys = /^(GPS|latitude|longitude|altitude|position)/i;
 const sensitiveKeys = /gps|latitude|longitude|altitude|serial|owner|artist|author|creator|copyright|date|time|software|comment|description|usercomment/i;
 const hiddenKeys = /^(Thumbnail|MakerNote|ImageData|StripOffsets|StripByteCounts|UserCommentEncoding)/i;
-const modeInfo:Record<ToolMode,{title:string;description:string;icon:LucideIcon;helper:string}> = {
- gps:{title:"GPS Location Remover",description:"Find location tags and export a clean image copy without embedded metadata.",icon:MapPin,helper:"JPEG, PNG and WebP · Up to 50 MB · Original file remains unchanged"},
- scanner:{title:"Image Privacy Scanner",description:"Inspect readable metadata and identify location, device, identity and capture details.",icon:ScanSearch,helper:"Read-only scan · JPEG, PNG and WebP · Up to 50 MB"},
- editor:{title:"EXIF Metadata Editor",description:"Edit common description, author, copyright and capture-time fields in JPEG images.",icon:Fingerprint,helper:"JPEG only · Up to 50 MB · Export a separate edited copy"}
+const modeInfo:Record<ToolMode,{title:string;description:string;icon:LucideIcon;helper:string;action:string;steps:[string,string,string]}> = {
+ gps:{title:"GPS Location Remover",description:"Find location tags and export a clean image copy without embedded metadata.",icon:MapPin,helper:"JPEG, PNG and WebP · Up to 50 MB · Original file remains unchanged",action:"Choose an image to remove GPS",steps:["Inspect location tags","Create a clean image copy","Download the new file"]},
+ scanner:{title:"Image Privacy Scanner",description:"Inspect readable metadata and identify location, device, identity and capture details.",icon:ScanSearch,helper:"Read-only scan · JPEG, PNG and WebP · Up to 50 MB",action:"Choose an image to scan",steps:["Read available metadata","Review privacy findings","Export a scan report"]},
+ editor:{title:"EXIF Metadata Editor",description:"Edit common description, author, copyright and capture-time fields in JPEG images.",icon:Fingerprint,helper:"JPEG only · Up to 50 MB · Export a separate edited copy",action:"Choose a JPEG to edit",steps:["Choose a JPEG image","Edit supported EXIF fields","Save a separate edited copy"]}
 };
 const valueText = (value:unknown):string => {
   if(value instanceof Date)return value.toLocaleString();
@@ -79,7 +79,7 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
  const [dateTime,setDateTime]=useState("");
  const [removeGps,setRemoveGps]=useState(true);
  const [showAllMetadata,setShowAllMetadata]=useState(false);
- const [inputKey,setInputKey]=useState(0);
+ const [inputKey,setInputKey]=useState(0);\n const fileInputRef=useRef<HTMLInputElement>(null);
 
  const previewUrl=useMemo(()=>file?URL.createObjectURL(file):"",[file]);
  const outputUrl=useMemo(()=>output?URL.createObjectURL(output):"",[output]);
