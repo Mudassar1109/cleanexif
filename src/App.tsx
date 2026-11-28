@@ -1,5 +1,4 @@
 import { lazy, Suspense, useCallback, useMemo, useRef, useState, useEffect, type ChangeEvent } from "react";
-import SponsorAd from "./SponsorAd";
 import { SiteHeader, SiteFooter } from "./SiteChrome";
 import { usePlanAccess } from "./planAccess";
 const PrivacyTools = lazy(() => import("./PrivacyTools"));
@@ -135,7 +134,7 @@ function LegalPage({ type }: { type: string }) {
     "privacy-policy": "Read how CleanExif handles image files, browser processing, website requests and privacy-related information.",
     terms: "Review the terms for using CleanExif, including supported image processing, user responsibilities and service limitations.",
     disclaimer: "Understand CleanExif's image metadata removal limitations and important information before relying on cleaned files.",
-    "cookie-policy": "Learn how CleanExif uses essential browser functionality and handles cookies, analytics and third-party resources."
+    "cookie-policy": "Learn about browser storage and third-party font delivery used by CleanExif."
   };
   useEffect(() => {
     const description = descriptions[type] ?? "CleanExif website policies and information.";
@@ -168,9 +167,9 @@ function LegalPage({ type }: { type: string }) {
   const content: Record<string, string[]> = {
     "privacy-policy": [
       "CleanExif is designed to process image files locally in your web browser. The image-processing feature does not upload your selected photos to CleanExif application servers.",
-      "When you visit this website, your hosting provider or network infrastructure may process standard connection information such as IP address, request time and browser details in routine server logs. Google AdSense may load on the homepage and blog pages to display advertising. Google and its advertising partners may process IP addresses, cookies, web beacons, browser or device identifiers and ad interactions for ad delivery, measurement and personalization.",
+      "When you visit this website, your hosting provider or network infrastructure may process standard connection information such as IP address, request time and browser details in routine server logs.",
       "Selected image files and generated clean copies remain in your browser session. They are not saved to a CleanExif account or database. Clearing the page or closing the tab may remove access to temporary results.",
-      "This website uses essential browser functionality only. Third-party font delivery may make a request to Google Fonts; you can replace hosted fonts with local font files if you prefer to avoid that request.",
+      "CleanExif does not currently display advertisements or use analytics trackers. The website requests the Inter typeface from Google Fonts, which may receive standard connection data needed to return the font files.",
       "The tool is provided as-is. Metadata formats vary, so users should verify cleaned files before sharing sensitive images."
     ],
     terms: [
@@ -185,11 +184,9 @@ function LegalPage({ type }: { type: string }) {
       "Always inspect the resulting file and use appropriate specialist tools when handling highly sensitive, regulated or evidentiary material."
     ],
     "cookie-policy": [
-      "CleanExif loads Google AdSense on the homepage and blog pages only. Google and other advertising partners may place or read cookies, web beacons, IP addresses and other identifiers to deliver, measure and personalize advertisements. These technologies may use information about visits to this website or other websites.",
-      "You can manage Google's personalized advertising settings at adssettings.google.com and review additional industry opt-out information at aboutads.info/choices. Browser settings can also be used to restrict or clear cookies, although some website features may not work as expected.",
-      "For visitors in the European Economic Area, the United Kingdom and Switzerland, check Google's current publisher consent requirements and configure an appropriate certified consent management platform before personalized advertising is served in those regions.",
+      "CleanExif does not currently display advertisements or use analytics trackers or advertising cookies.",
       "The application uses browser memory and temporary object URLs to preview and process images. These are not cookies and are not sent as image uploads to CleanExif.",
-      "Third-party font resources may be requested from Google Fonts. Browser or hosting infrastructure may also use technically necessary mechanisms to deliver the website."
+      "The website requests the Inter typeface from Google Fonts. Browser or hosting infrastructure may also use technically necessary mechanisms to deliver the website."
     ]
   };
   return <div className="legal-page"><SiteHeader />
@@ -374,11 +371,9 @@ function BlogPage({ slug }: { slug?: string }) {
           {paragraphs.map((paragraph: string) => <p key={paragraph}>{paragraph}</p>)}
           {bullets && <ul>{bullets.map((item: string) => <li key={item}>{item}</li>)}</ul>}
         </section>)}</div>
-        <SponsorAd placement="blog_inline" />
-        <div className="blog-cta"><h2>Inspect and clean your photos</h2><p>Check readable metadata and create a fresh copy of supported images in your browser.</p><a className="button button-primary" href="/">Open the free tool →</a></div>
+<div className="blog-cta"><h2>Inspect and clean your photos</h2><p>Check readable metadata and create a fresh copy of supported images in your browser.</p><a className="button button-primary" href="/">Open the free tool →</a></div>
         <section className="blog-related"><h2>Related guides</h2><div className="blog-related-grid">{related.map(item => <a className="blog-related-card" href={"/blog/" + item.slug} key={item.slug}><b>{item.title}</b><span>Read guide →</span></a>)}</div></section>
-        <SponsorAd placement="blog_end" />
-      </article> : slug ? <section className="blog-not-found"><h1>Article not found</h1><p>This page may have moved or the address may be incorrect.</p><a className="button button-primary" href="/blog">Browse all guides</a></section> : <>
+</article> : slug ? <section className="blog-not-found"><h1>Article not found</h1><p>This page may have moved or the address may be incorrect.</p><a className="button button-primary" href="/blog">Browse all guides</a></section> : <>
         <section className="blog-hero">
           <div className="blog-hero-copy"><span className="eyebrow">CLEANEXIF KNOWLEDGE HUB</span><h1 className="blog-heading">Photo Privacy, Made Clear.</h1><p className="blog-lead">Practical guides for inspecting image metadata, creating clean copies and using CleanExif tools with confidence.</p><div className="blog-categories"><span>How To</span><span>Privacy</span><span>CleanExif Tools</span></div></div>
           <img src="/blog/cleanexif-workflow.svg" alt="CleanExif image workflow illustration" />
@@ -909,17 +904,12 @@ function App() {
     }
   };
   const faqs = [
-    ["What is EXIF data?", "EXIF is information stored inside many image files. It can include camera details, capture date, lens settings and, when enabled, GPS coordinates."],
-    ["Does CleanExif upload my photos?", "No. Image processing happens locally in your browser. Your selected image files are not sent to CleanExif image-processing servers."],
-    ["Can I remove GPS location from an image?", "Re-encoding a supported image removes embedded metadata commonly used for GPS and camera details. Always inspect the exported file if location privacy is critical."],
-    ["Which image formats are supported?", "CleanExif supports JPEG, PNG and WebP. Your " + limits.name + " plan allows " + limits.maxFileMB + " MB per image, " + limits.maxImages + " images and " + limits.totalMB + " MB total per batch. HEIC, animated GIF and SVG are not supported."],
-    ["Does removing EXIF data affect image quality?", "PNG is re-encoded losslessly. JPEG and WebP are exported at a high quality setting, but re-encoding can cause a small quality or file-size difference."],
-    ["Can I clean multiple images at once?", "Yes. Add up to " + limits.maxImages + " supported images under your " + limits.name + " plan and use Clean all to download the cleaned files together in a ZIP archive."],
-    ["What types of information can image metadata contain?", "Depending on the file and the device or app that created it, metadata may include capture date, camera make and model, lens and exposure settings, orientation, software details, author fields and GPS coordinates."],
-    ["Will metadata removal change the visible photo?", "CleanExif creates a newly exported image from its pixels. PNG export is lossless; JPEG and WebP are re-encoded at a high quality setting, so a small change in file size or visual quality is possible."],
-    ["Are screenshots free of metadata?", "Not necessarily. Screenshots often contain fewer camera-related fields than camera photos, but they can still include file properties or other embedded information. Inspect the exact file you plan to share."],
-    ["Does CleanExif remove metadata from PDFs or videos?", "No. The current CleanExif image workflow supports JPEG, PNG and WebP only. PDF documents, videos, HEIC files, animated GIFs and SVG files are not supported."],
-    ["Can metadata be added again after cleaning?", "Yes. Editing or exporting an image in another application may add new metadata. If privacy matters, inspect the final copy immediately before sharing it."],
+    ["What is EXIF data?", "EXIF is information stored inside an image. It may include the camera model, capture date, lens settings and, when enabled, GPS coordinates."],
+    ["Are my photos uploaded?", "No. Image processing happens locally in your browser. Your selected image files are not sent to CleanExif image-processing servers."],
+    ["Can I remove GPS location?", "CleanExif re-encodes supported images to remove common embedded GPS and camera metadata. Inspect the exported file when location privacy is critical."],
+    ["Which image formats are supported?", "CleanExif supports JPEG, PNG and WebP. HEIC, animated GIF, SVG, PDF and video files are not supported by the image-cleaning tool."],
+    ["Will cleaning affect image quality?", "PNG is exported losslessly. JPEG and WebP are re-encoded at a high quality setting, so a small file-size or visual-quality difference is possible."],
+    ["Can I clean multiple images?", "Yes. Add up to the image limit on your plan and use Clean all to download the cleaned images together in a ZIP file."]
   ];
   return <div className="app-shell">
     <SiteHeader />
@@ -930,7 +920,7 @@ function App() {
         <div className="container hero-grid">
           <div className="hero-copy"><span className="eyebrow"><span className="eyebrow-icon"><ShieldCheck size={15} /></span> PHOTO PRIVACY, MADE SIMPLE</span>
             <h1>Share the photo.<br />Not the <span>metadata.</span></h1>
-            <p className="hero-description">Photos can reveal more than you intend. Check for GPS location, camera details and hidden EXIF data, then download a cleaner copy. Everything is processed in your browser. No image uploads. Sign in only to use your daily cleaning credits.</p>
+            <p className="hero-description">Review GPS location, camera details and hidden EXIF data before sharing. CleanExif creates a fresh copy locally in your browser—your photo is never uploaded.</p>
             <div className="trust-pills"><span><LockKeyhole size={15} /> No image uploads</span><span><ScanSearch size={16} /> Review before export</span><span><Monitor size={16} /> Processed locally</span></div>
             <div className="hero-footnote"><ShieldCheck size={15} /> Your original photo is never overwritten.</div>
           </div>
@@ -958,19 +948,7 @@ function App() {
           <div className="feature-item"><span className="feature-icon"><Download /></span><div><b>Download clean</b><small>Save a fresh copy without embedded metadata.</small></div></div>
           <div className="feature-item"><span className="feature-icon"><ShieldCheck /></span><div><b>Privacy first</b><small>Processing happens locally in your browser.</small></div></div>
         </div>
-        <section className="container ce-trust-strip" aria-label="CleanExif privacy and processing commitments">
-          <div className="ce-trust-intro">
-            <span className="eyebrow">BUILT FOR PHOTO PRIVACY</span>
-            <h2>Your files stay in your workflow.</h2>
-            <p>Clear, practical privacy information before you clean or share an image.</p>
-          </div>
-          <div className="ce-trust-grid">
-            <article className="ce-trust-item"><span><ShieldCheck size={18}/></span><div><b>Browser-based processing</b><small>Image work runs locally in your browser.</small></div></article>
-            <article className="ce-trust-item"><span><UploadCloud size={18}/></span><div><b>No image upload required</b><small>Your selected image is processed on your device.</small></div></article>
-            <article className="ce-trust-item"><span><ScanSearch size={18}/></span><div><b>Review before export</b><small>Inspect readable metadata before downloading.</small></div></article>
-            <article className="ce-trust-item"><span><Download size={18}/></span><div><b>Separate clean copy</b><small>Your original file is not overwritten.</small></div></article>
-          </div>
-        </section>
+        
       </section>
 
       {items.length > 0 && <section className="tool-workspace" aria-live="polite"><div className="container">
@@ -997,88 +975,9 @@ function App() {
         </div>
       </div></section>}
 
-      <section className="metadata-education section-pad" aria-labelledby="metadata-guide-title">
-        <div className="container">
-          <div className="education-heading">
-            <span className="eyebrow">UNDERSTAND YOUR IMAGE FILES</span>
-            <h2 id="metadata-guide-title">A closer look at the information <span>inside your photos</span></h2>
-            <p>An image can carry details beyond its visible pixels. Knowing what those details mean helps you make a more informed choice before sharing.</p>
-          </div>
-          <div className="education-feature-grid">
-            <article className="education-card education-card-main">
-              <span className="education-icon"><Fingerprint size={22} /></span>
-              <h3>What is image metadata?</h3>
-              <p>Metadata is information saved alongside an image. Some details are created by a camera or phone when a photo is captured; others can be added by editing software, an export process or a content workflow.</p>
-              <p>It does not usually change what you see in the picture, but it can provide context about the device, time, settings or software involved in creating the file.</p>
-            </article>
-            <article className="education-card">
-              <span className="education-icon"><MapPin size={22} /></span>
-              <h3>Location information</h3>
-              <p>When location tagging is enabled, GPS fields may record coordinates associated with a photo. Those coordinates can reveal more than the scene itself, so review them before publishing a personal image.</p>
-            </article>
-            <article className="education-card">
-              <span className="education-icon"><Camera size={22} /></span>
-              <h3>Camera and capture details</h3>
-              <p>Files may include a camera or phone model, lens information, exposure values, orientation and capture date. These fields can be useful for photographers and cataloguing.</p>
-            </article>
-            <article className="education-card">
-              <span className="education-icon"><Globe2 size={22} /></span>
-              <h3>Editing and author details</h3>
-              <p>Some workflows add software names, author information, captions, copyright notes or other descriptive fields. The exact fields depend on the application and export settings.</p>
-            </article>
-          </div>
-          <div className="education-split">
-            <div className="education-copy">
-              <span className="eyebrow">WHY REVIEW METADATA?</span>
-              <h3>Choose what your image shares</h3>
-              <p>Metadata can make photo libraries easier to organize and help preserve creative or technical details. But when a file is shared publicly, some of that context may be unnecessary.</p>
-              <p>Reviewing a photo before sharing lets you decide whether to keep its capture information or create a cleaner copy. CleanExif gives you a way to inspect readable fields and re-export supported images locally in your browser.</p>
-            </div>
-            <div className="education-callout">
-              <ShieldCheck size={25} />
-              <h3>Privacy-conscious by design</h3>
-              <p>Your selected image is decoded and re-encoded in your browser. CleanExif does not upload image files to its image-processing servers.</p>
-            </div>
-          </div>
-          <div className="format-guide">
-            <div className="format-guide-heading">
-              <span className="eyebrow">CURRENT FORMAT SUPPORT</span>
-              <h3>Which image files can you clean?</h3>
-              <p>CleanExif currently accepts these three image formats in its metadata workflow.</p>
-            </div>
-            <div className="format-guide-grid">
-              <article><b>JPEG / JPG</b><p>Common camera and phone photos. Re-exported at a high quality setting; file size or visual quality may change slightly.</p><span>Supported</span></article>
-              <article><b>PNG</b><p>Often used for screenshots, graphics and transparent images. Exported using lossless PNG encoding.</p><span>Supported</span></article>
-              <article><b>WebP</b><p>A modern web image format. Re-exported at a high quality setting, which may affect file size or image quality slightly.</p><span>Supported</span></article>
-            </div>
-            <p className="format-limit-note">HEIC, animated GIF, SVG, PDF and video files are not supported by this image-cleaning workflow.</p>
-          </div>
-          <div className="education-split education-process">
-            <div className="education-copy">
-              <span className="eyebrow">A SIMPLE WORKFLOW</span>
-              <h3>How to prepare an image before sharing</h3>
-              <ol className="education-steps">
-                <li><b>Select the exact image</b><span>Choose the original file you intend to share.</span></li>
-                <li><b>Inspect its details</b><span>Review readable GPS, camera, date and other metadata fields.</span></li>
-                <li><b>Create a clean copy</b><span>Use the metadata removal action to export a new image in your browser.</span></li>
-                <li><b>Check before publishing</b><span>Review the downloaded copy and share that version if it meets your needs.</span></li>
-              </ol>
-            </div>
-            <div className="education-callout education-caution">
-              <AlertCircle size={24} />
-              <h3>Know the limits</h3>
-              <p>Re-encoding is designed to omit common embedded image metadata, but it is not a forensic sanitization guarantee. Keep your original file and independently inspect outputs when handling highly sensitive images.</p>
-            </div>
-          </div>
-          <div className="usecase-strip">
-            <div><b>Personal photo sharing</b><span>Review location and capture details before posting family or everyday photos.</span></div>
-            <div><b>Creator workflows</b><span>Prepare exported images for portfolios, blogs and social content.</span></div>
-            <div><b>Business publishing</b><span>Check product and campaign images before adding them to public pages.</span></div>
-          </div>
-        </div>
-      </section>
+      
 
-      <section className="tool-directory-section section-pad" id="all-tools"><div className="container"><div className="tool-directory-heading"><span className="eyebrow">ONE PRIVACY WORKSPACE</span><h2>All CleanExif <span>tools</span></h2><p>Choose the exact tool you need. Each tool has its own page, clear processing status and separate download action.</p></div><div className="tool-directory-grid">
+      <section className="tool-directory-section section-pad" id="all-tools"><div className="container"><div className="tool-directory-heading"><span className="eyebrow">ONE PRIVACY WORKSPACE</span><h2>All CleanExif <span>tools</span></h2><p>Choose the privacy tool you need.</p></div><div className="tool-directory-grid">
 <a className="tool-directory-card" href="/#tool"><span className="tool-directory-icon"><Eye/></span><b>Image Metadata Cleaner</b><small>Inspect and remove common embedded metadata from supported images.</small><span className="tool-directory-link">Open cleaner <ArrowRight size={15}/></span></a>
 <a className="tool-directory-card" href="/watermark"><span className="tool-directory-icon"><ImageIcon/></span><b>Watermark Maker</b><small>Add a repeating visible text watermark and export your image.</small><span className="tool-directory-link">Open watermark <ArrowRight size={15}/></span></a>
 <a className="tool-directory-card" href="/gps-remover"><span className="tool-directory-icon"><MapPin/></span><b>GPS Location Remover</b><small>Review location tags and export a re-encoded copy without common metadata.</small><span className="tool-directory-link">Open GPS remover <ArrowRight size={15}/></span></a>

@@ -843,16 +843,6 @@ textarea {
     margin-top: 28px;
   }
 
-  .sponsor-ad-link {
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .sponsor-ad img {
-    width: min(28vw, 96px);
-    flex: none;
-  }
-
   .blog-content {
     padding-top: 32px;
     padding-bottom: 56px;
@@ -1199,4 +1189,38 @@ textarea {
     left: 8px;
     right: 8px;
   }
+}
+/* Final mobile layout pass: keep every route readable and touch-friendly. */
+@media (max-width: 780px) {
+  .section-pad { padding-top: 52px; padding-bottom: 52px; }
+  .tool-directory-grid { grid-template-columns: minmax(0, 1fr); }
+  .how-grid, .metadata-grid { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .metadata-intro { padding-right: 0; }
+  .faq-column { border-left: 0; border-top: 1px solid #e1e8f2; padding: 24px 0 0; }
+  .final-cta-inner { align-items: flex-start; flex-direction: column; gap: 18px; }
+  .final-cta-inner > .button { width: 100%; max-width: 340px; }
+  .admin-tabs { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
+  .admin-table-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+  .account-dashboard, .account-auth-layout, .plans-main, .wm-main, .privacy-tools-main, .blog-content { min-width: 0; }
+  .blog-section-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
+}
+@media (max-width: 600px) {
+  .upload-actions { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; width: 100%; gap: 9px; }
+  .upload-actions > .button { width: 100%; max-width: 280px; white-space: normal; text-align: center; }
+  .tool-directory-card { width: 100%; min-width: 0; }
+  .privacy-points { grid-template-columns: minmax(0, 1fr); gap: 11px; }
+  .blog-article-meta { flex-wrap: wrap; gap: 7px 12px; }
+  .plans-footer { flex-wrap: wrap; justify-content: center; gap: 10px 16px; line-height: 1.6; }
+}
+@media (max-width: 390px) {
+  .container { width: calc(100% - 28px); }
+  .hero-copy h1 { font-size: clamp(34px, 9.5vw, 40px); letter-spacing: -1.7px; }
+  .upload-card { padding: 9px; }
+  .drop-zone { padding: 16px 9px; }
+  .workspace-actions { grid-template-columns: minmax(0, 1fr); }
+  .workspace-actions .button-primary { grid-column: auto; }
+  .current-plan { align-items: flex-start; flex-wrap: wrap; line-height: 1.5; }
+  .privacy-tool-row { min-width: 0; }
+  .admin-toolbar { flex-wrap: wrap; }
+  .account-auth-layout { width: calc(100% - 28px); }
 }
