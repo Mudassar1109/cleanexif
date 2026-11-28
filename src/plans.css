@@ -127,3 +127,149 @@
   right:17px;
   z-index:2;
 }
+
+
+/* Responsive pricing and account activation layouts. */
+@media (min-width: 761px) and (max-width: 980px) {
+  .plans-main {
+    padding: 32px 0 62px;
+  }
+  .plans-intro {
+    min-height: 0;
+    padding: 34px 25px 92px;
+  }
+  .plans-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .pricing-card,
+  .pricing-card:not(.pricing-featured),
+  .pricing-featured {
+    min-height: 0;
+    transform: none;
+    padding: 24px 20px;
+  }
+  .pricing-card:nth-child(3) {
+    grid-column: 1 / -1;
+    width: min(100%, 520px);
+    justify-self: center;
+  }
+  .pricing-card:hover,
+  .pricing-card:not(.pricing-featured):hover,
+  .pricing-featured:hover {
+    transform: translateY(-2px);
+  }
+  .plans-account {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  .plans-account form {
+    width: min(100%, 520px);
+  }
+}
+
+@media (max-width: 760px) {
+  .plans-main {
+    width: calc(100% - 28px);
+    padding: 25px 0 48px;
+  }
+  .plans-intro {
+    min-height: 0;
+    padding: 30px 17px 77px;
+    border-radius: 18px;
+  }
+  .plans-intro h1 {
+    font-size: clamp(30px, 8vw, 37px);
+    letter-spacing: -1.2px;
+    line-height: 1.12;
+  }
+  .plans-intro p {
+    font-size: 12px;
+    line-height: 1.65;
+  }
+  .plans-trust-row {
+    gap: 7px;
+  }
+  .plans-trust-row span {
+    font-size: 9px;
+    padding: 7px 9px;
+  }
+  .current-plan {
+    width: calc(100% - 18px);
+    margin: -48px auto 18px;
+    align-items: flex-start;
+    padding: 12px;
+    font-size: 11px;
+    line-height: 1.55;
+  }
+  .plans-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 13px;
+  }
+  .pricing-card,
+  .pricing-card:not(.pricing-featured),
+  .pricing-featured {
+    min-height: 0;
+    transform: none;
+    padding: 22px 18px 18px;
+    border-radius: 16px;
+  }
+  .pricing-card h2 {
+    font-size: 36px;
+  }
+  .pricing-card > p {
+    min-height: 0;
+  }
+  .pricing-card ul {
+    gap: 11px;
+    margin: 18px 0 20px;
+  }
+  .pricing-card li {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .pricing-card:hover,
+  .pricing-card:not(.pricing-featured):hover,
+  .pricing-featured:hover {
+    transform: none;
+  }
+  .plans-account {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    margin-top: 25px;
+    padding: 18px;
+  }
+  .plans-account form {
+    width: 100%;
+  }
+  .plans-footer {
+    gap: 10px 16px;
+    flex-wrap: wrap;
+    padding: 18px 14px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 390px) {
+  .plans-main {
+    width: calc(100% - 22px);
+  }
+  .plans-intro {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .plans-intro h1 {
+    font-size: 30px;
+  }
+  .pricing-card {
+    padding: 19px 15px;
+  }
+  .pricing-tag {
+    right: 12px;
+    top: 12px;
+  }
+  .pricing-featured .pricing-current {
+    right: 12px;
+    top: 42px;
+  }
+}
