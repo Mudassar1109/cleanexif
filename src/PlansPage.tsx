@@ -13,8 +13,14 @@ const DEFAULT_PLANS:PricingPlan[]=[
  {code:"business",name:"Business",description:"For high-volume image workflows.",price_monthly:12.99,watermark_images_per_batch:200,watermark_total_mb:1024,max_file_mb:100,daily_images_limit:200,active:true,sort_order:2}
 ];
 export default function PlansPage({accountOnly=false}:{accountOnly?:boolean}){
- const {limits,email,loading,expiryCountdown,isPlanExpired}=usePlanAccess();const [plans,setPlans]=useState<PricingPlan[]>([]),[plansLoaded,setPlansLoaded]=useState(false),[plansError,setPlansError]=useState("");const [authEmail,setAuthEmail]=useState(""),[password,setPassword]=useState("");
+ const {limits,email,emailVerified,loading,expiryCountdown,isPlanExpired}=usePlanAccess();const [plans,setPlans]=useState<PricingPlan[]>([]),[plansLoaded,setPlansLoaded]=useState(false),[plansError,setPlansError]=useState("");const [authEmail,setAuthEmail]=useState(""),[password,setPassword]=useState("");
  const [mode,setMode]=useState<"signin"|"signup">("signup"),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[error,setError]=useState("");
+ const requestedUpgrade=new URLSearchParams(window.location.search).get("upgrade");
+ const requestedUpgradeNotice=requestedUpgrade==="pro"||requestedUpgrade==="business"
+  ?email&&emailVerified?<p className="plans-notice" role="status">Your email {email} is verified. Continue with the {requestedUpgrade==="pro"?"Pro":"Business"} activation button below.</p>
+   :email?<p className="plans-note" role="status">Verify your account email before requesting a paid plan.</p>
+   :<p className="plans-note" role="status">Sign in or create an account to continue your paid plan request.</p>
+  :null;
  useEffect(()=>{
   if(!cleanexifSupabase){setPlans(DEFAULT_PLANS);setPlansLoaded(true);return;}
   let cancelled=false;
@@ -74,11 +80,46 @@ export default function PlansPage({accountOnly=false}:{accountOnly?:boolean}){
   }catch(err){setError(err instanceof Error?err.message:"Password reset request failed. Please try again.");}
   finally{setBusy(false);}
  }
- const wa=(code:string)=>WA+"?text="+encodeURIComponent("Hi CleanExif, I want to activate the "+code+" plan. My account email: "+(email||authEmail||"Not registered yet")+". Please share payment instructions.");
+ async function startUpgrade(code:string){
+  if(!cleanexifSupabase){setError("Account service is not configured. Please contact support.");return;}
+  setBusy(true);setError("");setNotice("");
+  const returnPath="/plans?upgrade="+encodeURIComponent(code);
+  const accountPath="/account?returnTo="+encodeURIComponent(returnPath);
+  try{
+   const {data,error:lookupError}=await cleanexifSupabase.auth.getUser();
+   const user=data.user;
+   if(lookupError||!user){window.location.assign(accountPath);return;}
+   const verified=Boolean(user.email_confirmed_at||user.confirmed_at);
+   if(!user.email||!verified){
+    if(!user.email){setError("Your account does not have a confirmed email address. Please contact support.");return;}
+    const {error:resendError}=await cleanexifSupabase.auth.resend({
+     type:"signup",email:user.email,
+     options:{emailRedirectTo:window.location.origin+accountPath}
+    });
+    if(resendError)setError("Email verification could not be resent: "+resendError.message);
+    else setNotice("Please verify "+user.email+" using the confirmation link in your inbox. After verification, return to Plans and continue your WhatsApp request.");
+    return;
+   }
+   const selectedPlan=displayPlans.find(item=>item.code===code);
+   if(!selectedPlan){setError("This plan is not currently available.");return;}
+   const message=[
+    "Hi CleanExif, I want to request the "+selectedPlan.name+" plan.",
+    "Verified CleanExif account email: "+user.email,
+    "Plan price: $"+Number(selectedPlan.price_monthly).toFixed(2)+" / month",
+    "Please share payment instructions. I understand paid access starts only after payment is verified and my account is activated by CleanExif."
+   ].join("\n");
+   window.location.assign(WA+"?text="+encodeURIComponent(message));
+  }catch(err){
+   setError(err instanceof Error?err.message:"Could not verify your CleanExif account. Please sign in and try again.");
+  }finally{setBusy(false);}
+ }
  return <div className="plans-page"><SiteHeader />
  <main className="container plans-main"><div className="plans-intro"><span className="eyebrow"><Sparkles size={14}/> SIMPLE, PRIVATE IMAGE TOOLS</span><h1>{accountOnly?"Your CleanExif account":<>Choose the plan that <span>fits your workflow.</span></>}</h1><p>{accountOnly?"Sign in or create an account to manage your CleanExif access.":"Start free with all five tools. Upgrade for larger daily allowances, bigger batches and higher file-size limits. Image processing stays in your browser."}</p><div className="plans-trust-row"><span><ShieldCheck size={15}/> Private browser processing</span><span><Check size={15}/> No auto-renewal</span><span><MessageCircle size={15}/> WhatsApp-assisted activation</span></div></div>
  {!accountOnly&&<><div className="current-plan"><ShieldCheck size={18}/><span>{email?<>Signed in as <b>{email}</b> · Current access: <b>{limits.name}</b>{expiryCountdown&&<> · {isPlanExpired?"Previous subscription expired":"Plan expires in"}: <b>{expiryCountdown}</b></>}</>:<>You are using the <b>Free plan</b>. Create an account to connect a manually activated subscription.</>}</span></div>
  {plansError&&<p className="plans-note" role="status">{plansError}</p>}
+ {!accountOnly&&requestedUpgradeNotice}
+ {!accountOnly&&error&&<p className="plans-error" role="alert">{error}</p>}
+ {!accountOnly&&notice&&<p className="plans-notice" role="status">{notice}</p>}
  <section className="plans-grid">{displayPlans.map(plan=>{
   const presentation=getPlanPresentation(plan);
   const {code,title,bullets}=presentation;
@@ -93,7 +134,10 @@ export default function PlansPage({accountOnly=false}:{accountOnly?:boolean}){
    {loading?<button className="button button-secondary" type="button" disabled>Checking current plan…</button>
     :isIncluded?<button className="button button-secondary" type="button" disabled aria-current={code===limits.code?"true":undefined}><LockKeyhole size={16}/>{code===limits.code?"Current plan":"Included in "+limits.name}</button>
     :code==="free"?<a className="button button-secondary" href="/watermark">Continue free</a>
-    :<a className="button button-primary" href={wa(code)} target="_blank" rel="noreferrer"><svg className="whatsapp-brand-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.52 3.48A11.86 11.86 0 0 0 12.08 0C5.5 0 .15 5.35.15 11.93c0 2.1.55 4.15 1.6 5.96L0 24l6.27-1.64a11.9 11.9 0 0 0 5.8 1.48h.01c6.58 0 11.93-5.35 11.93-11.93 0-3.19-1.24-6.19-3.49-8.43ZM12.08 21.8h-.01a9.88 9.88 0 0 1-5.03-1.37l-.36-.21-3.72.98.99-3.63-.24-.37a9.88 9.88 0 0 1-1.52-5.27c0-5.46 4.44-9.9 9.9-9.9 2.65 0 5.14 1.03 7.01 2.9a9.84 9.84 0 0 1 2.9 7.01c0 5.46-4.44 9.9-9.9 9.9Zm5.43-7.41c-.3-.15-1.77-.87-2.05-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.47-.89-.79-1.49-1.77-1.67-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.48-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.2 5.08 4.49.71.31 1.27.5 1.7.64.72.23 1.37.2 1.88.12.57-.08 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.13-.27-.2-.57-.35Z"/></svg>{email?"Upgrade via WhatsApp":"Activate via WhatsApp"}</a>}
+    :<button className="button button-primary" type="button" onClick={()=>void startUpgrade(code)} disabled={busy}>
+      <svg className="whatsapp-brand-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.52 3.48A11.86 11.86 0 0 0 12.08 0C5.5 0 .15 5.35.15 11.93c0 2.1.55 4.15 1.6 5.96L0 24l6.27-1.64a11.9 11.9 0 0 0 5.8 1.48h.01c6.58 0 11.93-5.35 11.93-11.93 0-3.19-1.24-6.19-3.49-8.43ZM12.08 21.8h-.01a9.88 9.88 0 0 1-5.03-1.37l-.36-.21-3.72.98.99-3.63-.24-.37a9.88 9.88 0 0 1-1.52-5.27c0-5.46 4.44-9.9 9.9-9.9 2.65 0 5.14 1.03 7.01 2.9a9.84 9.84 0 0 1 2.9 7.01c0 5.46-4.44 9.9-9.9 9.9Zm5.43-7.41c-.3-.15-1.77-.87-2.05-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.47-.89-.79-1.49-1.77-1.67-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.48-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.2 5.08 4.49.71.31 1.27.5 1.7.64.72.23 1.37.2 1.88.12.57-.08 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.13-.27-.2-.57-.35Z"/></svg>
+      {busy?"Checking account…":email?(emailVerified?"Upgrade via WhatsApp":"Verify email to upgrade"):"Sign in to request activation"}
+    </button>}
   </article>;
  })}{!displayPlans.length&&<p className="plans-note">No plans are currently available. Please contact support.</p>}</section>
  <section className="plans-tool-access"><div><span className="eyebrow">INCLUDED WITH EVERY PLAN</span><h2>All five tools stay available</h2><p>Every plan includes the Metadata Cleaner, Watermark Maker, GPS Location Remover, Image Privacy Scanner and EXIF Metadata Editor. Daily allowances apply to metadata-cleaning and watermark workflows. The standalone GPS remover, scanner and editor do not currently consume daily image credits.</p></div><a href="/#all-tools">Explore all tools <span>→</span></a></section>

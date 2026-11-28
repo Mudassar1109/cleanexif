@@ -23,6 +23,7 @@ type ImageRecord = {
 };
 
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_PIXELS = 40_000_000;
 const formatBytes = (bytes: number) => bytes < 1024 * 1024
   ? (bytes / 1024).toFixed(0) + " KB" : (bytes / (1024 * 1024)).toFixed(2) + " MB";
 const displayValue = (value: unknown): string => {
@@ -102,6 +103,9 @@ async function cleanImage(file: File, onStage?: (stage: string) => void): Promis
   onStage?.("Decoding image");
   const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
   try {
+    if (bitmap.width * bitmap.height > MAX_IMAGE_PIXELS) {
+      throw new Error("This image is too large to process safely in your browser. Choose an image with 40 megapixels or fewer.");
+    }
     onStage?.("Preparing clean image");
     const canvas = document.createElement("canvas");
     canvas.width = bitmap.width;
@@ -164,7 +168,7 @@ function LegalPage({ type }: { type: string }) {
   const content: Record<string, string[]> = {
     "privacy-policy": [
       "CleanExif is designed to process image files locally in your web browser. The image-processing feature does not upload your selected photos to CleanExif application servers.",
-      "When you visit this website, your hosting provider or network infrastructure may process standard connection information such as IP address, request time and browser details in routine server logs. CleanExif does not add analytics or advertising trackers in this version.",
+      "When you visit this website, your hosting provider or network infrastructure may process standard connection information such as IP address, request time and browser details in routine server logs. Google AdSense may load on the homepage and blog pages to display advertising. Google and its advertising partners may process IP addresses, cookies, web beacons, browser or device identifiers and ad interactions for ad delivery, measurement and personalization.",
       "Selected image files and generated clean copies remain in your browser session. They are not saved to a CleanExif account or database. Clearing the page or closing the tab may remove access to temporary results.",
       "This website uses essential browser functionality only. Third-party font delivery may make a request to Google Fonts; you can replace hosted fonts with local font files if you prefer to avoid that request.",
       "The tool is provided as-is. Metadata formats vary, so users should verify cleaned files before sharing sensitive images."
@@ -181,7 +185,9 @@ function LegalPage({ type }: { type: string }) {
       "Always inspect the resulting file and use appropriate specialist tools when handling highly sensitive, regulated or evidentiary material."
     ],
     "cookie-policy": [
-      "CleanExif does not intentionally set analytics, advertising or tracking cookies in this version of the website.",
+      "CleanExif loads Google AdSense on the homepage and blog pages only. Google and other advertising partners may place or read cookies, web beacons, IP addresses and other identifiers to deliver, measure and personalize advertisements. These technologies may use information about visits to this website or other websites.",
+      "You can manage Google's personalized advertising settings at adssettings.google.com and review additional industry opt-out information at aboutads.info/choices. Browser settings can also be used to restrict or clear cookies, although some website features may not work as expected.",
+      "For visitors in the European Economic Area, the United Kingdom and Switzerland, check Google's current publisher consent requirements and configure an appropriate certified consent management platform before personalized advertising is served in those regions.",
       "The application uses browser memory and temporary object URLs to preview and process images. These are not cookies and are not sent as image uploads to CleanExif.",
       "Third-party font resources may be requested from Google Fonts. Browser or hosting infrastructure may also use technically necessary mechanisms to deliver the website."
     ]
@@ -493,9 +499,15 @@ function WatermarkPage() {
         if (existingBytes + selectedBytes + file.size > limits.totalMB * 1024 * 1024) { errors.push("Your "+limits.name+" plan allows "+limits.totalMB+" MB total per batch. Upgrade for more capacity."); break; }
         try {
           const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-          const record = { id: crypto.randomUUID(), file, url: URL.createObjectURL(file), width: bitmap.width, height: bitmap.height };
-          bitmap.close();
-          records.push(record);
+          try {
+            if (bitmap.width * bitmap.height > MAX_IMAGE_PIXELS) {
+              throw new Error("This image exceeds the 40-megapixel browser processing limit.");
+            }
+            const record = { id: crypto.randomUUID(), file, url: URL.createObjectURL(file), width: bitmap.width, height: bitmap.height };
+            records.push(record);
+          } finally {
+            bitmap.close();
+          }
         } catch { errors.push(file.name + ": could not read image."); }
         setAddProgress(previous => ({ ...previous, done: previous.done + 1 }));
       }
@@ -510,6 +522,9 @@ function WatermarkPage() {
   const renderWatermark = async (item: WatermarkFile, config: RepeatWatermarkSettings = settings): Promise<Blob> => {
     const bitmap = await createImageBitmap(item.file, { imageOrientation: "from-image" });
     try {
+      if (bitmap.width * bitmap.height > MAX_IMAGE_PIXELS) {
+        throw new Error("This image exceeds the 40-megapixel browser processing limit.");
+      }
       const canvas = document.createElement("canvas");
       canvas.width = bitmap.width; canvas.height = bitmap.height;
       const ctx = canvas.getContext("2d", { alpha: item.file.type !== "image/jpeg" });
@@ -736,20 +751,34 @@ function App() {
       totalSize += file.size;
     }
     setAddProgress({ done: 0, total: valid.length });
-    const records: ImageRecord[] = await Promise.all(valid.map(async file => {
+    const records: ImageRecord[] = [];
+    for (const file of valid) {
       const id = (typeof crypto !== "undefined" && "randomUUID" in crypto) ? crypto.randomUUID() : String(Date.now()) + Math.random();
       let preview = "";
       let width = 0;
       let height = 0;
       try {
         const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-        width = bitmap.width; height = bitmap.height; bitmap.close();
-        preview = URL.createObjectURL(file);
-      } catch { errors.push(file.name + ": could not read image"); }
-      const metadata = await readMetadata(file);
+        try {
+          width = bitmap.width;
+          height = bitmap.height;
+          if (width * height > MAX_IMAGE_PIXELS) {
+            errors.push(file.name + ": image exceeds the 40-megapixel browser processing limit");
+          } else {
+            preview = URL.createObjectURL(file);
+          }
+        } finally {
+          bitmap.close();
+        }
+      } catch {
+        errors.push(file.name + ": could not read image");
+      }
+      if (preview) {
+        const metadata = await readMetadata(file);
+        records.push({ id, file, preview, width, height, metadata, status: "ready" as const });
+      }
       setAddProgress(previous => ({ ...previous, done: previous.done + 1 }));
-      return { id, file, preview, width, height, metadata, status: "ready" as const };
-    }));
+    }
     const usable = records.filter(record => !!record.preview);
     setItems(previous => [...previous, ...usable]);
     if (!activeId && usable[0]) setActiveId(usable[0].id);
@@ -959,7 +988,7 @@ function App() {
           <div className="metadata-panel"><div className="panel-label">{active.status === "clean" ? "ORIGINAL METADATA (BEFORE CLEANING)" : "METADATA FOUND"} <span>{metadataRows.length} fields shown</span></div>
             {metadataRows.length ? <div className="metadata-categories">{metadataCategories.map(group => <section className="metadata-category" key={group.id}><h4>{group.label}<span>{group.rows.length}</span></h4><div className="metadata-table">{group.rows.map(row => <div className="metadata-row" key={row.key}><span>{row.label}</span><b>{row.value}</b></div>)}</div></section>)}</div> : <div className="empty-metadata"><Fingerprint size={25} /><b>No readable EXIF fields found</b><span>This image may already have little or no EXIF metadata.</span></div>}
             {active.cleanError && <p className="error-text">{active.cleanError}</p>}
-            {active.status === "clean" ? <div className="clean-success"><CheckCircle2 size={17} /><span>Clean copy is ready</span><button className="button button-primary" onClick={() => downloadItem(active)} disabled={!!active.downloaded}><Download size={15} /> {active.downloaded ? "Downloaded" : "Download"}</button></div> :
+            {active.status === "clean" ? <div className="clean-success"><CheckCircle2 size={17} /><span>{active.cleanCheckError ? "Copy ready · verification incomplete" : active.cleanCheck && Object.keys(active.cleanCheck).length ? "Copy ready · review remaining fields" : "Clean copy verified by readable metadata check"}</span><button className="button button-primary" onClick={() => downloadItem(active)} disabled={!!active.downloaded}><Download size={15} /> {active.downloaded ? "Downloaded" : "Download"}</button></div> :
               <button className="button button-primary clean-button" onClick={() => void cleanOne(active)} disabled={active.status === "cleaning" || busy || isLocked}>{active.status === "cleaning" ? <><RefreshCw className="spin" size={16} /> Processing image…</> : isLocked ? <><LockKeyhole size={17} /> Daily limit reached · {resetCountdown}</> : <><ShieldCheck size={17} /> Remove metadata</>}</button>}
             {active.status === "cleaning" && <div className="processing-panel" role="status" aria-live="polite"><div className="processing-top"><RefreshCw className="spin" size={15} /><b>{cleaningStage || "Processing locally"}</b><span>In progress</span></div><div className="processing-track"><span /></div><p>Decoding pixels, creating a fresh image and checking its metadata — all in your browser.</p></div>}
             {active.status === "clean" && <div className="comparison-panel"><div><span>Original privacy fields</span><b>{metadataRows.length}</b></div><div><span>Clean copy fields</span><b>{active.cleanCheckError ? "Not verified" : active.cleanCheck ? Object.keys(active.cleanCheck).length : 0}</b></div><div><span>File size</span><b>{formatBytes(active.file.size)} → {formatBytes(active.cleaned?.size ?? 0)}</b></div></div>}

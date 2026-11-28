@@ -9,12 +9,22 @@ import { SiteHeader } from "./SiteChrome";
 
 type View = "profile" | "subscription" | "settings" | "help";
 type AuthMode = "signin" | "signup";
-type UserShape = { id: string; email?: string; user_metadata?: Record<string, unknown> };
+type UserShape = { id: string; email?: string; email_confirmed_at?: string | null; confirmed_at?: string | null; user_metadata?: Record<string, unknown> };
 const avatarOf = (user: UserShape | null) => {
   const meta = user?.user_metadata ?? {};
   const value = meta.avatar_url ?? meta.picture;
   return typeof value === "string" ? value : "";
 };
+const safeReturnPath = (value: string | null): string | null => {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return null;
+  try {
+    const resolved = new URL(value, window.location.origin);
+    return resolved.origin === window.location.origin ? resolved.pathname + resolved.search + resolved.hash : null;
+  } catch {
+    return null;
+  }
+};
+
 const initials = (name: string, email: string) => {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0]?.slice(0, 2) || email.slice(0, 2))).toUpperCase();
@@ -24,6 +34,7 @@ const initials = (name: string, email: string) => {
 export default function AccountPage({ initialMode }: { initialMode?: AuthMode }) {
   const [user, setUser] = useState<UserShape | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const returnTo = safeReturnPath(new URLSearchParams(window.location.search).get("returnTo"));
   const [authMode, setAuthMode] = useState<AuthMode>(initialMode ?? "signup");
   const [view, setView] = useState<View>(() => {
     const tab = new URLSearchParams(window.location.search).get("tab");
@@ -61,6 +72,13 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
   }, []);
 
   const userEmail = user?.email ?? "";
+  const userEmailVerified = Boolean(user?.email_confirmed_at || user?.confirmed_at);
+
+  useEffect(() => {
+    if (!authLoading && user && userEmailVerified && returnTo) {
+      window.location.replace(returnTo);
+    }
+  }, [authLoading, user, userEmailVerified, returnTo]);
   const displayName = String(user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? "");
   const avatar = avatarOf(user);
   const initialsText = initials(displayName, userEmail);
@@ -73,7 +91,7 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
     try {
       const cleanEmail = email.trim().toLowerCase();
       const result = authMode === "signup"
-        ? await cleanexifSupabase.auth.signUp({ email: cleanEmail, password, options: { data: { full_name: fullName.trim() }, emailRedirectTo: window.location.origin + "/account" } })
+        ? await cleanexifSupabase.auth.signUp({ email: cleanEmail, password, options: { data: { full_name: fullName.trim() }, emailRedirectTo: window.location.origin + "/account" + (returnTo ? "?returnTo=" + encodeURIComponent(returnTo) : "") } })
         : await cleanexifSupabase.auth.signInWithPassword({ email: cleanEmail, password });
       if (result.error) setError(result.error.message);
       else if (authMode === "signup" && !result.data.session) setNotice("Account created. Check your email for a confirmation link, then sign in.");
@@ -87,7 +105,7 @@ export default function AccountPage({ initialMode }: { initialMode?: AuthMode })
     setBusy(true); setError(""); setNotice("");
     const { error: authError } = await cleanexifSupabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin + "/account", queryParams: { prompt: "select_account" } }
+      options: { redirectTo: window.location.origin + "/account" + (returnTo ? "?returnTo=" + encodeURIComponent(returnTo) : ""), queryParams: { prompt: "select_account" } }
     });
     if (authError) { setError(authError.message); setBusy(false); }
   }
