@@ -5,7 +5,6 @@ import {
   Eye, EyeOff, Gauge
 } from "lucide-react";
 import { cleanexifSupabase, usePlanAccess } from "./planAccess";
-import "./account.css";
 import { SiteHeader } from "./SiteChrome";
 
 type View = "profile" | "subscription" | "settings" | "help";

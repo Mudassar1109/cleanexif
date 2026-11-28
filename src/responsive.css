@@ -1078,3 +1078,125 @@ textarea {
     transition-duration: .01ms !important;
   }
 }
+
+
+/* Critical mobile header/account menu correction.
+   AccountMenu is rendered by the shared header on every route, so its base
+   styles must be loaded globally rather than only with the lazy account page. */
+@media (max-width: 1080px) {
+  .ce-nav-links.ce-nav-open {
+    position: absolute;
+    top: calc(100% + 1px);
+    left: 12px;
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    max-height: calc(100dvh - 82px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: #fff;
+  }
+
+  .ce-nav-links .account-menu-wrap {
+    position: relative;
+    top: auto;
+    right: auto;
+    align-self: flex-end;
+    margin: 8px 3px 3px;
+  }
+
+  .ce-nav-links .account-menu-wrap .account-popover {
+    position: static;
+    top: auto;
+    right: auto;
+    width: min(100%, 320px);
+    max-width: 100%;
+    margin-top: 9px;
+    box-shadow: none;
+    border-color: #e4eaf3;
+  }
+
+  .ce-nav-links .account-popover-user b,
+  .ce-nav-links .account-popover-user span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+@media (max-width: 780px) {
+  html,
+  body,
+  #root {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .ce-site-header,
+  .ce-nav-inner {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .ce-nav-inner {
+    padding-left: 15px;
+    padding-right: 15px;
+    gap: 10px;
+  }
+
+  .hero-grid {
+    width: 100%;
+    max-width: 100%;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .hero-grid > *,
+  .hero-visual,
+  .upload-card,
+  .drop-zone {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .hero-visual {
+    width: 100%;
+    margin: 0 auto;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .floating-meta {
+    display: none !important;
+  }
+
+  .ce-trust-strip,
+  .tool-workspace,
+  .section-pad,
+  .final-cta,
+  .ce-site-footer {
+    max-width: 100%;
+  }
+
+  .account-popover {
+    width: 100%;
+  }
+}
+
+@media (max-width: 390px) {
+  .brand-logo-image {
+    width: min(148px, 46vw);
+  }
+
+  .ce-nav-inner {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .ce-nav-links {
+    left: 8px;
+    right: 8px;
+  }
+}
