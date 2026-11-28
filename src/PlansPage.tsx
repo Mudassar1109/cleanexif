@@ -1,6 +1,7 @@
 import { useEffect,useState,type FormEvent } from "react";
 import { Check,ShieldCheck,LogIn,LogOut,MessageCircle,Sparkles,LockKeyhole } from "lucide-react";
 import {cleanexifSupabase,usePlanAccess} from "./planAccess";
+import { getPlanPresentation } from "./planPresentation";
 import "./plans.css";
 import { SiteHeader, SiteFooter } from "./SiteChrome";
 
@@ -11,7 +12,6 @@ const DEFAULT_PLANS:PricingPlan[]=[
  {code:"pro",name:"Pro",description:"For creators processing larger image batches.",price_monthly:4.99,watermark_images_per_batch:100,watermark_total_mb:500,max_file_mb:50,daily_images_limit:50,active:true,sort_order:1},
  {code:"business",name:"Business",description:"For high-volume image workflows.",price_monthly:12.99,watermark_images_per_batch:200,watermark_total_mb:1024,max_file_mb:100,daily_images_limit:200,active:true,sort_order:2}
 ];
-const formatPlanPrice=(value:number)=>"$"+Number(value??0).toFixed(2);
 export default function PlansPage({accountOnly=false}:{accountOnly?:boolean}){
  const {limits,email,loading,expiryCountdown,isPlanExpired}=usePlanAccess();const [plans,setPlans]=useState<PricingPlan[]>([]),[plansLoaded,setPlansLoaded]=useState(false),[plansError,setPlansError]=useState("");const [authEmail,setAuthEmail]=useState(""),[password,setPassword]=useState("");
  const [mode,setMode]=useState<"signin"|"signup">("signup"),[busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[error,setError]=useState("");
@@ -80,23 +80,15 @@ export default function PlansPage({accountOnly=false}:{accountOnly?:boolean}){
  {!accountOnly&&<><div className="current-plan"><ShieldCheck size={18}/><span>{email?<>Signed in as <b>{email}</b> · Current access: <b>{limits.name}</b>{expiryCountdown&&<> · {isPlanExpired?"Previous subscription expired":"Plan expires in"}: <b>{expiryCountdown}</b></>}</>:<>You are using the <b>Free plan</b>. Create an account to connect a manually activated subscription.</>}</span></div>
  {plansError&&<p className="plans-note" role="status">{plansError}</p>}
  <section className="plans-grid">{displayPlans.map(plan=>{
-  const code=plan.code.toLowerCase();
-  const title=plan.name||code[0]?.toUpperCase()+code.slice(1);
-  const bullets=[
-   `${plan.daily_images_limit ?? 0} metadata-cleaning images per day`,
-   `${plan.watermark_images_per_batch ?? 0} images per batch`,
-   `${plan.watermark_total_mb ?? 0} MB total batch size`,
-   `${plan.max_file_mb ?? 0} MB maximum per file`,
-   code==="free"?"Core cleaner and watermark workflow":code==="business"?"High-volume batch workflows":"Higher daily and batch limits",
-   "All five image tools"
-  ];
+  const presentation=getPlanPresentation(plan);
+  const {code,title,bullets}=presentation;
   const isIncluded=Boolean(email&&!isPlanExpired&&currentPlanOrder!==undefined&&Number(plan.sort_order)<=Number(currentPlanOrder));
   return <article className={"pricing-card "+(code==="pro"?"pricing-featured":"")} key={plan.id||plan.code}>
-   {code==="pro"&&<span className="pricing-tag">MOST POPULAR</span>}
-   <div className="pricing-topline"><span className="pricing-name">{title}</span>{code==="free"&&<span className="pricing-current">START HERE</span>}{code==="pro"&&<span className="pricing-current">BEST VALUE</span>}</div>
-   <h2>{formatPlanPrice(plan.price_monthly)}<small>{code==="free"?" forever":"/ month"}</small></h2>
+   {presentation.popularBadge&&<span className="pricing-tag">{presentation.popularBadge}</span>}
+   <div className="pricing-topline"><span className="pricing-name">{title}</span>{presentation.cornerBadge&&<span className="pricing-current">{presentation.cornerBadge}</span>}</div>
+   <h2>{presentation.price}<small>{presentation.pricePeriod}</small></h2>
    <p>{plan.description||"Clean images privately in your browser with plan-specific allowances."}</p>
-   <div className="pricing-fit">{code==="free"?"All five tools included":code==="pro"?"Larger batches and ZIP export":"Higher daily and batch limits"}</div>
+   <div className="pricing-fit">{presentation.featureHighlight}</div>
    <ul>{bullets.map(item=><li key={item}><Check size={16}/>{item}</li>)}</ul>
    {loading?<button className="button button-secondary" type="button" disabled>Checking current plan…</button>
     :isIncluded?<button className="button button-secondary" type="button" disabled aria-current={code===limits.code?"true":undefined}><LockKeyhole size={16}/>{code===limits.code?"Current plan":"Included in "+limits.name}</button>
