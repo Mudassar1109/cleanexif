@@ -234,7 +234,7 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
    }
    return;
   }
-  if(output)downloadBlob(output,outputName+".jpg");
+  if(output)downloadBlob(output,outputName);
  };
  const hasResult=meta!==null;
  const displayImage=outputUrl||previewUrl;
