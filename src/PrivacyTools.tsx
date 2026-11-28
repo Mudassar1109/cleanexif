@@ -4,13 +4,13 @@ import {
   RotateCcw, ScanSearch, ShieldCheck, UploadCloud, X
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { usePlanAccess } from "./planAccess";
 import piexif from "piexifjs";
 import { SiteHeader, SiteFooter } from "./SiteChrome";
 
 type ToolMode = "gps" | "scanner" | "editor";
 type Meta = Record<string, unknown>;
 const ACCEPTED = new Set(["image/jpeg", "image/png", "image/webp"]);
-const MAX_FILE_BYTES = 50 * 1024 * 1024;
 const bytes = (n:number) => n < 1048576 ? (n/1024).toFixed(0)+" KB" : (n/1048576).toFixed(2)+" MB";
 const mimeFor = (file:File) => {
   if (ACCEPTED.has(file.type)) return file.type;
@@ -32,9 +32,9 @@ const gpsKeys = /^(GPS|latitude|longitude|altitude|position)/i;
 const sensitiveKeys = /gps|latitude|longitude|altitude|serial|owner|artist|author|creator|copyright|date|time|software|comment|description|usercomment/i;
 const hiddenKeys = /^(Thumbnail|MakerNote|ImageData|StripOffsets|StripByteCounts|UserCommentEncoding)/i;
 const modeInfo:Record<ToolMode,{title:string;description:string;icon:LucideIcon;helper:string;action:string;steps:[string,string,string]}> = {
- gps:{title:"GPS Location Remover",description:"Find location tags and export a clean image copy without embedded metadata.",icon:MapPin,helper:"JPEG, PNG and WebP · Up to 50 MB · Original file remains unchanged",action:"Choose an image to remove GPS",steps:["Inspect location tags","Create a clean image copy","Download the new file"]},
- scanner:{title:"Image Privacy Scanner",description:"Inspect readable metadata and identify location, device, identity and capture details.",icon:ScanSearch,helper:"Read-only scan · JPEG, PNG and WebP · Up to 50 MB",action:"Choose an image to scan",steps:["Read available metadata","Review privacy findings","Export a scan report"]},
- editor:{title:"EXIF Metadata Editor",description:"Edit common description, author, copyright and capture-time fields in JPEG images.",icon:Fingerprint,helper:"JPEG only · Up to 50 MB · Export a separate edited copy",action:"Choose a JPEG to edit",steps:["Choose a JPEG image","Edit supported EXIF fields","Save a separate edited copy"]}
+ gps:{title:"GPS Location Remover",description:"Find location tags and export a clean image copy without embedded metadata.",icon:MapPin,helper:"JPEG, PNG and WebP · Original file remains unchanged",action:"Choose an image to remove GPS",steps:["Inspect location tags","Create a clean image copy","Download the new file"]},
+ scanner:{title:"Image Privacy Scanner",description:"Inspect readable metadata and identify location, device, identity and capture details.",icon:ScanSearch,helper:"Read-only scan · JPEG, PNG and WebP",action:"Choose an image to scan",steps:["Read available metadata","Review privacy findings","Export a scan report"]},
+ editor:{title:"EXIF Metadata Editor",description:"Edit common description, author, copyright and capture-time fields in JPEG images.",icon:Fingerprint,helper:"JPEG only · Export a separate edited copy",action:"Choose a JPEG to edit",steps:["Choose a JPEG image","Edit supported EXIF fields","Save a separate edited copy"]}
 };
 const valueText = (value:unknown):string => {
   if(value instanceof Date)return value.toLocaleString();
@@ -66,6 +66,7 @@ const downloadBlob = (blob:Blob,name:string) => {
 };
 
 export default function PrivacyTools({mode}:{mode:ToolMode}){
+ const {limits,email,loading:planLoading,dailyUsage,consumeImage,isLocked,resetCountdown}=usePlanAccess(mode);
  const [file,setFile]=useState<File|null>(null);
  const [meta,setMeta]=useState<Meta|null>(null);
  const [busy,setBusy]=useState(false);
@@ -77,6 +78,10 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
  const [artist,setArtist]=useState("");
  const [copyright,setCopyright]=useState("");
  const [dateTime,setDateTime]=useState("");
+ const [make,setMake]=useState("");
+ const [model,setModel]=useState("");
+ const [software,setSoftware]=useState("");
+ const [originalDate,setOriginalDate]=useState("");
  const [removeGps,setRemoveGps]=useState(true);
  const [showAllMetadata,setShowAllMetadata]=useState(false);
  const [inputKey,setInputKey]=useState(0);
@@ -91,18 +96,29 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
  const findings=useMemo(()=>entries.filter(([key])=>sensitiveKeys.test(key)),[entries]);
  const gps=findings.filter(([key])=>gpsKeys.test(key));
  const InfoIcon=modeInfo[mode].icon;
- const outputName=mode==="gps"?"no-gps-"+(file?.name??"image"):mode==="editor"?"edited-"+(file?.name??"image"):(file?.name??"image")+".privacy-report.txt";
+ const outputName=mode==="gps"?"no-gps-"+(file?.name??"image"):mode==="editor"?"edited-"+(file?.name??"image"):(file?.name??"image")+".privacy-report";
 
  const setMessage=(message:string,type:"info"|"success"|"error"="info")=>{setNotice(message);setNoticeType(type);};
+ const ensureCreditAccess=()=>{
+  if(!email)throw new Error("Sign in to use daily "+modeInfo[mode].title+" credits. Open your account from the header.");
+  if(planLoading||!dailyUsage)throw new Error("Your daily allowance is still loading. Please try again in a moment.");
+  if(isLocked)throw new Error("Your daily "+modeInfo[mode].title+" allowance is used. Credits reset in "+resetCountdown+".");
+ };
  const inspect=async(next:File)=>{
   setBusy(true);setMessage("Reading image metadata in this browser…");
   try{
+   if(mode==="scanner")ensureCreditAccess();
    const data=await read(next);
+   if(mode==="scanner")await consumeImage();
    setMeta(data);
    setDescription(String(data.ImageDescription??""));
    setArtist(String(data.Artist??data.Creator??""));
    setCopyright(String(data.Copyright??""));
-   setDateTime(exifDate(data.DateTime??data.DateTimeOriginal??data.CreateDate));
+   setDateTime(exifDate(data.DateTime??data.CreateDate));
+   setOriginalDate(exifDate(data.DateTimeOriginal));
+   setMake(String(data.Make??""));
+   setModel(String(data.Model??""));
+   setSoftware(String(data.Software??""));
    setMessage(Object.keys(data).length?"Inspection complete. Review the findings below.":"No readable metadata fields were found. This does not guarantee the file contains no hidden data.","success");
   }catch{
    setMeta({});
@@ -114,7 +130,7 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
   setMeta(null);setOutput(null);setShowAllMetadata(false);
   const mime=mimeFor(next);
   if(!ACCEPTED.has(mime)){setFile(null);setMessage("Unsupported format. Choose a JPEG, PNG or WebP image.", "error");return;}
-  if(next.size>MAX_FILE_BYTES){setFile(null);setMessage("This file is larger than the 50 MB limit.", "error");return;}
+  if(next.size>limits.maxFileMB*1024*1024){setFile(null);setMessage("This file is larger than your "+limits.maxFileMB+" MB plan limit.", "error");return;}
   if(mode==="editor"&&mime!=="image/jpeg"){setFile(null);setMessage("EXIF editing currently supports JPEG files only. Choose a .jpg or .jpeg image.", "error");return;}
   setFile(next);
   await inspect(next);
@@ -131,11 +147,12 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
  };
  const clearFile=()=>{
   setFile(null);setMeta(null);setOutput(null);setShowAllMetadata(false);
-  setDescription("");setArtist("");setCopyright("");setDateTime("");setMessage("");
+  setDescription("");setArtist("");setCopyright("");setDateTime("");setMake("");setModel("");setSoftware("");setOriginalDate("");setMessage("");
   setInputKey(v=>v+1);
  };
  const removeMetadata=async()=>{
   if(!file)return;
+  try{ensureCreditAccess();}catch(error){setMessage(error instanceof Error?error.message:"Daily credits unavailable.","error");return;}
   setBusy(true);setMessage("Removing embedded image metadata and verifying the exported copy…");
   try{
    const bitmap=await createImageBitmap(file);
@@ -149,6 +166,7 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
    const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(result=>result?resolve(result):reject(new Error("Image export failed.")),mime,mime==="image/png"?undefined:.94));
    const verified=await read(new File([blob],file.name,{type:blob.type||mime}));
    const remaining=Object.keys(verified).filter(key=>sensitiveKeys.test(key));
+   await consumeImage();
    setOutput(blob);
    setMessage(remaining.length?"A clean copy was created, but readable fields remain: "+remaining.slice(0,6).join(", ")+". Review the result before sharing.":"Clean copy created and re-read. No common privacy-sensitive metadata was detected.",remaining.length?"info":"success");
   }catch(error){
@@ -157,7 +175,8 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
  };
  const saveEdited=async()=>{
   if(!file)return;
-  if(!validExifDate(dateTime)){setMessage("Date & time must use YYYY:MM:DD HH:MM:SS and be a valid date.", "error");return;}
+  try{ensureCreditAccess();}catch(error){setMessage(error instanceof Error?error.message:"Daily credits unavailable.","error");return;}
+  if(!validExifDate(dateTime)||!validExifDate(originalDate)){setMessage("Date fields must use YYYY:MM:DD HH:MM:SS and be valid dates.", "error");return;}
   setBusy(true);setMessage("Updating JPEG EXIF fields and verifying the new file…");
   try{
    const dataUrl=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error("Could not read the JPEG file."));reader.readAsDataURL(file);});
@@ -167,34 +186,55 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
    exif["0th"][piexif.ImageIFD.Artist]=artist;
    exif["0th"][piexif.ImageIFD.Copyright]=copyright;
    exif["0th"][piexif.ImageIFD.DateTime]=dateTime;
+   exif["0th"][piexif.ImageIFD.Make]=make;
+   exif["0th"][piexif.ImageIFD.Model]=model;
+   exif["0th"][piexif.ImageIFD.Software]=software;
+   exif["Exif"]=exif["Exif"]??{};
+   exif["Exif"][piexif.ExifIFD.DateTimeOriginal]=originalDate;
    if(removeGps)exif["GPS"]={};
    const updated=piexif.insert(piexif.dump(exif),dataUrl);
    const blob=asBlob(updated,"image/jpeg");
    const verified=await read(new File([blob],file.name,{type:"image/jpeg"}));
+   await consumeImage();
    setMeta(verified);setOutput(blob);
    setMessage("Edited JPEG created and metadata re-read. Download the separate copy to keep your original unchanged.","success");
   }catch(error){
    setMessage(error instanceof Error?error.message:"Could not edit this JPEG. It may contain an unsupported EXIF structure.", "error");
   }finally{setBusy(false);}
  };
- const download=()=>{
+ const download=(format:"txt"|"csv"|"json"="txt")=>{
   if(!file)return;
   if(mode==="scanner"){
-   const lines=[
-    "CleanExif privacy scan report",
-    "File: "+file.name,
-    "Scanned: "+new Date().toISOString(),
-    "Readable metadata fields: "+entries.length,
-    "Privacy-sensitive fields: "+findings.length,
-    "",
-    ...findings.map(([key,value])=>key+": "+valueText(value)),
-    "",
-    "Note: This report includes metadata readable by the parser. It is not a forensic guarantee."
-   ];
-   downloadBlob(new Blob([lines.join("\n")],{type:"text/plain;charset=utf-8"}),file.name+".privacy-report.txt");
+   const report={
+    tool:"CleanExif Image Privacy Scanner",
+    file:file.name,
+    scannedAt:new Date().toISOString(),
+    readableMetadataCount:entries.length,
+    privacySensitiveCount:findings.length,
+    gpsFieldCount:gps.length,
+    findings:findings.map(([key,value])=>({field:key,value:valueText(value),category:gpsKeys.test(key)?"location":"review"})),
+    note:"This report includes metadata readable by the parser. It is not a forensic guarantee."
+   };
+   if(format==="json"){
+    downloadBlob(new Blob([JSON.stringify(report,null,2)],{type:"application/json;charset=utf-8"}),file.name+".privacy-report.json");
+   }else if(format==="csv"){
+    const quote=(v:string)=>'"'+v.replace(/"/g,'""')+'"';
+    const rows=[["Field","Value","Category"],...report.findings.map(row=>[row.field,row.value,row.category])];
+    downloadBlob(new Blob([rows.map(row=>row.map(quote).join(",")).join("\r\n")],{type:"text/csv;charset=utf-8"}),file.name+".privacy-report.csv");
+   }else{
+    const lines=[
+     report.tool,"File: "+report.file,"Scanned: "+report.scannedAt,
+     "Readable metadata fields: "+report.readableMetadataCount,
+     "Privacy-sensitive fields: "+report.privacySensitiveCount,
+     "GPS / location fields: "+report.gpsFieldCount,"",
+     ...report.findings.map(row=>row.field+": "+row.value+" ["+row.category+"]"),
+     "","Note: "+report.note
+    ];
+    downloadBlob(new Blob([lines.join("\n")],{type:"text/plain;charset=utf-8"}),file.name+".privacy-report.txt");
+   }
    return;
   }
-  if(output)downloadBlob(output,outputName);
+  if(output)downloadBlob(output,outputName+".jpg");
  };
  const hasResult=meta!==null;
  const displayImage=outputUrl||previewUrl;
@@ -206,7 +246,8 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
     <span className="eyebrow"><ShieldCheck size={15}/> PRIVATE, IN-BROWSER IMAGE TOOLS</span>
     <h1><InfoIcon size={34}/> {modeInfo[mode].title}</h1>
     <p>{modeInfo[mode].description}</p>
-    <small>{modeInfo[mode].helper}</small>
+    <small>{modeInfo[mode].helper} · Up to {limits.maxFileMB} MB per file</small>
+    <div className={"privacy-tool-quota"+(isLocked?" is-locked":"")} role="status" aria-live="polite"><div><b>{limits.name} · {modeInfo[mode].title} credits</b><strong>{planLoading?"Checking allowance…":!email?"Sign in required":dailyUsage?dailyUsage.remaining+" / "+dailyUsage.limit+" left today":"Allowance unavailable"}</strong></div><small>{dailyUsage?(isLocked?"Daily limit reached · Resets in "+resetCountdown:"Resets in "+resetCountdown):"Independent daily credits · No rollover"}</small><a href="/plans">View plans</a></div>
    </div>
    <section className="privacy-tool-card">
     <label className={"privacy-tool-upload"+(dragging?" is-dragging":"")+(busy?" is-disabled":"")} htmlFor="privacy-tool-file-input"
@@ -242,7 +283,7 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
          <div><span>Privacy-sensitive fields</span><b>{findings.length}</b></div>
          <div><span>GPS / location fields</span><b>{gps.length}</b></div>
         </div>
-        <div className="privacy-tool-result-heading"><h2><ScanSearch size={19}/> Privacy findings</h2><button type="button" className="button button-outline" onClick={download} disabled={busy}><Download size={15}/> Export report</button></div>
+        <div className="privacy-tool-result-heading"><h2><ScanSearch size={19}/> Privacy findings</h2><div className="privacy-tool-report-actions"><button type="button" className="button button-outline" onClick={()=>download("txt")} disabled={busy}>TXT</button><button type="button" className="button button-outline" onClick={()=>download("csv")} disabled={busy}>CSV</button><button type="button" className="button button-outline" onClick={()=>download("json")} disabled={busy}>JSON</button></div></div>
         {findings.length?findings.map(([key,value])=><div className="privacy-tool-row" key={key}><span>{key}</span><b>{valueText(value)}</b><em className={gpsKeys.test(key)?"risk-high":"risk-medium"}>{gpsKeys.test(key)?"Location":"Review"}</em></div>):<div className="privacy-tool-empty"><CheckCircle2 size={20}/><b>No common privacy-sensitive fields detected</b><span>This is a parser-based check, not a forensic guarantee.</span></div>}
         <button type="button" className="privacy-tool-disclosure" onClick={()=>setShowAllMetadata(v=>!v)} aria-expanded={showAllMetadata}>{showAllMetadata?"Hide":"View"} all readable metadata ({entries.length}) <span>{showAllMetadata?"−":"+"}</span></button>
         {showAllMetadata&&<div className="privacy-tool-all-meta">{entries.length?entries.slice(0,100).map(([key,value])=><div className="privacy-tool-row" key={key}><span>{key}</span><b>{valueText(value)}</b></div>):<p>No readable metadata fields were returned by the parser.</p>}</div>}
@@ -255,7 +296,7 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
         </div>
         <h2><MapPin size={19}/> Location metadata</h2>
         {gps.length?gps.map(([key,value])=><div className="privacy-tool-row" key={key}><span>{key}</span><b>{valueText(value)}</b><em className="risk-high">Location</em></div>):<div className="privacy-tool-empty"><CheckCircle2 size={20}/><b>No readable GPS fields found</b><span>You can still re-encode the image to remove common embedded metadata.</span></div>}
-        <button type="button" className="button button-primary privacy-tool-action" onClick={()=>void removeMetadata()} disabled={busy}><ShieldCheck size={16}/> Remove GPS / metadata & export</button>
+        <button type="button" className="button button-primary privacy-tool-action" onClick={()=>void removeMetadata()} disabled={busy||planLoading||!email||!dailyUsage||isLocked}><ShieldCheck size={16}/> Remove GPS / metadata & export</button>
        </div>}
        {mode==="editor"&&<div className="privacy-tool-results">
         <h2><Fingerprint size={19}/> Editable JPEG fields</h2>
@@ -264,10 +305,14 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
          <label>Description<input value={description} onChange={e=>setDescription(e.target.value)} maxLength={1000} disabled={busy}/></label>
          <label>Artist / Author<input value={artist} onChange={e=>setArtist(e.target.value)} maxLength={200} disabled={busy}/></label>
          <label>Copyright<input value={copyright} onChange={e=>setCopyright(e.target.value)} maxLength={200} disabled={busy}/></label>
+         <label>Camera make<input value={make} onChange={e=>setMake(e.target.value)} maxLength={100} disabled={busy}/></label>
+         <label>Camera model<input value={model} onChange={e=>setModel(e.target.value)} maxLength={100} disabled={busy}/></label>
+         <label>Software<input value={software} onChange={e=>setSoftware(e.target.value)} maxLength={100} disabled={busy}/></label>
          <label>Date & time (YYYY:MM:DD HH:MM:SS)<input value={dateTime} onChange={e=>setDateTime(e.target.value)} maxLength={19} placeholder="2026:11:28 10:30:00" disabled={busy}/></label>
+         <label>Original capture time<input value={originalDate} onChange={e=>setOriginalDate(e.target.value)} maxLength={19} placeholder="2026:11:28 10:30:00" disabled={busy}/></label>
         </div>
         <label className="privacy-tool-check"><input type="checkbox" checked={removeGps} onChange={e=>setRemoveGps(e.target.checked)} disabled={busy}/> Remove GPS tags when saving</label>
-        <button type="button" className="button button-primary privacy-tool-action" onClick={()=>void saveEdited()} disabled={busy}><CheckCircle2 size={16}/> Save edited JPEG & export</button>
+        <button type="button" className="button button-primary privacy-tool-action" onClick={()=>void saveEdited()} disabled={busy||planLoading||!email||!dailyUsage||isLocked}><CheckCircle2 size={16}/> Save edited JPEG & export</button>
        </div>}
       </div>
     </div>}
