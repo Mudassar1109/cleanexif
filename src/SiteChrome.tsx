@@ -65,5 +65,5 @@ export function SiteHeader(){
  </div></header>;
 }
 export function SiteFooter(){
- return <footer className="ce-site-footer"><div className="container ce-footer-inner"><span>© 2026 CleanExif</span><nav aria-label="Legal links"><a href="/privacy-policy">Privacy Policy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a><a href="/cookie-policy">Cookie Policy</a></nav></div></footer>;
+ return <footer className="ce-site-footer"><div className="container ce-footer-inner"><span>© 2026 CleanExif</span><nav aria-label="Legal links"><a href="/advertise">Advertise</a><a href="/privacy-policy">Privacy Policy</a><a href="/terms">Terms</a><a href="/disclaimer">Disclaimer</a><a href="/cookie-policy">Cookie Policy</a></nav></div></footer>;
 }
