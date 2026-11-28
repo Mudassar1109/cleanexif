@@ -52,7 +52,7 @@ const exifDate = (value:unknown):string => {
 };
 const validExifDate = (value:string) => {
   if(!value.trim())return true;
-  const match=/^(\\d{4}):(\\d{2}):(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2})$/.exec(value);
+  const match=/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(value);
   if(!match)return false;
   const [,y,mo,d,h,mi,s]=match.map(Number);
   const date=new Date(y,mo-1,d,h,mi,s);
@@ -245,7 +245,7 @@ export default function PrivacyTools({mode}:{mode:ToolMode}){
         <div className="privacy-tool-summary">
          <div><span>Readable metadata</span><b>{entries.length}</b></div>
          <div><span>GPS / location fields</span><b>{gps.length}</b></div>
-         <div><span>Image size</span><b>{file.width?String(file.width):"—"}</b></div>
+         <div><span>File size</span><b>{bytes(file.size)}</b></div>
         </div>
         <h2><MapPin size={19}/> Location metadata</h2>
         {gps.length?gps.map(([key,value])=><div className="privacy-tool-row" key={key}><span>{key}</span><b>{valueText(value)}</b><em className="risk-high">Location</em></div>):<div className="privacy-tool-empty"><CheckCircle2 size={20}/><b>No readable GPS fields found</b><span>You can still re-encode the image to remove common embedded metadata.</span></div>}
